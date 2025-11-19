@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 标题将由JS动态设置 -->
+    <title data-i18n-key="page.title">Your Name | Robotics & AI Researcher</title>
+    <!-- 引入 Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tailwind 配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'inter': ['Inter', 'sans-serif'],
+                        'mono': ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
+                    },
+                    colors: {
+                        'primary': tailwind.colors.violet,
+                    },
+                    animation: {
+                        'fade-in-up': 'fadeInUp 0.8s ease-out forwards',
+                        'bounce-slow': 'bounce-slow 2s infinite ease-in-out',
+                        'pulse-glow': 'pulse-glow 3s infinite ease-in-out',
+                    },
+                    keyframes: {
+                        fadeInUp: {
+                            '0%': { opacity: '0', transform: 'translateY(30px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        },
+                        'bounce-slow': {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-15px)' }
+                        },
+                        'pulse-glow': {
+                            '0%, 100%': { boxShadow: '0 0 15px rgba(167, 139, 250, 0.4)' },
+                            '50%': { boxShadow: '0 0 25px rgba(167, 139, 250, 0.8)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- 引入 Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- 引入 Google Font: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- 基础样式 --- */
+        body { background-color: #0f172a; cursor: none; overflow-x: hidden; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #1e293b; }
+        ::-webkit-scrollbar-thumb { background: #8b5cf6; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #a78bfa; }
+        a, button { cursor: none; } /* 隐藏默认手型 */
+
+        /* --- 顶部进度条 --- */
+        #scroll-progress {
+            position: fixed; top: 0; left: 0; width: 0%; height: 3px;
+            background: linear-gradient(90deg, #8b5cf6, #06b6d4);
+            z-index: 9999; transition: width 0.1s ease-out;
+            box-shadow: 0 0 10px rgba(139, 92, 246, 0.8);
+        }
+
+        /* --- 极光背景 (Layer 0) --- */
+        .aurora-container { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+        .aurora-blob { position: absolute; width: 500px; height: 500px; border-radius: 50%; filter: blur(80px); opacity: 0.4; will-change: transform; }
+        .aurora-blob.purple { background-color: #7c3aed; animation: moveBlob1 25s infinite alternate ease-in-out; }
+        .aurora-blob.cyan { background-color: #0891b2; animation: moveBlob2 30s infinite alternate-reverse ease-in-out; }
+        @keyframes moveBlob1 { from { transform: translate(0vw, 0vh) rotate(0deg); } to { transform: translate(60vw, 60vh) rotate(180deg); } }
+        @keyframes moveBlob2 { from { transform: translate(60vw, 0vh) rotate(0deg); } to { transform: translate(0vw, 60vh) rotate(-180deg); } }
+
+        /* --- 神经网络粒子画布 (Layer 1) --- */
+        #neural-canvas {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 1; pointer-events: none; opacity: 0.6;
+        }
+
+        /* --- 鼠标聚光灯 (Layer 2) --- */
+        #spotlight-effect {
+            position: fixed; inset: 0; z-index: 2; pointer-events: none;
+            background: radial-gradient(600px circle at var(--x) var(--y), rgba(167, 139, 250, 0.08), transparent 80%);
+        }
+
+        /* --- 组件样式 --- */
+        /* 导航下划线 */
+        .nav-link { position: relative; }
+        .nav-link:not(.active)::after {
+            content: ''; position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%);
+            width: 0; height: 2px; background-color: #8b5cf6; transition: width 0.3s ease-out;
+        }
+        .nav-link:not(.active):hover::after { width: 60%; }
+        .nav-link.active { color: #c4b5fd; background-color: #334155; border-right: 4px solid #8b5cf6; }
+        .mobile-nav-link.active { color: #8b5cf6; }
+
+        /* 简单稳健的社交图标悬停 */
+        .social-link { transition: transform 0.2s ease, color 0.2s ease; display: inline-block; }
+        .social-link:hover { transform: scale(1.2); color: #a78bfa; }
+        
+        /* 毛玻璃卡片 */
+        .card-interactive {
+            background-color: rgba(30, 41, 59, 0.6); backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .card-interactive:hover {
+            transform: translateY(-8px) scale(1.01);
+            border-color: rgba(139, 92, 246, 0.5);
+            box-shadow: 0 20px 40px -15px rgba(139, 92, 246, 0.3);
+        }
+        .card-interactive img { transition: transform 0.5s ease-out; }
+        .card-interactive:hover img { transform: scale(1.08); }
+
+        /* 时间线 */
+        .timeline-item { position: relative; padding-bottom: 3rem; padding-left: 2.5rem; }
+        .timeline-item:last-child { padding-bottom: 0; }
+        .timeline-item::before { content: ''; position: absolute; left: 0; top: 0.3rem; bottom: 0; width: 2px; background-color: #475569; }
+        .timeline-item:last-child::before { height: 0.3rem; }
+        .timeline-dot { 
+            position: absolute; left: -0.4rem; top: 0.3rem; height: 1rem; width: 1rem; 
+            border-radius: 50%; background-color: #1e293b; border: 3px solid #8b5cf6; 
+            transition: all 0.3s ease;
+        }
+        .timeline-item:hover .timeline-dot { background-color: #8b5cf6; box-shadow: 0 0 15px #8b5cf6; }
+
+        /* 语言按钮 */
+        .lang-btn {
+            background-color: rgba(51, 65, 85, 0.8); color: #94a3b8; padding: 0.25rem 0.75rem;
+            border-radius: 6px; font-weight: 500; transition: all 0.2s ease; border: 1px solid rgba(255,255,255,0.1);
+        }
+        .lang-btn:not(.active):hover { transform: scale(1.1); color: white; background-color: rgba(71, 85, 105, 0.9); }
+        .lang-btn.active { background-color: #8b5cf6; color: #ffffff; border-color: #8b5cf6; box-shadow: 0 0 10px rgba(139, 92, 246, 0.4); }
+
+        /* 打字机光标 */
+        .typing-cursor::after { content: '|'; animation: blink 1s step-end infinite; color: #8b5cf6; margin-left: 4px; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+        /* AI 结果框 */
+        .ai-result-box {
+            background-color: rgba(15, 23, 42, 0.6); border-left: 4px solid #8b5cf6;
+            padding: 1rem; border-radius: 0 8px 8px 0; margin-bottom: 1rem;
+            animation: fadeIn 0.5s ease-out; border: 1px solid rgba(139, 92, 246, 0.2);
+        }
+        .ai-result-box h4 { font-weight: 700; color: #c4b5fd; margin-bottom: 0.5rem; display: flex; align-items: center; }
+        .ai-result-box p { font-size: 0.9rem; color: #e2e8f0; white-space: pre-wrap; line-height: 1.6; }
+
+        /* 滚动动画 */
+        .scroll-animate { opacity: 0; transition: opacity 0.8s ease-out, transform 0.8s ease-out; transform: translateY(30px); }
+        .scroll-animate.is-visible { opacity: 1; transform: translateY(0); }
+
+        /* 自定义光标 */
+        .cursor-dot {
+            position: fixed; width: 8px; height: 8px; background-color: #8b5cf6; border-radius: 50%;
+            left: 0; top: 0; transform: translate(-50%, -50%); pointer-events: none; z-index: 9999; 
+            transition: transform 0.05s linear; box-shadow: 0 0 10px #8b5cf6;
+        }
+        .cursor-outline {
+            position: fixed; width: 40px; height: 40px; border: 1.5px solid rgba(139, 92, 246, 0.6); border-radius: 50%;
+            left: 0; top: 0; transform: translate(-50%, -50%); pointer-events: none; z-index: 9998; 
+            transition: all 0.15s ease-out;
+        }
+        .cursor-dot.hover { transform: translate(-50%, -50%) scale(1.5); background-color: #fff; }
+        .cursor-outline.hover { transform: translate(-50%, -50%) scale(1.5); border-color: #fff; background-color: rgba(255,255,255,0.1); }
+    </style>
+</head>
+<body class="text-slate-300 font-inter relative overflow-x-hidden selection:bg-primary-500 selection:text-white">
+
+    <!-- 顶部阅读进度条 -->
+    <div id="scroll-progress"></div>
+
+    <!-- 自定义光标 -->
+    <div class="cursor-dot" id="cursor-dot"></div>
+    <div class="cursor-outline" id="cursor-outline"></div>
+
+    <!-- 鼠标聚光灯 -->
+    <div id="spotlight-effect"></div>
+
+    <!-- 神经网络粒子背景 (Canvas) -->
+    <canvas id="neural-canvas"></canvas>
+
+    <!-- 极光背景 (Aurora) -->
+    <div class="aurora-container">
+        <div class="aurora-blob purple"></div>
+        <div class="aurora-blob cyan"></div>
+    </div>
+
+    <!-- 桌面端侧边栏 -->
+    <aside class="hidden md:block w-64 h-screen fixed top-0 left-0 bg-slate-900/90 backdrop-blur-xl border-r border-slate-800 p-8 flex flex-col shadow-2xl z-20">
+        <div class="text-center mb-8">
+            <div class="relative inline-block group">
+                <div class="absolute -inset-1 bg-gradient-to-r from-primary-600 to-cyan-600 rounded-full blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-tilt"></div>
+                <img src="https://placehold.co/120x120/8b5cf6/ffffff?text=Avatar&font=inter" 
+                     alt="个人头像" 
+                     class="relative w-24 h-24 rounded-full mx-auto mb-4 border-2 border-slate-700 object-cover animate-pulse-glow">
+            </div>
+            <h1 class="text-2xl font-bold text-white mt-4" data-i18n-key="profile.name">Your Name</h1>
+            <p class="text-sm text-primary-400" data-i18n-key="profile.title">Robotics & AI Researcher</p>
+        </div>
+        
+        <nav class="flex-grow">
+            <ul class="space-y-2" id="desktop-nav">
+                <li><a href="#home" class="nav-link group flex items-center py-3 px-4 rounded-lg hover:bg-slate-800/50 transition-all duration-300">
+                    <i data-lucide="home" class="w-5 h-5 mr-3 text-slate-400 group-hover:text-primary-400 transition-colors"></i>
+                    <span class="font-medium" data-i18n-key="nav.home">Home</span>
+                </a></li>
+                <li><a href="#research" class="nav-link group flex items-center py-3 px-4 rounded-lg hover:bg-slate-800/50 transition-all duration-300">
+                    <i data-lucide="flask-conical" class="w-5 h-5 mr-3 text-slate-400 group-hover:text-primary-400 transition-colors"></i>
+                    <span class="font-medium" data-i18n-key="nav.research">Research</span>
+                </a></li>
+                <li><a href="#journey" class="nav-link group flex items-center py-3 px-4 rounded-lg hover:bg-slate-800/50 transition-all duration-300">
+                    <i data-lucide="milestone" class="w-5 h-5 mr-3 text-slate-400 group-hover:text-primary-400 transition-colors"></i>
+                    <span class="font-medium" data-i18n-key="nav.journey">Journey</span>
+                </a></li>
+                <li><a href="#blog" class="nav-link group flex items-center py-3 px-4 rounded-lg hover:bg-slate-800/50 transition-all duration-300">
+                    <i data-lucide="pen-square" class="w-5 h-5 mr-3 text-slate-400 group-hover:text-primary-400 transition-colors"></i>
+                    <span class="font-medium" data-i18n-key="nav.blog">Blog</span>
+                </a></li>
+                 <li><a href="#contact" class="nav-link group flex items-center py-3 px-4 rounded-lg hover:bg-slate-800/50 transition-all duration-300">
+                    <i data-lucide="send" class="w-5 h-5 mr-3 text-slate-400 group-hover:text-primary-400 transition-colors"></i>
+                    <span class="font-medium" data-i18n-key="nav.contact">Contact</span>
+                </a></li>
+            </ul>
+        </nav>
+        
+        <div class="flex justify-center space-x-2 mb-6" id="lang-switcher-desktop">
+            <button class="lang-btn active" data-lang="en">EN</button>
+            <button class="lang-btn" data-lang="zh">中</button>
+            <button class="lang-btn" data-lang="de">DE</button>
+        </div>
+
+        <div class="flex justify-center space-x-6">
+            <!-- 普通悬停效果 -->
+            <a href="#" class="social-link text-slate-500 hover:text-primary-400" title="GitHub"><i data-lucide="github" class="w-6 h-6"></i></a>
+            <a href="#" class="social-link text-slate-500 hover:text-primary-400" title="LinkedIn"><i data-lucide="linkedin" class="w-6 h-6"></i></a>
+            <a href="#" class="social-link text-slate-500 hover:text-primary-400" title="Google Scholar"><i data-lucide="graduation-cap" class="w-6 h-6"></i></a>
+            <a href="mailto:your.email@example.com" class="social-link text-slate-500 hover:text-primary-400" title="Email"><i data-lucide="mail" class="w-6 h-6"></i></a>
+        </div>
+    </aside>
+
+    <!-- 移动端导航 -->
+    <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-slate-900/90 backdrop-blur-lg border-t border-slate-700 shadow-2xl z-50">
+        <ul class="flex justify-around items-center h-16" id="mobile-nav">
+            <li><a href="#home" class="mobile-nav-link flex flex-col items-center text-slate-400 p-2"><i data-lucide="home" class="w-6 h-6"></i><span class="text-xs" data-i18n-key="nav.home.mobile">Home</span></a></li>
+            <li><a href="#research" class="mobile-nav-link flex flex-col items-center text-slate-400 p-2"><i data-lucide="flask-conical" class="w-6 h-6"></i><span class="text-xs" data-i18n-key="nav.research.mobile">Research</span></a></li>
+            <li><a href="#journey" class="mobile-nav-link flex flex-col items-center text-slate-400 p-2"><i data-lucide="milestone" class="w-6 h-6"></i><span class="text-xs" data-i18n-key="nav.journey.mobile">Journey</span></a></li>
+            <li><a href="#blog" class="mobile-nav-link flex flex-col items-center text-slate-400 p-2"><i data-lucide="pen-square" class="w-6 h-6"></i><span class="text-xs" data-i18n-key="nav.blog.mobile">Blog</span></a></li>
+             <li><a href="#contact" class="mobile-nav-link flex flex-col items-center text-slate-400 p-2"><i data-lucide="send" class="w-6 h-6"></i><span class="text-xs" data-i18n-key="nav.contact.mobile">Contact</span></a></li>
+        </ul>
+    </nav>
+    
+    <!-- 主内容区域 -->
+    <main class="md:ml-64 p-6 md:p-12 pb-24 md:pb-12 relative z-10">
+        
+        <div class="md:hidden flex justify-end space-x-2 mb-6" id="lang-switcher-mobile">
+            <button class="lang-btn active" data-lang="en">EN</button>
+            <button class="lang-btn" data-lang="zh">中</button>
+            <button class="lang-btn" data-lang="de">DE</button>
+        </div>
+
+        <!-- 区域1: 英雄/主页 -->
+        <section id="home" class="min-h-screen flex items-center scroll-mt-16 relative">
+            <div class="scroll-animate w-full">
+                <!-- 黑客解密风标题 -->
+                <h1 class="text-4xl md:text-6xl font-extrabold text-white mb-4">
+                    <span data-i18n-key="hero.greeting">Hello, I'm</span> 
+                    <!-- 添加了 id 和 data-value 用于 JS 动画 -->
+                    <span id="hacker-name" class="text-transparent bg-clip-text bg-gradient-to-r from-primary-400 to-cyan-400 cursor-pointer font-mono" data-value="Your Name" data-i18n-key="hero.name">Your Name</span>
+                </h1>
+                <p class="text-xl md:text-2xl text-slate-300 max-w-3xl mb-8 leading-relaxed">
+                    <span class="typing-text" data-i18n-key="hero.typing_prefix">I am a </span>
+                    <span id="typewriter" class="text-primary-400 font-bold typing-cursor font-mono"></span>
+                </p>
+                <div class="flex flex-wrap gap-3 mb-8">
+                    <span class="bg-slate-800/50 backdrop-blur-md border border-slate-700 text-primary-300 text-sm font-medium px-4 py-2 rounded-full shadow-md flex items-center transition-all hover:bg-primary-900/30 hover:border-primary-500/50 hover:text-primary-200 hover:scale-105 cursor-none"><i data-lucide="bot" class="w-4 h-4 mr-2"></i> <span data-i18n-key="keywords.robotics">Robotics</span></span>
+                    <span class="bg-slate-800/50 backdrop-blur-md border border-slate-700 text-primary-300 text-sm font-medium px-4 py-2 rounded-full shadow-md flex items-center transition-all hover:bg-primary-900/30 hover:border-primary-500/50 hover:text-primary-200 hover:scale-105 cursor-none"><i data-lucide="brain-circuit" class="w-4 h-4 mr-2"></i> <span data-i18n-key="keywords.rl">Reinforcement Learning</span></span>
+                    <span class="bg-slate-800/50 backdrop-blur-md border border-slate-700 text-primary-300 text-sm font-medium px-4 py-2 rounded-full shadow-md transition-all hover:bg-primary-900/30 hover:border-primary-500/50 hover:text-primary-200 hover:scale-105 cursor-none">SLAM</span>
+                    <span class="bg-slate-800/50 backdrop-blur-md border border-slate-700 text-primary-300 text-sm font-medium px-4 py-2 rounded-full shadow-md transition-all hover:bg-primary-900/30 hover:border-primary-500/50 hover:text-primary-200 hover:scale-105 cursor-none">ROS</span>
+                    <span class="bg-slate-800/50 backdrop-blur-md border border-slate-700 text-primary-300 text-sm font-medium px-4 py-2 rounded-full shadow-md transition-all hover:bg-primary-900/30 hover:border-primary-500/50 hover:text-primary-200 hover:scale-105 cursor-none">PyTorch</span>
+                </div>
+                <div class="flex gap-4">
+                    <a href="your_cv.pdf" class="bg-slate-700/80 backdrop-blur border border-slate-600 text-white font-semibold px-6 py-3 rounded-lg shadow-lg hover:bg-primary-600 hover:border-primary-500 transition-all duration-300 flex items-center hover:shadow-[0_0_20px_theme(colors.primary.500)] group">
+                        <i data-lucide="file-text" class="w-5 h-5 mr-2 group-hover:animate-bounce"></i> <span data-i18n-key="hero.button.cv">View My CV</span>
+                    </a>
+                    <a href="#contact" class="bg-slate-700/80 backdrop-blur border border-slate-600 text-white font-semibold px-6 py-3 rounded-lg shadow-lg hover:bg-primary-600 hover:border-primary-500 transition-all duration-300 flex items-center hover:shadow-[0_0_20px_theme(colors.primary.500)] group">
+                        <i data-lucide="mail" class="w-5 h-5 mr-2 group-hover:animate-bounce"></i> <span data-i18n-key="hero.button.contact">Contact Me</span>
+                    </a>
+                </div>
+            </div>
+            <a href="#research" class="absolute bottom-10 left-1/2 -translate-x-1/2 text-slate-500 hover:text-primary-400 transition-colors animate-bounce-slow">
+                <i data-lucide="chevron-down" class="w-8 h-8"></i>
+            </a>
+        </section>
+
+        <!-- 区域2: 精选研究 -->
+        <section id="research" class="py-24 scroll-mt-16">
+            <!-- 回归静态高对比渐变标题 -->
+            <h2 class="text-3xl md:text-4xl font-black text-white mb-12 scroll-animate 
+                       bg-gradient-to-r from-white to-primary-400 bg-clip-text text-transparent
+                       drop-shadow-[0_0_15px_rgba(139,92,246,0.5)]">
+                <span class="text-primary-400">//</span> <span data-i18n-key="research.title">Featured Research</span>
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- 研究卡片 1 -->
+                <div class="rounded-xl shadow-2xl overflow-hidden card-interactive scroll-animate" style="transition-delay: 100ms;">
+                    <img src="https://placehold.co/600x400/1e293b/8b5cf6?text=SLAM+Visualization&font=inter" alt="研究项目封面" class="w-full h-48 object-cover">
+                    <div class="p-6">
+                        <p class="text-sm text-primary-400 mb-1 font-mono" data-i18n-key="research.item1.meta">IEEE/CVF (ICCV) @ 2024</p>
+                        <h3 class="text-xl font-bold text-white mb-3" data-i18n-key="research.item1.title">Real-time SLAM Algorithm for Autonomous Drones</h3>
+                        <p class="text-slate-400 mb-4 text-sm" data-i18n-key="research.item1.desc">A lightweight, robust Visual-Inertial SLAM framework designed for compute-constrained aerial robots.</p>
+                        <div class="ai-result-box hidden" data-ai-result="item1"><h4 data-i18n-key="common.ai_result_title">✨ AI Analysis Result</h4><p class="ai-result-text"></p></div>
+                        <div class="flex flex-wrap gap-3">
+                            <a href="#" class="text-sm bg-slate-700 text-slate-300 px-3 py-1 rounded-full hover:bg-slate-600 hover:shadow-[0_0_8px_theme(colors.slate.400)] hover:text-white transition-all"><i data-lucide="file-text" class="w-4 h-4 inline-block mr-1"></i> PDF</a>
+                            <a href="#" class="text-sm bg-slate-700 text-slate-300 px-3 py-1 rounded-full hover:bg-slate-600 hover:shadow-[0_0_8px_theme(colors.slate.400)] hover:text-white transition-all"><i data-lucide="github" class="w-4 h-4 inline-block mr-1"></i> <span data-i18n-key="common.code">Code</span></a>
+                            <a href="#" class="text-sm bg-slate-700 text-slate-300 px-3 py-1 rounded-full hover:bg-slate-600 hover:shadow-[0_0_8px_theme(colors.slate.400)] hover:text-white transition-all"><i data-lucide="youtube" class="w-4 h-4 inline-block mr-1"></i> <span data-i18n-key="common.video">Video</span></a>
+                            <button class="text-sm bg-slate-700 text-slate-300 px-3 py-1 rounded-full hover:bg-slate-600 hover:shadow-[0_0_8px_theme(colors.slate.400)] hover:text-white transition-all flex items-center" onclick="handleAiExplain(event, 'item1')" data-ai-button="item1"><i data-lucide="sparkles" class="w-4 h-4 inline-block mr-1"></i><span class="ai-button-text" data-i18n-key="common.ai_explain">✨ AI Explain</span></button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 研究卡片 2 -->
+                <div class="rounded-xl shadow-2xl overflow-hidden card-interactive scroll-animate" style="transition-delay: 200ms;">
+                    <img src="https://placehold.co/600x400/1e293b/8b5cf6?text=Robotic+Grasping&font=inter" alt="研究项目封面" class="w-full h-48 object-cover">
+                    <div class="p-6">
+                        <p class="text-sm text-primary-400 mb-1 font-mono" data-i18n-key="research.item2.meta">IEEE (IROS) @ 2023</p>
+                        <h3 class="text-xl font-bold text-white mb-3" data-i18n-key="research.item2.title">Reinforcement Learning for Underactuated Grasping</h3>
+                        <p class="text-slate-400 mb-4 text-sm" data-i18n-key="research.item2.desc">Combining simulation and real-world data to train a policy for stable grasping of unknown objects.</p>
+                        <div class="ai-result-box hidden" data-ai-result="item2"><h4 data-i18n-key="common.ai_result_title">✨ AI Analysis Result</h4><p class="ai-result-text"></p></div>
+                        <div class="flex flex-wrap gap-3">
+                            <a href="#" class="text-sm bg-slate-700 text-slate-300 px-3 py-1 rounded-full hover:bg-slate-600 hover:shadow-[0_0_8px_theme(colors.slate.400)] hover:text-white transition-all"><i data-lucide="file-text" class="w-4 h-4 inline-block mr-1"></i> PDF</a>
+                            <a href="#" class="text-sm bg-slate-700 text-slate-300 px-3 py-1 rounded-full hover:bg-slate-600 hover:shadow-[0_0_8px_theme(colors.slate.400)] hover:text-white transition-all"><i data-lucide="github" class="w-4 h-4 inline-block mr-1"></i> <span data-i18n-key="common.code">Code</span></a>
+                            <button class="text-sm bg-slate-700 text-slate-300 px-3 py-1 rounded-full hover:bg-slate-600 hover:shadow-[0_0_8px_theme(colors.slate.400)] hover:text-white transition-all flex items-center" onclick="handleAiExplain(event, 'item2')" data-ai-button="item2"><i data-lucide="sparkles" class="w-4 h-4 inline-block mr-1"></i><span class="ai-button-text" data-i18n-key="common.ai_explain">✨ AI Explain</span></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+             <a href="#" class="inline-block text-primary-400 font-medium mt-8 group scroll-animate" style="transition-delay: 300ms;">
+                <span data-i18n-key="research.seeall">See All Research</span>
+                <i data-lucide="arrow-right" class="w-4 h-4 inline-block ml-1 group-hover:translate-x-1 transition-transform"></i>
+            </a>
+        </section>
+
+        <!-- 区域3: 学术历程 -->
+        <section id="journey" class="py-24 scroll-mt-16">
+            <h2 class="text-3xl md:text-4xl font-black text-white mb-12 scroll-animate
+                       bg-gradient-to-r from-white to-primary-400 bg-clip-text text-transparent
+                       drop-shadow-[0_0_15px_rgba(139,92,246,0.5)]">
+                <span class="text-primary-400">//</span> <span data-i18n-key="journey.title">Academic Journey</span>
+            </h2>
+            <div class="max-w-2xl mx-auto">
+                <div class="relative">
+                    <div class="timeline-item scroll-animate" style="transition-delay: 100ms;">
+                        <div class="timeline-dot"></div>
+                        <p class="text-sm text-primary-400 mb-1 font-medium" data-i18n-key="journey.item1.date">2022 - 2025 (Expected)</p>
+                        <h3 class="text-xl font-bold text-white mb-2" data-i18n-key="journey.item1.degree">M.Sc. in Robotics</h3>
+                        <p class="text-lg text-slate-300 mb-2" data-i18n-key="journey.item1.school">[Your University], [City]</p>
+                        <p class="text-slate-400 text-sm" data-i18n-key="journey.item1.desc">GPA: 3.9/4.0 | Focus: Autonomous Systems, Reinforcement Learning.</p>
+                    </div>
+                    <div class="timeline-item scroll-animate" style="transition-delay: 200ms;">
+                        <div class="timeline-dot"></div>
+                        <p class="text-sm text-primary-400 mb-1 font-medium" data-i18n-key="journey.item2.date">Summer 2024</p>
+                        <h3 class="text-xl font-bold text-white mb-2" data-i18n-key="journey.item2.degree">Robotics Research Intern</h3>
+                        <p class="text-lg text-slate-300 mb-2" data-i18n-key="journey.item2.school">[AI Research Lab/Company]</p>
+                        <p class="text-slate-400 text-sm" data-i18n-key="journey.item2.desc">Developed motion planning algorithms for quadruped robots under the supervision of [Advisor/Team].</p>
+                    </div>
+                    <div class="timeline-item scroll-animate" style="transition-delay: 300ms;">
+                        <div class="timeline-dot"></div>
+                        <p class="text-sm text-primary-400 mb-1 font-medium" data-i18n-key="journey.item3.date">2018 - 2022</p>
+                        <h3 class="text-xl font-bold text-white mb-2" data-i18n-key="journey.item3.degree">B.Eng. in Automation</h3>
+                        <p class="text-lg text-slate-300 mb-2" data-i18n-key="journey.item3.school">[Your Undergrad University], [City]</p>
+                        <p class="text-slate-400 text-sm" data-i18n-key="journey.item3.desc">GPA: 3.8/4.0 | Honors: [e.g., National Scholarship, Robotics Competition 1st Prize]</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- 区域4: 所思所想 (博客) -->
+        <section id="blog" class="py-24 scroll-mt-16">
+            <h2 class="text-3xl md:text-4xl font-black text-white mb-12 scroll-animate
+                       bg-gradient-to-r from-white to-primary-400 bg-clip-text text-transparent
+                       drop-shadow-[0_0_15px_rgba(139,92,246,0.5)]">
+                <span class="text-primary-400">//</span> <span data-i18n-key="blog.title">Thoughts & Notes</span>
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <a href="#" class="block rounded-xl shadow-2xl overflow-hidden card-interactive scroll-animate" style="transition-delay: 100ms;">
+                    <img src="https://placehold.co/600x300/1e293b/8b5cf6?text=Humanoid+Robots&font=inter" alt="博客封面" class="w-full h-40 object-cover">
+                    <div class="p-6">
+                        <p class="text-sm text-slate-400 mb-2 font-mono" data-i18n-key="blog.item1.date">Nov 10, 2025</p>
+                        <h3 class="text-lg font-bold text-white mb-3" data-i18n-key="blog.item1.title">Future of Humanoids: From Atlas to Digit</h3>
+                        <p class="text-slate-400 text-sm mb-4" data-i18n-key="blog.item1.desc">With recent progress from Boston Dynamics and Agility Robotics, how far are we from general-purpose humanoids?</p>
+                        <div class="flex flex-wrap gap-2"><span class="text-xs bg-slate-700 text-primary-300 px-2 py-1 rounded" data-i18n-key="blog.item1.tag1">Humanoids</span><span class="text-xs bg-slate-700 text-primary-300 px-2 py-1 rounded" data-i18n-key="blog.item1.tag2">Control</span></div>
+                    </div>
+                </a>
+                <a href="#" class="block rounded-xl shadow-2xl overflow-hidden card-interactive scroll-animate" style="transition-delay: 200ms;">
+                    <img src="https://placehold.co/600x300/1e293b/8b5cf6?text=ROS+2+Middleware&font=inter" alt="博客封面" class="w-full h-40 object-cover">
+                    <div class="p-6">
+                        <p class="text-sm text-slate-400 mb-2 font-mono" data-i18n-key="blog.item2.date">Oct 28, 2025</p>
+                        <h3 class="text-lg font-bold text-white mb-3" data-i18n-key="blog.item2.title">ROS 2 vs. ROS 1: Why Migration is Necessary</h3>
+                        <p class="text-slate-400 text-sm mb-4" data-i18n-key="blog.item2.desc">ROS 1 is approaching EOL. Discussing the new features of ROS 2 (DDS, Real-time) and their importance for modern robotics.</p>
+                        <div class="flex flex-wrap gap-2"><span class="text-xs bg-slate-700 text-primary-300 px-2 py-1 rounded">ROS</span><span class="text-xs bg-slate-700 text-primary-300 px-2 py-1 rounded" data-i18n-key="blog.item2.tag2">Middleware</span></div>
+                    </div>
+                </a>
+                <a href="#" class="block rounded-xl shadow-2xl overflow-hidden card-interactive scroll-animate" style="transition-delay: 300ms;">
+                    <img src="https://placehold.co/600x300/1e293b/8b5cf6?text=Sim-to-Real&font=inter" alt="博客封面" class="w-full h-40 object-cover">
+                    <div class="p-6">
+                        <p class="text-sm text-slate-400 mb-2 font-mono" data-i18n-key="blog.item3.date">Sep 15, 2025</p>
+                        <h3 class="text-lg font-bold text-white mb-3" data-i18n-key="blog.item3.title">The Sim-to-Real Gap: Challenges & Opportunities</h3>
+                        <p class="text-slate-400 text-sm mb-4" data-i18n-key="blog.item3.desc">Models trained in simulation often fail on real hardware. Reviewing recent methods in domain randomization and system ID.</p>
+                        <div class="flex flex-wrap gap-2"><span class="text-xs bg-slate-700 text-primary-300 px-2 py-1 rounded">Sim-to-Real</span><span class="text-xs bg-slate-700 text-primary-300 px-2 py-1 rounded" data-i18n-key="blog.item3.tag2">RL</span></div>
+                    </div>
+                </a>
+            </div>
+        </section>
+
+        <!-- 区域5: 联系方式 -->
+        <section id="contact" class="py-24 scroll-mt-16">
+            <h2 class="text-3xl md:text-4xl font-black text-white mb-8 text-center scroll-animate
+                       bg-gradient-to-r from-white to-primary-400 bg-clip-text text-transparent
+                       drop-shadow-[0_0_15px_rgba(139,92,246,0.5)]" 
+                       data-i18n-key="contact.title">
+                Get In Touch
+            </h2>
+            <p class="text-lg text-slate-300 max-w-2xl mx-auto text-center mb-10 scroll-animate" style="transition-delay: 100ms;" data-i18n-key="contact.desc">
+                I am currently seeking Ph.D. opportunities for Fall 2026 entry. If my research interests align with yours, please feel free to contact me via email.
+            </p>
+            <div class="flex justify-center scroll-animate" style="transition-delay: 200ms;">
+                <a href="mailto:your.email@example.com" 
+                   class="bg-primary-500 text-white font-semibold px-8 py-4 rounded-lg shadow-lg 
+                          hover:bg-primary-600 transition-all duration-300 flex items-center text-lg
+                          hover:shadow-[0_0_30px_theme(colors.primary.500)] group">
+                    <i data-lucide="mail" class="w-6 h-6 mr-3 group-hover:animate-pulse"></i>
+                    your.email@example.com
+                </a>
+            </div>
+        </section>
+
+        <footer class="text-center py-8 border-t border-slate-800 relative z-10 bg-slate-900/50 backdrop-blur">
+            <p class="text-slate-500 text-sm" data-i18n-key="footer.copyright">© 2025 Your Name. All rights reserved.</p>
+            <p class="text-slate-600 text-xs mt-1" data-i18n-key="footer.builtWith">Built with Tailwind CSS & Lucide Icons</p>
+        </footer>
+
+    </main>
+
+    <script>
+        // --- 翻译数据 ---
+        const translations = {
+            'zh': {
+                'page.title': '你的名字 | 机器人与AI研究者', 'profile.name': '你的名字', 'profile.title': '机器人与AI研究者',
+                'nav.home': '主页', 'nav.research': '精选研究', 'nav.journey': '学术历程', 'nav.blog': '所思所想', 'nav.contact': '联系我',
+                'nav.home.mobile': '主页', 'nav.research.mobile': '研究', 'nav.journey.mobile': '历程', 'nav.blog.mobile': '博客', 'nav.contact.mobile': '联系',
+                'hero.greeting': '你好，我是', 'hero.name': '你的名字', 'hero.typing_prefix': '我是一名 ',
+                'hero.typing_words': '机器人研究者,AI 爱好者,SLAM 开发者', 
+                'hero.intro1': '一名 机器人与人工智能 研究者，硕士毕业于 [你的学校]。', 'hero.field': '机器人与人工智能', 'hero.school': '[你的学校]',
+                'hero.intro2': '目前正在积极寻求 [自主系统] 领域的博士（Ph.D.）机会。', 'hero.goal': '[自主系统]',
+                'keywords.robotics': '机器人学', 'keywords.rl': '强化学习',
+                'hero.button.cv': '查看我的CV', 'hero.button.contact': '联系我',
+                'common.code': '代码', 'common.video': '视频', 'common.ai_explain': '✨ 智能解析', 'common.ai_loading': '解析中...', 'common.ai_result_title': '✨ AI 解析结果', 'common.ai_error': '解析失败，请重试。',
+                'research.title': '精选研究',
+                'research.item1.meta': 'IEEE/CVF (ICCV) @ 2024', 'research.item1.title': '自主无人机导航的实时SLAM算法', 'research.item1.desc': '提出一种轻量级、高鲁棒性的视觉惯性SLAM框架，专为计算资源受限的空中机器人设计。',
+                'research.item2.meta': 'IEEE (IROS) @ 2023', 'research.item2.title': '基于强化学习的欠驱动机械臂抓取', 'research.item2.desc': '结合模拟器与真实世界数据，使用深度强化学习训练一个策略，以实现对未知物体的稳定抓取。',
+                'research.seeall': '查看所有研究',
+                'journey.title': '学术历程',
+                'journey.item1.date': '2022 - 2025 (预期)', 'journey.item1.degree': '理学硕士, 机器人学', 'journey.item1.school': '[你的学校], [城市]', 'journey.item1.desc': 'GPA: 3.9/4.0 | 研究方向: 自主系统, 强化学习。',
+                'journey.item2.date': '2024 夏', 'journey.item2.degree': '机器人研究实习生', 'journey.item2.school': '[AI研究实验室/公司]', 'journey.item2.desc': '在 [导师/团队] 的指导下，开发用于四足机器人的运动规划算法。',
+                'journey.item3.date': '2018 - 2022', 'journey.item3.degree': '工学学士, 自动化', 'journey.item3.school': '[你的本科学校], [城市]', 'journey.item3.desc': 'GPA: 3.8/4.0 | 荣誉: [例如：国家奖学金, 机器人大赛一等奖]',
+                'blog.title': '所思所想',
+                'blog.item1.date': '2025年11月10日', 'blog.item1.title': '人形机器人的未来：从Atlas到Digit', 'blog.item1.desc': '随着波士顿动力和Agility Robotics的最新进展，我们离通用人形机器人还有多远？', 'blog.item1.tag1': '人形机器人', 'blog.item1.tag2': '控制',
+                'blog.item2.date': '2025年10月28日', 'blog.item2.title': 'ROS 2 vs. ROS 1: 为什么迁移是必要的', 'blog.item2.desc': 'ROS 1 即将停止支持。探讨 ROS 2 的新特性 (DDS, 实时性) 及其对现代机器人系统的重要性。', 'blog.item2.tag2': '中间件',
+                'blog.item3.date': '2025年9月15日', 'blog.item3.title': 'Sim-to-Real 鸿沟：挑战与机遇', 'blog.item3.desc': '在模拟中训练的模型在部署到真实硬件时总会遇到问题。梳理领域随机化和系统辨识的最新方法。', 'blog.item3.tag2': 'RL',
+                'contact.title': '与我联系', 'contact.desc': '我目前正在寻找2026年秋季入学的博士项目机会。如果我的研究兴趣与您契合，欢迎随时通过邮件与我联系。',
+                'footer.copyright': '© 2025 你的名字. All rights reserved.', 'footer.builtWith': '使用 Tailwind CSS & Lucide Icons 构建'
+            },
+            'en': {
+                'page.title': 'Your Name | Robotics & AI Researcher', 'profile.name': 'Your Name', 'profile.title': 'Robotics & AI Researcher',
+                'nav.home': 'Home', 'nav.research': 'Research', 'nav.journey': 'Journey', 'nav.blog': 'Blog', 'nav.contact': 'Contact',
+                'nav.home.mobile': 'Home', 'nav.research.mobile': 'Research', 'nav.journey.mobile': 'Journey', 'nav.blog.mobile': 'Blog', 'nav.contact.mobile': 'Contact',
+                'hero.greeting': "Hello, I'm", 'hero.name': 'Your Name', 'hero.typing_prefix': 'I am a ',
+                'hero.typing_words': 'Robotics Researcher,AI Enthusiast,SLAM Developer',
+                'hero.intro1': 'A Robotics & AI researcher, graduated with M.Sc. from [Your University].', 'hero.field': 'Robotics & AI', 'hero.school': '[Your University]',
+                'hero.intro2': 'Currently seeking Ph.D. opportunities in [Autonomous Systems] for Fall 2026.', 'hero.goal': '[Autonomous Systems]',
+                'keywords.robotics': 'Robotics', 'keywords.rl': 'Reinforcement Learning',
+                'hero.button.cv': 'View My CV', 'hero.button.contact': 'Contact Me',
+                'common.code': 'Code', 'common.video': 'Video', 'common.ai_explain': '✨ AI Explain', 'common.ai_loading': 'Analyzing...', 'common.ai_result_title': '✨ AI Analysis Result', 'common.ai_error': 'Failed to analyze. Please try again.',
+                'research.title': 'Featured Research',
+                'research.item1.meta': 'IEEE/CVF (ICCV) @ 2024', 'research.item1.title': 'Real-time SLAM Algorithm for Autonomous Drones', 'research.item1.desc': 'A lightweight, robust Visual-Inertial SLAM framework designed for compute-constrained aerial robots.',
+                'research.item2.meta': 'IEEE (IROS) @ 2023', 'research.item2.title': 'Reinforcement Learning for Underactuated Grasping', 'research.item2.desc': 'Combining simulation and real-world data to train a policy for stable grasping of unknown objects.',
+                'research.seeall': 'See All Research',
+                'journey.title': 'Academic Journey',
+                'journey.item1.date': '2022 - 2025 (Expected)', 'journey.item1.degree': 'M.Sc. in Robotics', 'journey.item1.school': '[Your University], [City]', 'journey.item1.desc': 'GPA: 3.9/4.0 | Focus: Autonomous Systems, Reinforcement Learning.',
+                'journey.item2.date': 'Summer 2024', 'journey.item2.degree': 'Robotics Research Intern', 'journey.item2.school': '[AI Research Lab/Company]', 'journey.item2.desc': 'Developed motion planning algorithms for quadruped robots under the supervision of [Advisor/Team].',
+                'journey.item3.date': '2018 - 2022', 'journey.item3.degree': 'B.Eng. in Automation', 'journey.item3.school': '[Your Undergrad University], [City]', 'journey.item3.desc': 'GPA: 3.8/4.0 | Honors: [e.g., National Scholarship, Robotics Competition 1st Prize]',
+                'blog.title': 'Thoughts & Notes',
+                'blog.item1.date': 'Nov 10, 2025', 'blog.item1.title': 'Future of Humanoids: From Atlas to Digit', 'blog.item1.desc': 'With recent progress from Boston Dynamics and Agility Robotics, how far are we from general-purpose humanoids?', 'blog.item1.tag1': 'Humanoids', 'blog.item1.tag2': 'Control',
+                'blog.item2.date': 'Oct 28, 2025', 'blog.item2.title': 'ROS 2 vs. ROS 1: Why Migration is Necessary', 'blog.item2.desc': 'ROS 1 is approaching EOL. Discussing the new features of ROS 2 (DDS, Real-time) and their importance for modern robotics.', 'blog.item2.tag2': 'Middleware',
+                'blog.item3.date': 'Sep 15, 2025', 'blog.item3.title': 'The Sim-to-Real Gap: Challenges & Opportunities', 'blog.item3.desc': 'Models trained in simulation often fail on real hardware. Reviewing recent methods in domain randomization and system ID.', 'blog.item3.tag2': 'RL',
+                'contact.title': 'Get In Touch', 'contact.desc': 'I am currently seeking Ph.D. opportunities for Fall 2026 entry. If my research interests align with yours, please feel free to contact me via email.',
+                'footer.copyright': '© 2025 Your Name. All rights reserved.', 'footer.builtWith': 'Built with Tailwind CSS & Lucide Icons'
+            },
+            'de': {
+                'page.title': 'Dein Name | Robotik & KI-Forscher', 'profile.name': 'Dein Name', 'profile.title': 'Robotik & KI-Forscher',
+                'nav.home': 'Startseite', 'nav.research': 'Forschung', 'nav.journey': 'Werdegang', 'nav.blog': 'Blog', 'nav.contact': 'Kontakt',
+                'nav.home.mobile': 'Start', 'nav.research.mobile': 'Forschung', 'nav.journey.mobile': 'Werdegang', 'nav.blog.mobile': 'Blog', 'nav.contact.mobile': 'Kontakt',
+                'hero.greeting': 'Hallo, ich bin', 'hero.name': 'Dein Name', 'hero.typing_prefix': 'Ich bin ein ',
+                'hero.typing_words': 'Robotik-Forscher,KI-Enthusiast,SLAM-Entwickler',
+                'hero.intro1': 'Ein Forscher im Bereich Robotik & KI, Master-Absolvent der [Deine Universität].', 'hero.field': 'Robotik & KI', 'hero.school': '[Deine Universität]',
+                'hero.intro2': 'Derzeit auf der Suche nach einer Doktorandenstelle (Ph.D.) im Bereich [Autonome Systeme] für Herbst 2026.', 'hero.goal': '[Autonome Systeme]',
+                'keywords.robotics': 'Robotik', 'keywords.rl': 'Verstärkendes Lernen',
+                'hero.button.cv': 'Lebenslauf (CV)', 'hero.button.contact': 'Kontaktieren',
+                'common.code': 'Code', 'common.video': 'Video', 'common.ai_explain': '✨ KI-Erklärung', 'common.ai_loading': 'Analysiere...', 'common.ai_result_title': '✨ KI-Analyse-Ergebnis', 'common.ai_error': 'Analyse fehlgeschlagen. Bitte erneut versuchen.',
+                'research.title': 'Ausgewählte Forschung',
+                'research.item1.meta': 'IEEE/CVF (ICCV) @ 2024', 'research.item1.title': 'Echtzeit-SLAM-Algorithmus für autonome Drohnen', 'research.item1.desc': 'Ein leichtgewichtiges, robustes Visual-Inertial SLAM-Framework, das für rechenleistungsbeschränkte Flugroboter entwickelt wurde.',
+                'research.item2.meta': 'IEEE (IROS) @ 2023', 'research.item2.title': 'Verstärkendes Lernen für unteraktuierte Greifsysteme', 'research.item2.desc': 'Kombination von Simulation und realen Daten, um eine Strategie für das stabile Greifen unbekannter Objekte zu trainieren.',
+                'research.seeall': 'Alle Forschungen ansehen',
+                'journey.title': 'Akademischer Werdegang',
+                'journey.item1.date': '2022 - 2025 (erwartet)', 'journey.item1.degree': 'M.Sc. in Robotik', 'journey.item1.school': '[Deine Universität], [Stadt]', 'journey.item1.desc': 'Note: 1.1 | Fokus: Autonome Systeme, Verstärkendes Lernen.',
+                'journey.item2.date': 'Sommer 2024', 'journey.item2.degree': 'Forschungspraktikant Robotik', 'journey.item2.school': '[KI-Forschungslabor/Firma]', 'journey.item2.desc': 'Entwicklung von Bewegungsplanungsalgorithmen für vierbeinige Roboter unter Betreuung von [Betreuer/Team].',
+                'journey.item3.date': '2018 - 2022', 'journey.item3.degree': 'B.Eng. in Automatisierungstechnik', 'journey.item3.school': '[Deine Bachelor-Universität], [Stadt]', 'journey.item3.desc': 'Note: 1.2 | Ehrungen: [z.B. Deutschlandstipendium, Robotik-Wettbewerb 1. Platz]',
+                'blog.title': 'Gedanken & Notizen',
+                'blog.item1.date': '10. Nov 2025', 'blog.item1.title': 'Zukunft der Humanoiden: Von Atlas zu Digit', 'blog.item1.desc': 'Wie weit sind wir mit den jüngsten Fortschritten von Boston Dynamics und Agility Robotics von universellen Humanoiden entfernt?', 'blog.item1.tag1': 'Humanoide', 'blog.item1.tag2': 'Steuerung',
+                'blog.item2.date': '28. Okt 2025', 'blog.item2.title': 'ROS 2 vs. ROS 1: Warum die Migration notwendig ist', 'blog.item2.desc': 'ROS 1 nähert sich dem EOL. Diskussion der neuen Funktionen von ROS 2 (DDS, Echtzeit) und ihrer Bedeutung für moderne Robotik.', 'blog.item2.tag2': 'Middleware',
+                'blog.item3.date': '15. Sep 2025', 'blog.item3.title': 'Die Sim-to-Real-Lücke: Herausforderungen & Chancen', 'blog.item3.desc': 'In Simulation trainierte Modelle scheitern oft auf realer Hardware. Ein Überblick über aktuelle Methoden der Domänenrandomisierung.', 'blog.item3.tag2': 'RL',
+                'contact.title': 'Kontakt aufnehmen', 'contact.desc': 'Ich suche derzeit nach einer Doktorandenstelle für Herbst 2026. Wenn meine Forschungsinteressen mit Ihren übereinstimmen, zögern Sie nicht, mich per E-Mail zu kontaktieren.',
+                'footer.copyright': '© 2025 Dein Name. Alle Rechte vorbehalten.', 'footer.builtWith': 'Erstellt mit Tailwind CSS & Lucide Icons'
+            }
+        };
+
+        lucide.createIcons();
+
+        // --- 鼠标聚光灯效果 ---
+        document.addEventListener('mousemove', (e) => {
+            document.documentElement.style.setProperty('--x', e.clientX + 'px');
+            document.documentElement.style.setProperty('--y', e.clientY + 'px');
+        });
+        
+        // --- 阅读进度条 ---
+        window.addEventListener('scroll', () => {
+            const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+            const scrollHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            const scrolled = (scrollTop / scrollHeight) * 100;
+            document.getElementById('scroll-progress').style.width = scrolled + "%";
+        });
+
+        // --- 打字机效果 (Subtitle) ---
+        let typeWriterInterval;
+        function initTypeWriter(lang) {
+            const textElement = document.getElementById('typewriter');
+            if (!textElement) return;
+            
+            if (typeWriterInterval) clearInterval(typeWriterInterval);
+            
+            const words = translations[lang]['hero.typing_words'].split(',');
+            let wordIndex = 0, charIndex = 0, isDeleting = false;
+
+            function type() {
+                const currentWord = words[wordIndex];
+                let typeSpeed = 100;
+                
+                if (isDeleting) {
+                    textElement.textContent = currentWord.substring(0, charIndex - 1);
+                    charIndex--; typeSpeed = 50;
+                } else {
+                    textElement.textContent = currentWord.substring(0, charIndex + 1);
+                    charIndex++; typeSpeed = 100;
+                }
+
+                if (!isDeleting && charIndex === currentWord.length) {
+                    isDeleting = true; typeSpeed = 2000;
+                } else if (isDeleting && charIndex === 0) {
+                    isDeleting = false; wordIndex = (wordIndex + 1) % words.length; typeSpeed = 500;
+                }
+                typeWriterInterval = setTimeout(type, typeSpeed);
+            }
+            type();
+        }
+
+        // --- 黑客解密效果 (Name) ---
+        const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        document.querySelector("#hacker-name").onmouseover = event => {
+            let iteration = 0;
+            let interval = null;
+            
+            clearInterval(interval);
+            
+            interval = setInterval(() => {
+                event.target.innerText = event.target.innerText
+                .split("")
+                .map((letter, index) => {
+                    if(index < iteration) {
+                        return event.target.dataset.value[index];
+                    }
+                    return letters[Math.floor(Math.random() * 26)]
+                })
+                .join("");
+                
+                if(iteration >= event.target.dataset.value.length){ 
+                    clearInterval(interval);
+                }
+                
+                iteration += 1 / 3;
+            }, 30);
+        };
+
+        // --- 神经网络粒子效果 (Canvas) ---
+        function initNeuralParticles() {
+            const canvas = document.getElementById('neural-canvas');
+            const ctx = canvas.getContext('2d');
+            let width, height, particles = [];
+
+            function resize() {
+                width = window.innerWidth; height = window.innerHeight;
+                canvas.width = width; canvas.height = height;
+                createParticles();
+            }
+
+            function createParticles() {
+                particles = [];
+                const numParticles = Math.min(width / 15, 60); // 粒子数量
+                for (let i = 0; i < numParticles; i++) {
+                    particles.push({
+                        x: Math.random() * width, y: Math.random() * height,
+                        vx: (Math.random() - 0.5) * 0.5, vy: (Math.random() - 0.5) * 0.5,
+                        size: Math.random() * 2 + 1
+                    });
+                }
+            }
+
+            function animateParticles() {
+                ctx.clearRect(0, 0, width, height);
+                ctx.fillStyle = 'rgba(139, 92, 246, 0.5)'; // 粒子颜色 (violet)
+                ctx.strokeStyle = 'rgba(139, 92, 246, 0.15)'; // 连线颜色
+
+                for (let i = 0; i < particles.length; i++) {
+                    let p = particles[i];
+                    p.x += p.vx; p.y += p.vy;
+
+                    // 边界反弹
+                    if (p.x < 0 || p.x > width) p.vx *= -1;
+                    if (p.y < 0 || p.y > height) p.vy *= -1;
+
+                    // 绘制粒子
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // 绘制连线 (神经网络)
+                    for (let j = i + 1; j < particles.length; j++) {
+                        let p2 = particles[j];
+                        let dist = Math.sqrt((p.x - p2.x)**2 + (p.y - p2.y)**2);
+                        if (dist < 150) {
+                            ctx.beginPath();
+                            ctx.lineWidth = 1 - dist / 150;
+                            ctx.moveTo(p.x, p.y);
+                            ctx.lineTo(p2.x, p2.y);
+                            ctx.stroke();
+                        }
+                    }
+                }
+                requestAnimationFrame(animateParticles);
+            }
+
+            window.addEventListener('resize', resize);
+            resize();
+            animateParticles();
+        }
+
+        // --- Gemini API ---
+        let currentLang = 'zh'; 
+        const langMap = { 'zh': 'Chinese', 'en': 'English', 'de': 'German' };
+
+        async function retryWithBackoff(fn, retries = 3, delay = 1000) {
+            try { return await fn(); } catch (error) {
+                if (retries > 0) { await new Promise(resolve => setTimeout(resolve, delay)); return retryWithBackoff(fn, retries - 1, delay * 2); }
+                else { throw error; }
+            }
+        }
+
+        async function callGeminiAPI(systemPrompt, userQuery) {
+            const apiKey = ""; 
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+            const payload = { contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] } };
+            const fn = async () => {
+                const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                return response.json();
+            };
+            return retryWithBackoff(fn);
+        }
+
+        async function handleAiExplain(event, itemId) {
+            event.preventDefault();
+            const card = event.target.closest('.card-interactive');
+            const button = card.querySelector(`[data-ai-button="${itemId}"]`);
+            const buttonText = button.querySelector('.ai-button-text');
+            const resultBox = card.querySelector(`[data-ai-result="${itemId}"]`);
+            const resultTextEl = resultBox.querySelector('.ai-result-text');
+            const originalButtonText = translations[currentLang]['common.ai_explain'];
+
+            try {
+                button.disabled = true; buttonText.textContent = translations[currentLang]['common.ai_loading'];
+                resultTextEl.textContent = ''; resultBox.classList.add('hidden');
+                const title = card.querySelector('h3').textContent;
+                const description = card.querySelector('p.text-slate-400').textContent;
+                const targetLanguage = langMap[currentLang] || 'English';
+                const systemPrompt = `You are a helpful science communicator. Your task is to explain complex academic research topics in simple, easy-to-understand terms for a layperson (like a high school student or someone from a different field). Respond in ${targetLanguage}. Keep it concise, friendly, and engaging. DO NOT use markdown.`;
+                const userQuery = `Please explain this research paper simply. Title: "${title}" Description: "${description}"`;
+                const result = await callGeminiAPI(systemPrompt, userQuery);
+                const generatedText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (generatedText) { resultTextEl.textContent = generatedText; resultBox.classList.remove('hidden'); } else { throw new Error('No text generated.'); }
+            } catch (error) {
+                console.error('Error calling Gemini API:', error);
+                resultTextEl.textContent = translations[currentLang]['common.ai_error']; resultBox.classList.remove('hidden');
+            } finally {
+                button.disabled = false; buttonText.textContent = originalButtonText; lucide.createIcons(); 
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initNeuralParticles(); // 初始化粒子背景
+
+            const sections = document.querySelectorAll('section[id]');
+            const navLinksDesktop = document.querySelectorAll('#desktop-nav .nav-link');
+            const navLinksMobile = document.querySelectorAll('#mobile-nav .mobile-nav-link');
+            const animatedElements = document.querySelectorAll('.scroll-animate');
+
+            const navObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const id = entry.target.getAttribute('id');
+                        navLinksDesktop.forEach(link => link.classList.toggle('active', link.getAttribute('href') === `#${id}`));
+                        navLinksMobile.forEach(link => link.classList.toggle('active', link.getAttribute('href') === `#${id}`));
+                    }
+                });
+            }, { rootMargin: '-30% 0px -70% 0px' });
+            sections.forEach(section => navObserver.observe(section));
+
+            const animationObserver = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => { if (entry.isIntersecting) entry.target.classList.add('is-visible'); else entry.target.classList.remove('is-visible'); });
+            }, { threshold: 0.1 });
+            animatedElements.forEach(el => animationObserver.observe(el));
+
+            const langSwitchers = document.querySelectorAll('#lang-switcher-desktop, #lang-switcher-mobile');
+            const allLangButtons = document.querySelectorAll('.lang-btn[data-lang]');
+            const translatableElements = document.querySelectorAll('[data-i18n-key]');
+
+            function changeLanguage(lang) {
+                if (!translations[lang]) { console.warn(`Language ${lang} not found.`); return; }
+                currentLang = lang;
+                translatableElements.forEach(el => {
+                    const key = el.dataset.i18nKey; const translation = translations[lang][key];
+                    if (translation) {
+                        if (key === 'hero.name') el.setAttribute('data-value', translation); // 更新解密风文字
+                        el.textContent = translation;
+                    }
+                    else if (key === 'page.title') document.title = translations[lang][key];
+                });
+                document.documentElement.lang = lang === 'zh' ? 'zh-CN' : lang;
+                allLangButtons.forEach(btn => btn.classList.toggle('active', btn.dataset.lang === lang));
+                localStorage.setItem('preferredLanguage', lang);
+                initTypeWriter(lang);
+            }
+
+            langSwitchers.forEach(switcher => {
+                switcher.addEventListener('click', (e) => { if (e.target.matches('.lang-btn[data-lang]')) changeLanguage(e.target.dataset.lang); });
+            });
+
+            const savedLang = localStorage.getItem('preferredLanguage');
+            let initialLang = 'en'; 
+            if (savedLang && translations[savedLang]) initialLang = savedLang;
+            changeLanguage(initialLang);
+
+            // 自定义光标逻辑
+            const cursorDot = document.getElementById('cursor-dot');
+            const cursorOutline = document.getElementById('cursor-outline');
+            if (window.matchMedia('(pointer: fine)').matches) {
+                document.addEventListener('mousemove', (e) => {
+                    cursorDot.style.left = e.clientX + 'px'; cursorDot.style.top = e.clientY + 'px';
+                    cursorOutline.style.left = e.clientX + 'px'; cursorOutline.style.top = e.clientY + 'px';
+                });
+                const hoverTargets = document.querySelectorAll('a, button, .card-interactive, .lang-btn');
+                hoverTargets.forEach(el => {
+                    el.addEventListener('mouseenter', () => { cursorDot.classList.add('hover'); cursorOutline.classList.add('hover'); });
+                    el.addEventListener('mouseleave', () => { cursorDot.classList.remove('hover'); cursorOutline.classList.remove('hover'); });
+                });
+            } else {
+                cursorDot.style.display = 'none'; cursorOutline.style.display = 'none';
+                document.body.style.cursor = 'auto'; document.querySelectorAll('a, button').forEach(el => el.style.cursor = 'pointer');
+            }
+        });
+    </script>
+</body>
+</html>
