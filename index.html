@@ -5,8 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- 标题将由JS动态设置 -->
     <title data-i18n-key="page.title">Your Name | Robotics & AI Researcher</title>
-    <!-- 引入 Tailwind CSS -->
+    
+    <!-- 引入 Tailwind CSS (开发模式CDN) -->
     <script src="https://cdn.tailwindcss.com"></script>
+    
     <!-- Tailwind 配置 -->
     <script>
         tailwind.config = {
@@ -51,18 +53,31 @@
 
     <style>
         /* --- 基础样式 --- */
-        body { background-color: #0f172a; cursor: none; overflow-x: hidden; }
+        body { 
+            background-color: #0f172a; 
+            /* 移除默认的 cursor: none，改为通过类控制，防止JS挂掉时鼠标消失 */
+            overflow-x: hidden; 
+        }
+        
+        /* 只有当 JS 激活该类时才隐藏光标 */
+        body.custom-cursor-active {
+            cursor: none;
+        }
+        body.custom-cursor-active a, 
+        body.custom-cursor-active button {
+            cursor: none;
+        }
+
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #1e293b; }
         ::-webkit-scrollbar-thumb { background: #8b5cf6; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #a78bfa; }
-        a, button { cursor: none; } /* 隐藏默认手型 */
 
         /* --- 顶部进度条 --- */
         #scroll-progress {
             position: fixed; top: 0; left: 0; width: 0%; height: 3px;
             background: linear-gradient(90deg, #8b5cf6, #06b6d4);
-            z-index: 9999; transition: width 0.1s ease-out;
+            z-index: 9999; transition: width 0.1s linear; /* 改为 linear 配合 RAF 更顺滑 */
             box-shadow: 0 0 10px rgba(139, 92, 246, 0.8);
         }
 
@@ -83,7 +98,9 @@
         /* --- 鼠标聚光灯 (Layer 2) --- */
         #spotlight-effect {
             position: fixed; inset: 0; z-index: 2; pointer-events: none;
-            background: radial-gradient(600px circle at var(--x) var(--y), rgba(167, 139, 250, 0.08), transparent 80%);
+            /* 默认位置放在屏幕外，防止初始加载时左上角出现光斑 */
+            background: radial-gradient(600px circle at var(--x, -1000px) var(--y, -1000px), rgba(167, 139, 250, 0.08), transparent 80%);
+            will-change: background; /* 性能优化 */
         }
 
         /* --- 组件样式 --- */
@@ -97,7 +114,7 @@
         .nav-link.active { color: #c4b5fd; background-color: #334155; border-right: 4px solid #8b5cf6; }
         .mobile-nav-link.active { color: #8b5cf6; }
 
-        /* 简单稳健的社交图标悬停 */
+        /* 社交图标悬停 */
         .social-link { transition: transform 0.2s ease, color 0.2s ease; display: inline-block; }
         .social-link:hover { transform: scale(1.2); color: #a78bfa; }
         
@@ -152,17 +169,65 @@
         .scroll-animate { opacity: 0; transition: opacity 0.8s ease-out, transform 0.8s ease-out; transform: translateY(30px); }
         .scroll-animate.is-visible { opacity: 1; transform: translateY(0); }
 
+        /* --- 液态流光文字特效 (Liquid Flow) --- */
+        .liquid-text {
+            /* 1. 默认状态：符合网站配色的静态渐变 (紫色 -> 青色) */
+            background: linear-gradient(to right, #a78bfa, #22d3ee);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            
+            position: relative;
+            display: inline-block;
+            transition: all 0.3s ease; /* 添加平滑过渡 */
+            
+            /* 默认发光较弱 */
+            text-shadow: 0 0 15px rgba(139, 92, 246, 0.2);
+        }
+
+        /* 2. 悬停状态：触发液态流光动画 */
+        .liquid-text:hover {
+            background: linear-gradient(
+                -45deg, 
+                #8b5cf6, /* Violet */
+                #06b6d4, /* Cyan */
+                #f472b6, /* Pink */
+                #22d3ee, /* Light Cyan */
+                #8b5cf6  /* Loop back */
+            );
+            background-size: 300%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            
+            /* 只有 Hover 时播放动画 */
+            animation: liquid-flow 4s linear infinite;
+            
+            /* Hover 时增强发光 */
+            text-shadow: 0 0 40px rgba(139, 92, 246, 0.6);
+        }
+
+        @keyframes liquid-flow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
         /* 自定义光标 */
         .cursor-dot {
             position: fixed; width: 8px; height: 8px; background-color: #8b5cf6; border-radius: 50%;
             left: 0; top: 0; transform: translate(-50%, -50%); pointer-events: none; z-index: 9999; 
             transition: transform 0.05s linear; box-shadow: 0 0 10px #8b5cf6;
+            opacity: 0; /* 默认隐藏，JS激活后显示 */
         }
         .cursor-outline {
             position: fixed; width: 40px; height: 40px; border: 1.5px solid rgba(139, 92, 246, 0.6); border-radius: 50%;
             left: 0; top: 0; transform: translate(-50%, -50%); pointer-events: none; z-index: 9998; 
-            transition: all 0.15s ease-out;
+            transition: transform 0.15s ease-out, width 0.2s, height 0.2s, background-color 0.2s;
+            opacity: 0;
         }
+        /* JS 添加 .active 类后显示 */
+        .cursor-dot.active, .cursor-outline.active { opacity: 1; }
+
         .cursor-dot.hover { transform: translate(-50%, -50%) scale(1.5); background-color: #fff; }
         .cursor-outline.hover { transform: translate(-50%, -50%) scale(1.5); border-color: #fff; background-color: rgba(255,255,255,0.1); }
     </style>
@@ -234,15 +299,15 @@
 
         <div class="flex justify-center space-x-6">
             <!-- 普通悬停效果 -->
-            <a href="#" class="social-link text-slate-500 hover:text-primary-400" title="GitHub"><i data-lucide="github" class="w-6 h-6"></i></a>
-            <a href="#" class="social-link text-slate-500 hover:text-primary-400" title="LinkedIn"><i data-lucide="linkedin" class="w-6 h-6"></i></a>
-            <a href="#" class="social-link text-slate-500 hover:text-primary-400" title="Google Scholar"><i data-lucide="graduation-cap" class="w-6 h-6"></i></a>
-            <a href="mailto:your.email@example.com" class="social-link text-slate-500 hover:text-primary-400" title="Email"><i data-lucide="mail" class="w-6 h-6"></i></a>
+            <a href="#" class="social-link text-slate-500 hover:text-primary-400" title="GitHub" aria-label="GitHub"><i data-lucide="github" class="w-6 h-6"></i></a>
+            <a href="#" class="social-link text-slate-500 hover:text-primary-400" title="LinkedIn" aria-label="LinkedIn"><i data-lucide="linkedin" class="w-6 h-6"></i></a>
+            <a href="#" class="social-link text-slate-500 hover:text-primary-400" title="Google Scholar" aria-label="Google Scholar"><i data-lucide="graduation-cap" class="w-6 h-6"></i></a>
+            <a href="mailto:your.email@example.com" class="social-link text-slate-500 hover:text-primary-400" title="Email" aria-label="Email"><i data-lucide="mail" class="w-6 h-6"></i></a>
         </div>
     </aside>
 
     <!-- 移动端导航 -->
-    <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-slate-900/90 backdrop-blur-lg border-t border-slate-700 shadow-2xl z-50">
+    <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-slate-900/90 backdrop-blur-lg border-t border-slate-700 shadow-2xl z-50 safe-area-pb">
         <ul class="flex justify-around items-center h-16" id="mobile-nav">
             <li><a href="#home" class="mobile-nav-link flex flex-col items-center text-slate-400 p-2"><i data-lucide="home" class="w-6 h-6"></i><span class="text-xs" data-i18n-key="nav.home.mobile">Home</span></a></li>
             <li><a href="#research" class="mobile-nav-link flex flex-col items-center text-slate-400 p-2"><i data-lucide="flask-conical" class="w-6 h-6"></i><span class="text-xs" data-i18n-key="nav.research.mobile">Research</span></a></li>
@@ -264,11 +329,11 @@
         <!-- 区域1: 英雄/主页 -->
         <section id="home" class="min-h-screen flex items-center scroll-mt-16 relative">
             <div class="scroll-animate w-full">
-                <!-- 黑客解密风标题 -->
+                <!-- 标题 -->
                 <h1 class="text-4xl md:text-6xl font-extrabold text-white mb-4">
                     <span data-i18n-key="hero.greeting">Hello, I'm</span> 
-                    <!-- 添加了 id 和 data-value 用于 JS 动画 -->
-                    <span id="hacker-name" class="text-transparent bg-clip-text bg-gradient-to-r from-primary-400 to-cyan-400 cursor-pointer font-mono" data-value="Your Name" data-i18n-key="hero.name">Your Name</span>
+                    <!-- 修改为液态流光效果 (Liquid Flow Effect) -->
+                    <span class="liquid-text font-mono pb-2" data-i18n-key="hero.name">Your Name</span>
                 </h1>
                 <p class="text-xl md:text-2xl text-slate-300 max-w-3xl mb-8 leading-relaxed">
                     <span class="typing-text" data-i18n-key="hero.typing_prefix">I am a </span>
@@ -471,7 +536,7 @@
                 'blog.item2.date': '2025年10月28日', 'blog.item2.title': 'ROS 2 vs. ROS 1: 为什么迁移是必要的', 'blog.item2.desc': 'ROS 1 即将停止支持。探讨 ROS 2 的新特性 (DDS, 实时性) 及其对现代机器人系统的重要性。', 'blog.item2.tag2': '中间件',
                 'blog.item3.date': '2025年9月15日', 'blog.item3.title': 'Sim-to-Real 鸿沟：挑战与机遇', 'blog.item3.desc': '在模拟中训练的模型在部署到真实硬件时总会遇到问题。梳理领域随机化和系统辨识的最新方法。', 'blog.item3.tag2': 'RL',
                 'contact.title': '与我联系', 'contact.desc': '我目前正在寻找2026年秋季入学的博士项目机会。如果我的研究兴趣与您契合，欢迎随时通过邮件与我联系。',
-                'footer.copyright': '© 2025 你的名字. All rights reserved.', 'footer.builtWith': '使用 Tailwind CSS & Lucide Icons 构建'
+                'footer.copyright': '© 2025 Your Name. All rights reserved.', 'footer.builtWith': '使用 Tailwind CSS & Lucide Icons 构建'
             },
             'en': {
                 'page.title': 'Your Name | Robotics & AI Researcher', 'profile.name': 'Your Name', 'profile.title': 'Robotics & AI Researcher',
@@ -529,19 +594,54 @@
 
         lucide.createIcons();
 
-        // --- 鼠标聚光灯效果 ---
-        document.addEventListener('mousemove', (e) => {
-            document.documentElement.style.setProperty('--x', e.clientX + 'px');
-            document.documentElement.style.setProperty('--y', e.clientY + 'px');
-        });
+        // --- 性能优化：RequestAnimationFrame 节流 ---
+        let tickingScroll = false;
+        let tickingMouse = false;
         
-        // --- 阅读进度条 ---
+        // 鼠标聚光灯效果
+        document.addEventListener('mousemove', (e) => {
+            if (!tickingMouse) {
+                window.requestAnimationFrame(() => {
+                    const x = e.clientX + 'px';
+                    const y = e.clientY + 'px';
+                    
+                    // 聚光灯
+                    const spotlight = document.getElementById('spotlight-effect');
+                    if (spotlight) {
+                        spotlight.style.setProperty('--x', x);
+                        spotlight.style.setProperty('--y', y);
+                    }
+                    
+                    // 自定义光标
+                    // 注意：在JS未就绪或CSS类未激活前，这些元素是隐藏的
+                    const dot = document.getElementById('cursor-dot');
+                    const outline = document.getElementById('cursor-outline');
+                    if (dot && outline) {
+                        dot.style.left = x; 
+                        dot.style.top = y;
+                        outline.style.left = x; 
+                        outline.style.top = y;
+                    }
+                    
+                    tickingMouse = false;
+                });
+                tickingMouse = true;
+            }
+        }, { passive: true });
+        
+        // 阅读进度条
         window.addEventListener('scroll', () => {
-            const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
-            const scrollHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
-            const scrolled = (scrollTop / scrollHeight) * 100;
-            document.getElementById('scroll-progress').style.width = scrolled + "%";
-        });
+            if (!tickingScroll) {
+                window.requestAnimationFrame(() => {
+                    const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+                    const scrollHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+                    const scrolled = (scrollTop / scrollHeight) * 100;
+                    document.getElementById('scroll-progress').style.width = scrolled + "%";
+                    tickingScroll = false;
+                });
+                tickingScroll = true;
+            }
+        }, { passive: true });
 
         // --- 打字机效果 (Subtitle) ---
         let typeWriterInterval;
@@ -549,7 +649,7 @@
             const textElement = document.getElementById('typewriter');
             if (!textElement) return;
             
-            if (typeWriterInterval) clearInterval(typeWriterInterval);
+            if (typeWriterInterval) clearTimeout(typeWriterInterval); // Fix: clear existing timeout
             
             const words = translations[lang]['hero.typing_words'].split(',');
             let wordIndex = 0, charIndex = 0, isDeleting = false;
@@ -576,38 +676,27 @@
             type();
         }
 
-        // --- 黑客解密效果 (Name) ---
-        const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-        document.querySelector("#hacker-name").onmouseover = event => {
-            let iteration = 0;
-            let interval = null;
-            
-            clearInterval(interval);
-            
-            interval = setInterval(() => {
-                event.target.innerText = event.target.innerText
-                .split("")
-                .map((letter, index) => {
-                    if(index < iteration) {
-                        return event.target.dataset.value[index];
-                    }
-                    return letters[Math.floor(Math.random() * 26)]
-                })
-                .join("");
-                
-                if(iteration >= event.target.dataset.value.length){ 
-                    clearInterval(interval);
-                }
-                
-                iteration += 1 / 3;
-            }, 30);
-        };
-
         // --- 神经网络粒子效果 (Canvas) ---
         function initNeuralParticles() {
             const canvas = document.getElementById('neural-canvas');
+            if (!canvas) return;
             const ctx = canvas.getContext('2d');
             let width, height, particles = [];
+
+            // 新增：定义鼠标位置对象和连接半径
+            let mouse = { x: null, y: null, radius: 150 };
+
+            // 新增：监听鼠标移动更新位置
+            window.addEventListener('mousemove', (event) => {
+                mouse.x = event.clientX;
+                mouse.y = event.clientY;
+            });
+
+            // 新增：鼠标移出窗口时清除位置
+            window.addEventListener('mouseout', () => {
+                mouse.x = null;
+                mouse.y = null;
+            });
 
             function resize() {
                 width = window.innerWidth; height = window.innerHeight;
@@ -617,7 +706,12 @@
 
             function createParticles() {
                 particles = [];
-                const numParticles = Math.min(width / 15, 60); // 粒子数量
+                // 移动端优化：减少粒子数量
+                const isMobile = width < 768;
+                const divider = isMobile ? 40 : 15; 
+                const maxParticles = isMobile ? 30 : 60;
+                
+                const numParticles = Math.min(width / divider, maxParticles); 
                 for (let i = 0; i < numParticles; i++) {
                     particles.push({
                         x: Math.random() * width, y: Math.random() * height,
@@ -629,31 +723,46 @@
 
             function animateParticles() {
                 ctx.clearRect(0, 0, width, height);
-                ctx.fillStyle = 'rgba(139, 92, 246, 0.5)'; // 粒子颜色 (violet)
-                ctx.strokeStyle = 'rgba(139, 92, 246, 0.15)'; // 连线颜色
-
+                
                 for (let i = 0; i < particles.length; i++) {
                     let p = particles[i];
                     p.x += p.vx; p.y += p.vy;
 
-                    // 边界反弹
                     if (p.x < 0 || p.x > width) p.vx *= -1;
                     if (p.y < 0 || p.y > height) p.vy *= -1;
 
                     // 绘制粒子
                     ctx.beginPath();
+                    ctx.fillStyle = 'rgba(139, 92, 246, 0.5)'; 
                     ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
                     ctx.fill();
 
-                    // 绘制连线 (神经网络)
+                    // 绘制粒子之间的连线
                     for (let j = i + 1; j < particles.length; j++) {
                         let p2 = particles[j];
                         let dist = Math.sqrt((p.x - p2.x)**2 + (p.y - p2.y)**2);
                         if (dist < 150) {
                             ctx.beginPath();
+                            ctx.strokeStyle = `rgba(139, 92, 246, ${0.15 * (1 - dist/150)})`; // 透明度随距离衰减
                             ctx.lineWidth = 1 - dist / 150;
                             ctx.moveTo(p.x, p.y);
                             ctx.lineTo(p2.x, p2.y);
+                            ctx.stroke();
+                        }
+                    }
+
+                    // 新增：绘制粒子与鼠标的连线
+                    if (mouse.x != null) {
+                        let dx = p.x - mouse.x;
+                        let dy = p.y - mouse.y;
+                        let distance = Math.sqrt(dx * dx + dy * dy);
+                        if (distance < mouse.radius) {
+                            ctx.beginPath();
+                            // 距离越近，线条越不透明
+                            ctx.strokeStyle = `rgba(139, 92, 246, ${1 - distance / mouse.radius})`; 
+                            ctx.lineWidth = 1;
+                            ctx.moveTo(p.x, p.y);
+                            ctx.lineTo(mouse.x, mouse.y);
                             ctx.stroke();
                         }
                     }
@@ -678,7 +787,24 @@
         }
 
         async function callGeminiAPI(systemPrompt, userQuery) {
-            const apiKey = ""; 
+            const apiKey = ""; // ⚠️ 注意：这里需要填入有效的 API Key
+            
+            // --- Demo 模式下的模拟响应 (防止因为没有Key导致演示失败) ---
+            if (!apiKey) {
+                console.warn("No API Key provided. Returning mock response.");
+                await new Promise(resolve => setTimeout(resolve, 1500)); // 模拟网络延迟
+                return {
+                    candidates: [{
+                        content: {
+                            parts: [{
+                                text: `(Demo Mode: Missing API Key)\n\nBased on the title and description, this research appears to focus on optimizing SLAM (Simultaneous Localization and Mapping) for drones. In simple terms, it's like giving the drone a better brain to map its surroundings and know where it is, even with limited computing power. This is crucial for drones to fly safely without crashing.`
+                            }]
+                        }
+                    }]
+                };
+            }
+            // -------------------------------------------------------
+
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
             const payload = { contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] } };
             const fn = async () => {
@@ -751,7 +877,7 @@
                 translatableElements.forEach(el => {
                     const key = el.dataset.i18nKey; const translation = translations[lang][key];
                     if (translation) {
-                        if (key === 'hero.name') el.setAttribute('data-value', translation); // 更新解密风文字
+                        // 移除了 hero.name 的 data-value 更新逻辑，因为不再需要黑客特效
                         el.textContent = translation;
                     }
                     else if (key === 'page.title') document.title = translations[lang][key];
@@ -771,22 +897,24 @@
             if (savedLang && translations[savedLang]) initialLang = savedLang;
             changeLanguage(initialLang);
 
-            // 自定义光标逻辑
+            // 自定义光标逻辑 (安全优化)
             const cursorDot = document.getElementById('cursor-dot');
             const cursorOutline = document.getElementById('cursor-outline');
+            
+            // 检测是否为精确指针设备（鼠标）
             if (window.matchMedia('(pointer: fine)').matches) {
-                document.addEventListener('mousemove', (e) => {
-                    cursorDot.style.left = e.clientX + 'px'; cursorDot.style.top = e.clientY + 'px';
-                    cursorOutline.style.left = e.clientX + 'px'; cursorOutline.style.top = e.clientY + 'px';
-                });
+                // 只有 JS 成功加载，才添加 active 类显示自定义光标并隐藏默认光标
+                document.body.classList.add('custom-cursor-active');
+                cursorDot.classList.add('active');
+                cursorOutline.classList.add('active');
+                
                 const hoverTargets = document.querySelectorAll('a, button, .card-interactive, .lang-btn');
                 hoverTargets.forEach(el => {
                     el.addEventListener('mouseenter', () => { cursorDot.classList.add('hover'); cursorOutline.classList.add('hover'); });
                     el.addEventListener('mouseleave', () => { cursorDot.classList.remove('hover'); cursorOutline.classList.remove('hover'); });
                 });
             } else {
-                cursorDot.style.display = 'none'; cursorOutline.style.display = 'none';
-                document.body.style.cursor = 'auto'; document.querySelectorAll('a, button').forEach(el => el.style.cursor = 'pointer');
+                // 触摸屏设备不需要做任何事，CSS默认是隐藏的
             }
         });
     </script>
