@@ -506,7 +506,7 @@
                 <div
                     class="absolute -inset-1 bg-gradient-to-r from-primary-600 to-cyan-600 rounded-full blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-tilt">
                 </div>
-                <img src="profile.png" alt="个人头像"
+                <img src="assets/images/home/profile.png" alt="个人头像"
                     class="relative w-24 h-24 rounded-full mx-auto mb-4 border-2 border-slate-700 object-cover animate-pulse-glow">
             </div>
             <h1 class="text-2xl font-bold text-white mt-4" data-i18n-key="profile.name">李泽其</h1>
@@ -548,25 +548,27 @@
             </ul>
         </nav>
 
-        <div class="flex justify-center space-x-2 mb-6" id="lang-switcher-desktop">
-            <button class="lang-btn active" data-lang="en">EN</button>
-            <button class="lang-btn" data-lang="zh">中</button>
-            <button class="lang-btn" data-lang="de">DE</button>
-        </div>
+        <div class="mt-auto pt-8">
+            <div class="flex justify-center space-x-2 mb-6" id="lang-switcher-desktop">
+                <button class="lang-btn active" data-lang="en">EN</button>
+                <button class="lang-btn" data-lang="zh">中</button>
+                <button class="lang-btn" data-lang="de">DE</button>
+            </div>
 
-        <div class="flex justify-center space-x-6">
-            <!-- 普通悬停效果 -->
-            <a href="https://github.com/Drapandiger" target="_blank"
-                class="social-link text-slate-500 hover:text-primary-400" title="GitHub" aria-label="GitHub"><i
-                    data-lucide="github" class="w-6 h-6"></i></a>
-            <a href="https://www.linkedin.com/in/zeqi-li-tum" target="_blank"
-                class="social-link text-slate-500 hover:text-primary-400" title="LinkedIn" aria-label="LinkedIn"><i
-                    data-lucide="linkedin" class="w-6 h-6"></i></a>
-            <a href="https://scholar.google.com/citations?hl=en&user=IiApesIAAAAJ" target="_blank"
-                class="social-link text-slate-500 hover:text-primary-400" title="Google Scholar"
-                aria-label="Google Scholar"><i data-lucide="graduation-cap" class="w-6 h-6"></i></a>
-            <a href="mailto:drapandiger@gmail.com" class="social-link text-slate-500 hover:text-primary-400"
-                title="Email" aria-label="Email"><i data-lucide="mail" class="w-6 h-6"></i></a>
+            <div class="flex justify-center space-x-6">
+                <!-- 普通悬停效果 -->
+                <a href="https://github.com/Drapandiger" target="_blank"
+                    class="social-link text-slate-500 hover:text-primary-400" title="GitHub" aria-label="GitHub"><i
+                        data-lucide="github" class="w-6 h-6"></i></a>
+                <a href="https://www.linkedin.com/in/zeqi-li-tum" target="_blank"
+                    class="social-link text-slate-500 hover:text-primary-400" title="LinkedIn" aria-label="LinkedIn"><i
+                        data-lucide="linkedin" class="w-6 h-6"></i></a>
+                <a href="https://scholar.google.com/citations?hl=en&user=IiApesIAAAAJ" target="_blank"
+                    class="social-link text-slate-500 hover:text-primary-400" title="Google Scholar"
+                    aria-label="Google Scholar"><i data-lucide="graduation-cap" class="w-6 h-6"></i></a>
+                <a href="mailto:drapandiger@gmail.com" class="social-link text-slate-500 hover:text-primary-400"
+                    title="Email" aria-label="Email"><i data-lucide="mail" class="w-6 h-6"></i></a>
+            </div>
         </div>
     </aside>
 
@@ -661,17 +663,21 @@
             </h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <!-- 研究卡片 1 -->
-                <div class="rounded-xl shadow-2xl overflow-hidden card-interactive scroll-animate"
+                <div class="rounded-xl shadow-2xl overflow-hidden card-interactive scroll-animate relative"
                     style="transition-delay: 100ms;">
-                    <img src="https://placehold.co/600x400/1e293b/8b5cf6?text=SLAM+Visualization&font=inter"
+                    <!-- Construction Badge -->
+                    <div
+                        class="absolute top-4 right-4 bg-amber-500/90 text-amber-950 text-xs font-bold px-3 py-1 rounded-full shadow-lg z-20 backdrop-blur-sm font-mono tracking-wider flex items-center">
+                        <i data-lucide="construction" class="w-3 h-3 mr-1"></i> Under Construction
+                    </div>
+                    <img src="https://placehold.co/600x400/1e293b/8b5cf6?text=Project+Coming+Soon&font=inter"
                         alt="研究项目封面" class="w-full h-48 object-cover">
                     <div class="p-6">
-                        <p class="text-sm text-primary-400 mb-1 font-mono" data-i18n-key="research.item1.meta">IEEE/CVF
-                            (ICCV) @ 2024</p>
-                        <h3 class="text-xl font-bold text-white mb-3" data-i18n-key="research.item1.title">Real-time
-                            SLAM Algorithm for Autonomous Drones</h3>
-                        <p class="text-slate-400 mb-4 text-sm" data-i18n-key="research.item1.desc">A lightweight, robust
-                            Visual-Inertial SLAM framework designed for compute-constrained aerial robots.</p>
+                        <p class="text-sm text-primary-400 mb-1 font-mono">TBA</p>
+                        <h3 class="text-xl font-bold text-slate-500 mb-3">Project Content Coming Soon</h3>
+                        <p class="text-slate-600 mb-4 text-sm">Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                            Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam.
+                        </p>
                         <div class="ai-result-box hidden" data-ai-result="item1">
                             <h4 data-i18n-key="common.ai_result_title">✨ AI Analysis Result</h4>
                             <p class="ai-result-text"></p>
@@ -699,17 +705,21 @@
                 </div>
 
                 <!-- 研究卡片 2 -->
-                <div class="rounded-xl shadow-2xl overflow-hidden card-interactive scroll-animate"
+                <div class="rounded-xl shadow-2xl overflow-hidden card-interactive scroll-animate relative"
                     style="transition-delay: 200ms;">
-                    <img src="https://placehold.co/600x400/1e293b/8b5cf6?text=Robotic+Grasping&font=inter" alt="研究项目封面"
-                        class="w-full h-48 object-cover">
+                    <!-- Construction Badge -->
+                    <div
+                        class="absolute top-4 right-4 bg-amber-500/90 text-amber-950 text-xs font-bold px-3 py-1 rounded-full shadow-lg z-20 backdrop-blur-sm font-mono tracking-wider flex items-center">
+                        <i data-lucide="construction" class="w-3 h-3 mr-1"></i> Under Construction
+                    </div>
+                    <img src="https://placehold.co/600x400/1e293b/8b5cf6?text=Project+Coming+Soon&font=inter"
+                        alt="研究项目封面" class="w-full h-48 object-cover">
                     <div class="p-6">
-                        <p class="text-sm text-primary-400 mb-1 font-mono" data-i18n-key="research.item2.meta">IEEE
-                            (IROS) @ 2023</p>
-                        <h3 class="text-xl font-bold text-white mb-3" data-i18n-key="research.item2.title">Reinforcement
-                            Learning for Underactuated Grasping</h3>
-                        <p class="text-slate-400 mb-4 text-sm" data-i18n-key="research.item2.desc">Combining simulation
-                            and real-world data to train a policy for stable grasping of unknown objects.</p>
+                        <p class="text-sm text-primary-400 mb-1 font-mono">TBA</p>
+                        <h3 class="text-xl font-bold text-slate-500 mb-3">Project Content Coming Soon</h3>
+                        <p class="text-slate-600 mb-4 text-sm">Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                            Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam.
+                        </p>
                         <div class="ai-result-box hidden" data-ai-result="item2">
                             <h4 data-i18n-key="common.ai_result_title">✨ AI Analysis Result</h4>
                             <p class="ai-result-text"></p>
@@ -751,10 +761,12 @@
                 <!-- 列 1：Education -->
                 <div>
                     <!-- Education Experience -->
-                    <h3 class="text-2xl font-bold text-white mb-8 flex items-center"
-                        data-i18n-key="journey.category.education">
-                        <i data-lucide="graduation-cap" class="w-6 h-6 mr-3 text-primary-400"></i> Education Experience
-                    </h3>
+                    <div class="flex items-center mb-8">
+                        <i data-lucide="graduation-cap" class="w-6 h-6 mr-3 text-primary-400"></i>
+                        <h3 class="text-2xl font-bold text-white" data-i18n-key="journey.category.education">
+                            Education Experience
+                        </h3>
+                    </div>
                     <div class="relative">
                         <!-- Education 1 -->
                         <div class="timeline-item scroll-animate" style="transition-delay: 100ms;">
@@ -798,10 +810,12 @@
                 <!-- 列 2：Research -->
                 <div>
                     <!-- Research Experience -->
-                    <h3 class="text-2xl font-bold text-white mb-8 flex items-center"
-                        data-i18n-key="journey.category.research">
-                        <i data-lucide="flask-conical" class="w-6 h-6 mr-3 text-primary-400"></i> Research Experience
-                    </h3>
+                    <div class="flex items-center mb-8">
+                        <i data-lucide="flask-conical" class="w-6 h-6 mr-3 text-primary-400"></i>
+                        <h3 class="text-2xl font-bold text-white" data-i18n-key="journey.category.research">
+                            Research Experience
+                        </h3>
+                    </div>
                     <div class="relative">
                         <!-- Research Experience 1 -->
                         <div class="timeline-item scroll-animate" style="transition-delay: 400ms;">
@@ -839,10 +853,12 @@
                 <!-- 列 3：Work -->
                 <div>
                     <!-- Work Experience -->
-                    <h3 class="text-2xl font-bold text-white mb-8 flex items-center"
-                        data-i18n-key="journey.category.work">
-                        <i data-lucide="briefcase" class="w-6 h-6 mr-3 text-primary-400"></i> Work Experience
-                    </h3>
+                    <div class="flex items-center mb-8">
+                        <i data-lucide="briefcase" class="w-6 h-6 mr-3 text-primary-400"></i>
+                        <h3 class="text-2xl font-bold text-white" data-i18n-key="journey.category.work">
+                            Work Experience
+                        </h3>
+                    </div>
                     <div class="relative">
                         <!-- Work Experience 1 -->
                         <div class="timeline-item scroll-animate" style="transition-delay: 700ms;">
@@ -871,66 +887,98 @@
 
         <!-- 区域4: 所思所想 (博客) -->
         <section id="blog" class="py-24 scroll-mt-16">
-            <h2 class="text-3xl md:text-4xl font-black text-white mb-12 scroll-animate
+            <h2 class="text-3xl md:text-4xl font-black text-white mb-8 scroll-animate
                        bg-gradient-to-r from-white to-primary-400 bg-clip-text text-transparent
                        drop-shadow-[0_0_15px_rgba(139,92,246,0.5)]">
                 <span class="text-primary-400">//</span> <span data-i18n-key="blog.title">Thoughts & Notes</span>
             </h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <a href="#" class="block rounded-xl shadow-2xl overflow-hidden card-interactive scroll-animate"
-                    style="transition-delay: 100ms;">
-                    <img src="https://placehold.co/600x300/1e293b/8b5cf6?text=Humanoid+Robots&font=inter" alt="博客封面"
-                        class="w-full h-40 object-cover">
-                    <div class="p-6">
-                        <p class="text-sm text-slate-400 mb-2 font-mono" data-i18n-key="blog.item1.date">Nov 10, 2025
-                        </p>
-                        <h3 class="text-lg font-bold text-white mb-3" data-i18n-key="blog.item1.title">Future of
-                            Humanoids: From Atlas to Digit</h3>
-                        <p class="text-slate-400 text-sm mb-4" data-i18n-key="blog.item1.desc">With recent progress from
-                            Boston Dynamics and Agility Robotics, how far are we from general-purpose humanoids?</p>
-                        <div class="flex flex-wrap gap-2"><span
-                                class="text-xs bg-slate-700 text-primary-300 px-2 py-1 rounded"
-                                data-i18n-key="blog.item1.tag1">Humanoids</span><span
-                                class="text-xs bg-slate-700 text-primary-300 px-2 py-1 rounded"
-                                data-i18n-key="blog.item1.tag2">Control</span></div>
-                    </div>
-                </a>
-                <a href="#" class="block rounded-xl shadow-2xl overflow-hidden card-interactive scroll-animate"
-                    style="transition-delay: 200ms;">
-                    <img src="https://placehold.co/600x300/1e293b/8b5cf6?text=ROS+2+Middleware&font=inter" alt="博客封面"
-                        class="w-full h-40 object-cover">
-                    <div class="p-6">
-                        <p class="text-sm text-slate-400 mb-2 font-mono" data-i18n-key="blog.item2.date">Oct 28, 2025
-                        </p>
-                        <h3 class="text-lg font-bold text-white mb-3" data-i18n-key="blog.item2.title">ROS 2 vs. ROS 1:
-                            Why Migration is Necessary</h3>
-                        <p class="text-slate-400 text-sm mb-4" data-i18n-key="blog.item2.desc">ROS 1 is approaching EOL.
-                            Discussing the new features of ROS 2 (DDS, Real-time) and their importance for modern
-                            robotics.</p>
-                        <div class="flex flex-wrap gap-2"><span
-                                class="text-xs bg-slate-700 text-primary-300 px-2 py-1 rounded">ROS</span><span
-                                class="text-xs bg-slate-700 text-primary-300 px-2 py-1 rounded"
-                                data-i18n-key="blog.item2.tag2">Middleware</span></div>
-                    </div>
-                </a>
-                <a href="#" class="block rounded-xl shadow-2xl overflow-hidden card-interactive scroll-animate"
-                    style="transition-delay: 300ms;">
-                    <img src="https://placehold.co/600x300/1e293b/8b5cf6?text=Sim-to-Real&font=inter" alt="博客封面"
-                        class="w-full h-40 object-cover">
-                    <div class="p-6">
-                        <p class="text-sm text-slate-400 mb-2 font-mono" data-i18n-key="blog.item3.date">Sep 15, 2025
-                        </p>
-                        <h3 class="text-lg font-bold text-white mb-3" data-i18n-key="blog.item3.title">The Sim-to-Real
-                            Gap: Challenges & Opportunities</h3>
-                        <p class="text-slate-400 text-sm mb-4" data-i18n-key="blog.item3.desc">Models trained in
-                            simulation often fail on real hardware. Reviewing recent methods in domain randomization and
-                            system ID.</p>
-                        <div class="flex flex-wrap gap-2"><span
-                                class="text-xs bg-slate-700 text-primary-300 px-2 py-1 rounded">Sim-to-Real</span><span
-                                class="text-xs bg-slate-700 text-primary-300 px-2 py-1 rounded"
-                                data-i18n-key="blog.item3.tag2">RL</span></div>
-                    </div>
-                </a>
+
+            <!-- Category: Project Practice -->
+            <div class="mb-16 scroll-animate">
+                <div class="flex items-center mb-6">
+                    <i data-lucide="wrench" class="w-6 h-6 text-primary-400 mr-3"></i>
+                    <h3 class="text-2xl font-bold text-white">Project Practice</h3>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <a href="blog-dodo.html" class="block rounded-xl shadow-2xl overflow-hidden card-interactive"
+                        style="transition-delay: 100ms;">
+                        <img src="assets/images/blog/dodo/dodocover.png" alt="博客封面" class="w-full h-40 object-cover">
+                        <div class="p-6">
+                            <p class="text-sm text-slate-400 mb-2 font-mono" data-i18n-key="blog.item1.date">July 28,
+                                2024
+                            </p>
+                            <h3 class="text-lg font-bold text-white mb-3" data-i18n-key="blog.item1.title">Building
+                                DODO:
+                                Bridging Simulation and Reality in Bird-like Bipedal Robotics</h3>
+                            <p class="text-slate-400 text-sm mb-4" data-i18n-key="blog.item1.desc">Developing a bipedal
+                                robot from scratch: wiring hardware, tuning motors, and bridging MATLAB/Simulink with
+                                real-time TwinCAT 3.</p>
+                            <div class="flex flex-wrap gap-2"><span
+                                    class="text-xs bg-slate-700 text-primary-300 px-2 py-1 rounded"
+                                    data-i18n-key="blog.item1.tag1">BipedalLocomotion</span><span
+                                    class="text-xs bg-slate-700 text-primary-300 px-2 py-1 rounded"
+                                    data-i18n-key="blog.item1.tag2">Simulink</span><span
+                                    class="text-xs bg-slate-700 text-primary-300 px-2 py-1 rounded"
+                                    data-i18n-key="blog.item1.tag3">TwinCAT</span></div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Category: Frontier Exploration -->
+            <div class="mb-8 scroll-animate">
+                <div class="flex items-center mb-6">
+                    <i data-lucide="telescope" class="w-6 h-6 text-primary-400 mr-3"></i>
+                    <h3 class="text-2xl font-bold text-white">Frontier Exploration</h3>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <a href="#" class="block rounded-xl shadow-2xl overflow-hidden card-interactive relative"
+                        style="transition-delay: 200ms;">
+                        <!-- Construction Badge -->
+                        <div
+                            class="absolute top-4 right-4 bg-amber-500/90 text-amber-950 text-xs font-bold px-3 py-1 rounded-full shadow-lg z-20 backdrop-blur-sm font-mono tracking-wider flex items-center">
+                            <i data-lucide="construction" class="w-3 h-3 mr-1"></i> Under Construction
+                        </div>
+                        <img src="https://placehold.co/600x300/1e293b/8b5cf6?text=Blog+Coming+Soon&font=inter"
+                            alt="博客封面" class="w-full h-40 object-cover">
+                        <div class="p-6">
+                            <p class="text-sm text-slate-500 mb-2 font-mono">Date TBA</p>
+                            <h3 class="text-lg font-bold text-slate-500 mb-3">Blog Post Title Coming Soon</h3>
+                            <p class="text-slate-600 text-sm mb-4">Lorem ipsum dolor sit amet, consectetur adipiscing
+                                elit.
+                                Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim
+                                veniam.
+                            </p>
+                            <div class="flex flex-wrap gap-2"><span
+                                    class="text-xs bg-slate-700 text-primary-300 px-2 py-1 rounded">ROS</span><span
+                                    class="text-xs bg-slate-700 text-primary-300 px-2 py-1 rounded"
+                                    data-i18n-key="blog.item2.tag2">Middleware</span></div>
+                        </div>
+                    </a>
+                    <a href="#" class="block rounded-xl shadow-2xl overflow-hidden card-interactive relative"
+                        style="transition-delay: 300ms;">
+                        <!-- Construction Badge -->
+                        <div
+                            class="absolute top-4 right-4 bg-amber-500/90 text-amber-950 text-xs font-bold px-3 py-1 rounded-full shadow-lg z-20 backdrop-blur-sm font-mono tracking-wider flex items-center">
+                            <i data-lucide="construction" class="w-3 h-3 mr-1"></i> Under Construction
+                        </div>
+                        <img src="https://placehold.co/600x300/1e293b/8b5cf6?text=Blog+Coming+Soon&font=inter"
+                            alt="博客封面" class="w-full h-40 object-cover">
+                        <div class="p-6">
+                            <p class="text-sm text-slate-500 mb-2 font-mono">Date TBA</p>
+                            <h3 class="text-lg font-bold text-slate-500 mb-3">Blog Post Title Coming Soon</h3>
+                            <p class="text-slate-600 text-sm mb-4">Lorem ipsum dolor sit amet, consectetur adipiscing
+                                elit.
+                                Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim
+                                veniam.
+                            </p>
+                            <div class="flex flex-wrap gap-2"><span
+                                    class="text-xs bg-slate-700 text-primary-300 px-2 py-1 rounded">Sim-to-Real</span><span
+                                    class="text-xs bg-slate-700 text-primary-300 px-2 py-1 rounded"
+                                    data-i18n-key="blog.item3.tag2">RL</span></div>
+                        </div>
+                    </a>
+                </div>
             </div>
         </section>
 
@@ -993,7 +1041,7 @@
                 'journey.item35.date': '2021年9月 - 2021年12月', 'journey.item35.degree': '学生助理', 'journey.item35.school': '锡根大学, 锡根, 德国',
                 'journey.item4.date': '2017年9月 - 2020年9月', 'journey.item4.degree': '工学学士, 自动化 (第一阶段)', 'journey.item4.school': '中德科技学院, 青岛科技大学, 青岛, 中国', 'journey.item4.desc': '转换 GPA: 3.6 / 4.0',
                 'blog.title': '所思所想',
-                'blog.item1.date': '2025年11月10日', 'blog.item1.title': '人形机器人的未来：从Atlas到Digit', 'blog.item1.desc': '随着波士顿动力和Agility Robotics的最新进展，我们离通用人形机器人还有多远？', 'blog.item1.tag1': '人形机器人', 'blog.item1.tag2': '控制',
+                'blog.item1.date': '2024年7月28日', 'blog.item1.title': '构建 DODO：连接鸟形双足机器人的仿真与现实', 'blog.item1.desc': '从零开始开发双足机器人：连接硬件、调试电机，并将 MATLAB/Simulink 与实时 TwinCAT 3 桥接。', 'blog.item1.tag1': '双足行走', 'blog.item1.tag2': 'Simulink', 'blog.item1.tag3': 'TwinCAT',
                 'blog.item2.date': '2025年10月28日', 'blog.item2.title': 'ROS 2 vs. ROS 1: 为什么迁移是必要的', 'blog.item2.desc': 'ROS 1 即将停止支持。探讨 ROS 2 的新特性 (DDS, 实时性) 及其对现代机器人系统的重要性。', 'blog.item2.tag2': '中间件',
                 'blog.item3.date': '2025年9月15日', 'blog.item3.title': 'Sim-to-Real 鸿沟：挑战与机遇', 'blog.item3.desc': '在模拟中训练的模型在部署到真实硬件时总会遇到问题。梳理领域随机化和系统辨识的最新方法。', 'blog.item3.tag2': 'RL',
                 'contact.title': '与我联系', 'contact.desc': '我目前正在寻找2026年秋季入学的博士项目机会。如果我的研究兴趣与您契合，欢迎随时通过邮件与我联系。',
@@ -1025,7 +1073,7 @@
                 'journey.item35.date': 'Sep 2021 - Dec 2021', 'journey.item35.degree': 'Student Assistant', 'journey.item35.school': 'University of Siegen, Siegen, Germany',
                 'journey.item4.date': 'Sep 2017 - Sep 2020', 'journey.item4.degree': 'B.Sc. in Automation (Phase I)', 'journey.item4.school': 'Chinese-German Technical Faculty, Qingdao University of Science and Technology, Qingdao, China', 'journey.item4.desc': 'Transferred GPA: 3.6 / 4.0',
                 'blog.title': 'Thoughts & Notes',
-                'blog.item1.date': 'Nov 10, 2025', 'blog.item1.title': 'Future of Humanoids: From Atlas to Digit', 'blog.item1.desc': 'With recent progress from Boston Dynamics and Agility Robotics, how far are we from general-purpose humanoids?', 'blog.item1.tag1': 'Humanoids', 'blog.item1.tag2': 'Control',
+                'blog.item1.date': 'July 28, 2024', 'blog.item1.title': 'Building DODO: Bridging Simulation and Reality in Bird-like Bipedal Robotics', 'blog.item1.desc': 'Developing a bipedal robot from scratch: wiring hardware, tuning motors, and bridging MATLAB/Simulink with real-time TwinCAT 3.', 'blog.item1.tag1': 'BipedalLocomotion', 'blog.item1.tag2': 'Simulink', 'blog.item1.tag3': 'TwinCAT',
                 'blog.item2.date': 'Oct 28, 2025', 'blog.item2.title': 'ROS 2 vs. ROS 1: Why Migration is Necessary', 'blog.item2.desc': 'ROS 1 is approaching EOL. Discussing the new features of ROS 2 (DDS, Real-time) and their importance for modern robotics.', 'blog.item2.tag2': 'Middleware',
                 'blog.item3.date': 'Sep 15, 2025', 'blog.item3.title': 'The Sim-to-Real Gap: Challenges & Opportunities', 'blog.item3.desc': 'Models trained in simulation often fail on real hardware. Reviewing recent methods in domain randomization and system ID.', 'blog.item3.tag2': 'RL',
                 'contact.title': 'Get In Touch', 'contact.desc': 'I am currently seeking Ph.D. opportunities for Fall 2026 entry. If my research interests align with yours, please feel free to contact me via email.',
@@ -1057,7 +1105,7 @@
                 'journey.item35.date': 'Sep 2021 - Dez 2021', 'journey.item35.degree': 'Studentische Hilfskraft (SHK)', 'journey.item35.school': 'Universität Siegen, Siegen, Deutschland',
                 'journey.item4.date': 'Sep 2017 - Sep 2020', 'journey.item4.degree': 'B.Sc. in Automatisierungstechnik (Phase I)', 'journey.item4.school': 'Chinesisch-Deutsche Technische Fakultät, Qingdao University of Science and Technology, Qingdao, China', 'journey.item4.desc': 'Übertragene Note: 1.4',
                 'blog.title': 'Gedanken & Notizen',
-                'blog.item1.date': '10. Nov 2025', 'blog.item1.title': 'Zukunft der Humanoiden: Von Atlas zu Digit', 'blog.item1.desc': 'Wie weit sind wir mit den jüngsten Fortschritten von Boston Dynamics und Agility Robotics von universellen Humanoiden entfernt?', 'blog.item1.tag1': 'Humanoide', 'blog.item1.tag2': 'Steuerung',
+                'blog.item1.date': '28. Juli 2024', 'blog.item1.title': 'DODO bauen: Brücke zwischen Simulation und Realität in der vogelähnlichen bipedalen Robotik', 'blog.item1.desc': 'Entwicklung eines bipedalen Roboters von Grund auf: Hardware-Verkabelung, Motorabstimmung und Überbrückung von MATLAB/Simulink mit Echtzeit-TwinCAT 3.', 'blog.item1.tag1': 'Bipedale Fortbewegung', 'blog.item1.tag2': 'Simulink', 'blog.item1.tag3': 'TwinCAT',
                 'blog.item2.date': '28. Okt 2025', 'blog.item2.title': 'ROS 2 vs. ROS 1: Warum die Migration notwendig ist', 'blog.item2.desc': 'ROS 1 nähert sich dem EOL. Diskussion der neuen Funktionen von ROS 2 (DDS, Echtzeit) und ihrer Bedeutung für moderne Robotik.', 'blog.item2.tag2': 'Middleware',
                 'blog.item3.date': '15. Sep 2025', 'blog.item3.title': 'Die Sim-to-Real-Lücke: Herausforderungen & Chancen', 'blog.item3.desc': 'In Simulation trainierte Modelle scheitern oft auf realer Hardware. Ein Überblick über aktuelle Methoden der Domänenrandomisierung.', 'blog.item3.tag2': 'RL',
                 'contact.title': 'Kontakt aufnehmen', 'contact.desc': 'Ich suche derzeit nach einer Doktorandenstelle für Herbst 2026. Wenn meine Forschungsinteressen mit Ihren übereinstimmen, zögern Sie nicht, mich per E-Mail zu kontaktieren.',

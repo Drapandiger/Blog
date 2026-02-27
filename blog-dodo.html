@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Building DODO: Bridging Simulation and Reality in Bird-like Bipedal Robotics | Zeqi Li</title>
+
+    <!-- Favicon -->
+    <link rel="apple-touch-icon" sizes="180x180" href="favicon_io/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon_io/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon_io/favicon-16x16.png">
+    <link rel="manifest" href="favicon_io/site.webmanifest">
+
+    <!-- 引入 Tailwind CSS (开发模式CDN) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Tailwind 配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'inter': ['Inter', 'sans-serif'],
+                        'mono': ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
+                    },
+                    colors: {
+                        'primary': tailwind.colors.violet,
+                    },
+                }
+            }
+        }
+    </script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+        }
+
+        /* Custom styles for article content */
+        .article-content h2 {
+            font-size: 1.875rem;
+            font-weight: 800;
+            color: #fff;
+            margin-top: 3rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #1e293b;
+        }
+
+        .article-content h3 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #e2e8f0;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .article-content p {
+            font-size: 1.125rem;
+            line-height: 1.75;
+            color: #cbd5e1;
+            margin-bottom: 1.5rem;
+        }
+
+        .article-content ul,
+        .article-content ol {
+            font-size: 1.125rem;
+            line-height: 1.75;
+            color: #cbd5e1;
+            margin-bottom: 1.5rem;
+            padding-left: 1.5rem;
+        }
+
+        .article-content li {
+            margin-bottom: 0.5rem;
+        }
+
+        .article-content ul {
+            list-style-type: disc;
+        }
+
+        .article-content ol {
+            list-style-type: decimal;
+        }
+
+        .article-content strong {
+            color: #f8fafc;
+            font-weight: 600;
+        }
+
+        .article-content em {
+            font-style: italic;
+        }
+
+        .article-content code {
+            background-color: #1e293b;
+            color: #a78bfa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 0.25rem;
+            font-family: 'ui-monospace', monospace;
+            font-size: 0.9em;
+        }
+
+        .article-content blockquote {
+            border-left: 4px solid #8b5cf6;
+            padding-left: 1rem;
+            margin-left: 0;
+            margin-right: 0;
+            font-style: italic;
+            color: #a1a1aa;
+            background-color: rgba(139, 92, 246, 0.05);
+            padding: 1rem;
+            border-radius: 0 0.5rem 0.5rem 0;
+            margin-bottom: 1.5rem;
+        }
+
+        .article-content hr {
+            border-color: #1e293b;
+            margin: 3rem 0;
+        }
+    </style>
+</head>
+
+<body class="antialiased selection:bg-primary-500/30">
+    <!-- Navbar -->
+    <nav
+        class="fixed w-full z-50 bg-slate-900/80 backdrop-blur-md border-b border-slate-800 transition-all duration-300">
+        <div class="max-w-6xl mx-auto px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Logo / Back button -->
+                <a href="index.html#blog"
+                    class="flex items-center text-slate-300 hover:text-white transition-colors group">
+                    <i data-lucide="arrow-left"
+                        class="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform"></i>
+                    <span class="font-medium">Back to Portfolio</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="pt-32 pb-24">
+        <article class="max-w-6xl mx-auto px-6 lg:px-8">
+            <!-- Header -->
+            <header class="mb-12">
+                <h1 class="text-4xl md:text-5xl lg:text-6xl font-black text-white mb-6 leading-tight tracking-tight">
+                    Building DODO: Bridging Simulation and Reality in Bird-like Bipedal Robotics
+                </h1>
+
+                <div class="flex flex-wrap items-center gap-4 text-slate-400 font-mono text-sm mb-6">
+                    <div class="flex items-center">
+                        <i data-lucide="calendar" class="w-4 h-4 mr-2"></i>
+                        <time datetime="2024-07-28">July 28, 2024</time>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap gap-2 mb-8">
+                    <span
+                        class="text-xs font-mono bg-slate-800 border border-slate-700 text-primary-400 px-3 py-1 rounded-full">#Robotics</span>
+                    <span
+                        class="text-xs font-mono bg-slate-800 border border-slate-700 text-primary-400 px-3 py-1 rounded-full">#BipedalLocomotion</span>
+                    <span
+                        class="text-xs font-mono bg-slate-800 border border-slate-700 text-primary-400 px-3 py-1 rounded-full">#MATLAB</span>
+                    <span
+                        class="text-xs font-mono bg-slate-800 border border-slate-700 text-primary-400 px-3 py-1 rounded-full">#Simulink</span>
+                    <span
+                        class="text-xs font-mono bg-slate-800 border border-slate-700 text-primary-400 px-3 py-1 rounded-full">#TwinCAT</span>
+                    <span
+                        class="text-xs font-mono bg-slate-800 border border-slate-700 text-primary-400 px-3 py-1 rounded-full">#MotorControl</span>
+                </div>
+            </header>
+
+            <!-- Hero Image Placeholder -->
+            <div class="rounded-2xl overflow-hidden mb-12 border border-slate-800 shadow-2xl max-w-5xl mx-auto">
+                <img src="assets/images/blog/dodo/dodocover.png" alt="DODO Robot Project Cover"
+                    class="w-full h-auto object-cover">
+            </div>
+
+            <!-- Content Body -->
+            <div class="article-content">
+                <blockquote class="text-lg">
+                    This semester, we took on the challenge of developing the DODO bipedal
+                    robot, aiming to mimic the fluid, natural locomotion of birds. Starting with just a mechanical shell
+                    and eight motors, we built a complete closed-loop control system from scratch. This post documents
+                    our journey of wiring the hardware, tuning the motor drivers, generating gait patterns using the
+                    Linear Inverted Pendulum Model (LIPM), and bridging MATLAB/Simulink with real-time TwinCAT 3 to make
+                    the robot actually move.
+                </blockquote>
+
+                <h2>1. The Challenge: Giving Life to a Mechanical Bird 🐦</h2>
+                <p>Developing bipedal robots that mimic the natural movements of birds is an ongoing challenge in
+                    robotics. At the beginning of this semester, we were handed the <strong>DODO project</strong>: a
+                    bipedal robot equipped with eight high-performance motors.</p>
+                <p>There was just one catch: it had no "brain" and no "nervous system."</p>
+                <p>While the motors were mechanically capable of driving motion, the robot lacked a control module and
+                    any means of communication between the high-level motion planning and the physical actuators.</p>
+                <p><strong>Our mission was clear:</strong> Establish a comprehensive, real-time communication framework
+                    and design a control architecture that could translate abstract, predefined walking commands into
+                    precise, physical bird-like locomotion.</p>
+
+                <hr>
+
+                <h2>2. Hardware Setup & Wiring: Building the Nervous System ⚡</h2>
+                <p>Before writing any control algorithms, we had to get our hands dirty with the hardware.</p>
+                <p>The robot's legs feature four main joints: <strong>Foot, Knee, Hip, and Rotation</strong>. To power
+                    these, we utilized <strong>T-MOTOR MN4004 300kv AntiGravity</strong> Brushless Motors—known for
+                    their high efficiency in UAV and robotics applications.</p>
+
+                <h3>The Motor Driver Dilemma</h3>
+                <p>To control all 8 joints, we ideally needed eight <strong>CAPITAN XCR-E</strong> motor drivers.
+                    However, due to initial hardware constraints, we only had four available. We decided to focus on
+                    fully controlling <strong>one leg</strong> first. To keep the wiring neat and prepare for future
+                    expansion, we custom-designed a motor driver mount capable of housing the full set of eight drivers
+                    later on.</p>
+
+                <div
+                    class="my-8 rounded-xl overflow-hidden border border-slate-800 shadow-lg bg-slate-900/50 p-6 text-center max-w-3xl mx-auto">
+                    <img src="assets/images/blog/dodo/robotic_leg_assembly.png" alt="Robotic leg assembly"
+                        class="w-full h-auto object-cover rounded-lg mb-4">
+                    <p class="text-sm text-slate-400">Figure 1: The robotic leg assembly, highlighting the key joints
+                        and motor components.</p>
+                </div>
+
+                <h3>Wiring it All Together</h3>
+                <p>Wiring the drivers requires absolute precision. I divided the setup into four critical paths:</p>
+                <ol>
+                    <li><strong>Power Supply (P1):</strong> A stable 5V-24V DC connection. Polarity is unforgiving
+                        here—getting it wrong means frying the board.</li>
+                    <li><strong>Motor Connections (P2):</strong> The classic three-phase configuration (PH_A, PH_B,
+                        PH_C), which is the foundation for precise speed and torque control in brushless motors.</li>
+                    <li><strong>Encoder Feedback (J1):</strong> The key to closed-loop control. The encoders feed
+                        incremental signals (A/B channels) and an index pulse (Z-channel) back to the CAPITAN driver.
+                    </li>
+                    <li><strong>Communication & STO:</strong> We used an <strong>EtherCAT</strong> daisy-chain
+                        configuration for high-speed, synchronized communication across all drivers. Finally, we wired
+                        up the <strong>Safe Torque Off (STO)</strong> functionality to ensure we had a reliable
+                        emergency stop mechanism.</li>
+                </ol>
+
+                <div
+                    class="my-8 rounded-xl overflow-hidden border border-slate-800 shadow-lg bg-slate-900/50 p-6 text-center max-w-3xl mx-auto">
+                    <img src="assets/images/blog/dodo/enetwiring.png" alt="EtherCAT wiring diagram"
+                        class="w-full h-auto object-cover rounded-lg mb-4">
+                    <p class="text-sm text-slate-400">Figure 2: EtherCAT daisy-chain topology for synchronized
+                        multi-motor control.</p>
+                </div>
+
+                <hr>
+
+                <h2>3. Tuning the Muscles: MotionLab 3 Configuration 🛠️</h2>
+                <p>With the hardware connected, the next step was configuring and tuning the drivers using the
+                    <strong>MotionLab 3</strong> software.
+                </p>
+                <ul>
+                    <li><strong>Limits & Motor Specs:</strong> Based on the T-MOTOR manual, we set the motor pole pairs
+                        to 12 and capped the maximum velocity limit at 90 revolutions per second.</li>
+                    <li><strong>Electrical Identification:</strong> We ran an automated identification process to map
+                        out the RL (Resistance-Inductance) mathematical model of our motors.</li>
+                    <li><strong>Frequency Design (Tuning):</strong> For the velocity loop, we set the bandwidth to 40 Hz
+                        and fine-tuned our PI controller (Kp = 0.50263, Ki = 1.5004). The position loop relied primarily
+                        on P control. Every time we adjusted a parameter, we had to "Save to the Drive" and run a
+                        physical verification to ensure the real-world response matched our expectations.</li>
+                </ul>
+
+                <hr>
+
+                <h2>4. The Brains: Bridging MATLAB, Simulink & TwinCAT 3 🧠</h2>
+                <p>This is where the magic happens. A beautifully tuned motor is useless without intelligent commands.
+                    We needed to bridge our high-level gait simulations with the low-level industrial hardware.</p>
+
+                <h3>Simscape Multibody & LIPM Gait Generation</h3>
+                <p>First, we built a highly accurate 3D physical model of the robot in <strong>Simscape
+                        Multibody</strong>. To generate the walking pattern, we implemented the <strong>Linear Inverted
+                        Pendulum Model (LIPM)</strong>.</p>
+                <div
+                    class="my-8 rounded-xl overflow-hidden border border-slate-800 shadow-lg bg-slate-900/50 p-6 text-center max-w-md mx-auto flex flex-col justify-between">
+                    <img src="assets/images/blog/dodo/model.gif" alt="LIPM Gait Model"
+                        class="w-full h-auto object-cover rounded-lg mb-4">
+                    <p class="text-sm text-slate-400">Figure 3(a): Simulated LIPM gait model.</p>
+                </div>
+
+                <p>The LIPM computes the ideal Center of Mass (CoM) trajectory to keep the robot balanced. We then used
+                    Inverse Kinematics to calculate the exact angles required for the Hip roll, Hip pitch, Knee pitch,
+                    and Foot pitch joints over time ($t$). This combined data formed our core driving signal:
+                    <code>inputsim</code>.
+                </p>
+
+                <div
+                    class="my-8 rounded-xl overflow-hidden border border-slate-800 shadow-lg bg-slate-900/50 p-6 text-center w-full mx-auto flex flex-col justify-between">
+                    <img src="assets/images/blog/dodo/simulink.png" alt="Simulink model"
+                        class="w-full h-auto object-cover rounded-lg mb-4">
+                    <p class="text-sm text-slate-400">Figure 3(b): The core Simulink model controlling the robot's
+                        LIPM gait.</p>
+                </div>
+
+                <h3>The Magic Bridge: TE1410 TwinCAT Interface</h3>
+                <p>Simulink is great for simulation, but it’s not a real-time hardware controller. To bridge this gap,
+                    we used <strong>TwinCAT 3</strong> (an industrial PC-based control platform by Beckhoff) and the
+                    <strong>TE1410 Interface</strong>.
+                </p>
+                <p>Here is how the data flows:</p>
+                <ol>
+                    <li><strong>Simulink</strong> runs the high-level state machine and computes desired joint
+                        positions/velocities.</li>
+                    <li>These signals are passed via ADS blocks to the <strong>TwinCAT runtime</strong>.</li>
+                    <li>TwinCAT translates these into real-time commands and sends them over <strong>EtherCAT</strong>
+                        to the CAPITAN drivers.</li>
+                    <li>The drivers read the physical encoders and send the real-time state <em>back</em> to Simulink.
+                    </li>
+                </ol>
+
+                <div
+                    class="my-8 rounded-xl overflow-hidden border border-slate-800 shadow-lg bg-slate-900/50 p-6 text-center max-w-2xl mx-auto">
+                    <img src="assets/images/blog/dodo/twincat3.png" alt="Structure integrating Simulink interface"
+                        class="w-full h-auto object-cover rounded-lg mb-4">
+                    <p class="text-sm text-slate-400">Figure 4: The full-loop communication architecture bridging
+                        Simulink, TwinCAT, and the physical motors.</p>
+                </div>
+
+                <hr>
+
+                <h2>5. Architectural Thinking: The 3-Level Control System 🏗️</h2>
+                <p>As the system grew in complexity, it became clear that we needed a strict <strong>Hierarchical
+                        Control Architecture</strong>. I structured the system into three distinct tiers:</p>
+                <ol>
+                    <li><strong>High-Level Control (Intent/Cognition):</strong> Operates on a longer timescale (seconds
+                        to minutes). It handles abstract, discrete decision-making, like path planning, overall mission
+                        objectives, and interpreting the required movement intent.</li>
+                    <li><strong>Mid-Level Control (Strategy):</strong> The bridge. It takes the high-level intent and
+                        generates actionable strategies—like running the LIPM algorithm to calculate the CoM trajectory
+                        and determine exact foot placements to maintain balance.</li>
+                    <li><strong>Low-Level Control (Execution):</strong> Operates in strict real-time (often under a
+                        millisecond). It handles high-frequency closed-loop servo control, processing encoder feedback,
+                        outputting exact currents to the motors, and managing safety protocols like STO.</li>
+                </ol>
+                <div
+                    class="my-8 rounded-xl overflow-hidden border border-slate-800 shadow-lg bg-slate-900/50 p-6 text-center max-w-3xl mx-auto">
+                    <img src="assets/images/blog/dodo/high.png" alt="3-Level Control System Architecture"
+                        class="w-full h-auto object-cover rounded-lg mb-4">
+                    <p class="text-sm text-slate-400">Figure 5: Hierarchical 3-Level Control System Architecture
+                        separating cognition, strategy, and execution.</p>
+                </div>
+                <p>This decoupling made our codebase incredibly robust and much easier to debug.</p>
+
+                <hr>
+
+                <h2>6. The First Test: Successes and Lessons Learned 📊</h2>
+                <p>To validate our entire pipeline, we ran a position control experiment using a <strong>Sinusoidal wave
+                        signal</strong>, testing all four joints of the single leg individually.</p>
+                <p><strong>The Good News:</strong><br>Looking at the oscilloscope data, the system successfully tracked
+                    the position commands! Speed, current, and voltage all exhibited clear sinusoidal waves (albeit with
+                    some expected real-world noise). This proved that our
+                    <code>MATLAB &lt;-&gt; TwinCAT &lt;-&gt; EtherCAT</code> bridge was fully functional.
+                </p>
+                <p><strong>The Reality Check (The Hip Joint):</strong><br>While most joints performed beautifully, the
+                    <strong>Hip Joint</strong> struggled. The data showed that the physical load on the hip was too
+                    high, and the current being supplied was too low. In certain dynamic postures, it simply couldn't
+                    keep up with the sine wave.
+                </p>
+
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 my-8 max-w-5xl mx-auto">
+                    <div
+                        class="rounded-xl overflow-hidden border border-slate-800 shadow-lg bg-slate-900/50 p-2 text-center">
+                        <img src="assets/images/blog/dodo/rotation.gif" alt="Rotation joint test"
+                            class="w-full h-auto object-cover rounded-lg mb-2">
+                        <p class="text-xs text-slate-400">Rotation Joint</p>
+                    </div>
+                    <div
+                        class="rounded-xl overflow-hidden border border-slate-800 shadow-lg bg-slate-900/50 p-2 text-center">
+                        <img src="assets/images/blog/dodo/hip.gif" alt="Hip joint test"
+                            class="w-full h-auto object-cover rounded-lg mb-2">
+                        <p class="text-xs text-slate-400">Hip Joint <span
+                                class="text-rose-400 opacity-80">(Struggled)</span></p>
+                    </div>
+                    <div
+                        class="rounded-xl overflow-hidden border border-slate-800 shadow-lg bg-slate-900/50 p-2 text-center">
+                        <img src="assets/images/blog/dodo/knee.gif" alt="Knee joint test"
+                            class="w-full h-auto object-cover rounded-lg mb-2">
+                        <p class="text-xs text-slate-400">Knee Joint</p>
+                    </div>
+                    <div
+                        class="rounded-xl overflow-hidden border border-slate-800 shadow-lg bg-slate-900/50 p-2 text-center">
+                        <img src="assets/images/blog/dodo/foot.gif" alt="Foot joint test"
+                            class="w-full h-auto object-cover rounded-lg mb-2">
+                        <p class="text-xs text-slate-400">Foot Joint</p>
+                    </div>
+                </div>
+
+                <div
+                    class="my-8 rounded-xl overflow-hidden border border-slate-800 shadow-lg bg-slate-900/50 p-6 text-center max-w-3xl mx-auto">
+                    <img src="assets/images/blog/dodo/wave.gif" alt="Sinusoidal signal oscilloscope data"
+                        class="w-full h-auto object-cover rounded-lg mb-4">
+                    <p class="text-sm text-slate-400">Figure 6: Oscilloscope data from the sine wave tracking test.
+                        Position tracking was accurate, but revealed a power bottleneck at the hip joint.</p>
+                </div>
+
+                <hr>
+
+                <h2>7. Final Thoughts & What's Next 🌱</h2>
+                <p>Going from a pile of mechanical parts and idle motors to a fully integrated, real-time control system
+                    bridging MATLAB and industrial EtherCAT drivers has been an incredibly rewarding journey.</p>
+                <p>That failure with the hip joint? That’s my favorite part of the project. It’s a harsh but beautiful
+                    reminder that no matter how perfect your Simulink mathematical model is, <strong>gravity, friction,
+                        and inertia in the physical world are the ultimate judges.</strong></p>
+                <p><strong>My next steps for the DODO project:</strong></p>
+                <ol>
+                    <li><strong>Hardware Optimization:</strong> Re-evaluate the torque requirements for the hip joint.
+                        We will either adjust the driver's current limits or upgrade to a higher-torque motor.</li>
+                    <li><strong>Scaling Up:</strong> Install the remaining 4 drivers, complete the wiring for the second
+                        leg, and scale our software to control all 8 joints simultaneously.</li>
+                    <li><strong>The First Steps:</strong> Deploy the LIPM gait algorithm onto the fully assembled
+                        physical robot and watch DODO take its first real steps.</li>
+                </ol>
+                <p>Building robots is hard, but seeing your code literally move the physical world makes every
+                    frustrating debugging session totally worth it.</p>
+            </div>
+        </article>
+    </main>
+
+    <footer class="text-center py-8 border-t border-slate-800 relative z-10 bg-slate-900/50 backdrop-blur">
+        <p class="text-slate-500 text-sm">© 2026 Zeqi Li. All rights reserved.</p>
+        <p class="text-slate-600 text-xs mt-1">Built with Tailwind CSS & Lucide Icons</p>
+    </footer>
+
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+
+</html>
