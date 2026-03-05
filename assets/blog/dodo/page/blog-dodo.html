@@ -122,6 +122,50 @@
             border-color: #1e293b;
             margin: 3rem 0;
         }
+
+        /* ====== DODO Terminal Animation ====== */
+        .dodo-terminal-wrapper {
+            font-family: 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', monospace;
+            font-size: 13px;
+            font-weight: bold;
+            color: #34d399;
+            /* Tailwind emerald-400 */
+            background-color: rgba(15, 23, 42, 0.85);
+            /* Tailwind slate-900 approx */
+            padding: 4px 12px;
+            border-radius: 4px;
+            border: 1px solid rgba(52, 211, 153, 0.3);
+            box-shadow: 0 0 10px rgba(52, 211, 153, 0.2);
+            display: inline-flex;
+            align-items: center;
+            justify-content: flex-start;
+            white-space: pre;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            user-select: none;
+            height: 32px;
+            width: 340px;
+            /* Fixed width prevents the box from shrinking and pushing text right-to-left when centered in flex */
+        }
+
+        .cursor {
+            display: inline-block;
+            width: 8px;
+            animation: blink 1s step-end infinite;
+            color: #34d399;
+        }
+
+        @keyframes blink {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0;
+            }
+        }
     </style>
 </head>
 
@@ -132,12 +176,18 @@
         <div class="max-w-6xl mx-auto px-6 lg:px-8">
             <div class="flex items-center justify-between h-16">
                 <!-- Logo / Back button -->
-                <a href="index.html#blog"
+                <a href="../../../../index.html#blog"
                     class="flex items-center text-slate-300 hover:text-white transition-colors group">
                     <i data-lucide="arrow-left"
                         class="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform"></i>
                     <span class="font-medium">Back to Portfolio</span>
                 </a>
+                <div class="hidden md:block">
+                    <div class="dodo-terminal-wrapper" onclick="if(window.bootSequence) window.bootSequence()"
+                        title="Click to reboot">
+                        <span id="dodo-text"></span><span class="cursor">_</span>
+                    </div>
+                </div>
             </div>
         </div>
     </nav>
@@ -155,6 +205,10 @@
                     <div class="flex items-center">
                         <i data-lucide="calendar" class="w-4 h-4 mr-2"></i>
                         <time datetime="2024-07-28">July 28, 2024</time>
+                    </div>
+                    <div class="flex items-center">
+                        <i data-lucide="book-open" class="w-4 h-4 mr-2"></i>
+                        <span>Biomimetic Systems</span>
                     </div>
                 </div>
 
@@ -176,8 +230,7 @@
 
             <!-- Hero Image Placeholder -->
             <div class="rounded-2xl overflow-hidden mb-12 border border-slate-800 shadow-2xl max-w-5xl mx-auto">
-                <img src="assets/images/blog/dodo/dodocover.png" alt="DODO Robot Project Cover"
-                    class="w-full h-auto object-cover">
+                <img src="../images/dodocover.png" alt="DODO Robot Project Cover" class="w-full h-auto object-cover">
             </div>
 
             <!-- Content Body -->
@@ -191,7 +244,7 @@
                     the robot actually move.
                 </blockquote>
 
-                <h2>1. The Challenge: Giving Life to a Mechanical Bird 🐦</h2>
+                <h2>🐦 1. The Challenge: Giving Life to a Mechanical Bird</h2>
                 <p>Developing bipedal robots that mimic the natural movements of birds is an ongoing challenge in
                     robotics. At the beginning of this semester, we were handed the <strong>DODO project</strong>: a
                     bipedal robot equipped with eight high-performance motors.</p>
@@ -204,7 +257,7 @@
 
                 <hr>
 
-                <h2>2. Hardware Setup & Wiring: Building the Nervous System ⚡</h2>
+                <h2>⚡ 2. Hardware Setup & Wiring: Building the Nervous System</h2>
                 <p>Before writing any control algorithms, we had to get our hands dirty with the hardware.</p>
                 <p>The robot's legs feature four main joints: <strong>Foot, Knee, Hip, and Rotation</strong>. To power
                     these, we utilized <strong>T-MOTOR MN4004 300kv AntiGravity</strong> Brushless Motors—known for
@@ -219,7 +272,7 @@
 
                 <div
                     class="my-8 rounded-xl overflow-hidden border border-slate-800 shadow-lg bg-slate-900/50 p-6 text-center max-w-3xl mx-auto">
-                    <img src="assets/images/blog/dodo/robotic_leg_assembly.png" alt="Robotic leg assembly"
+                    <img src="../images/robotic_leg_assembly.png" alt="Robotic leg assembly"
                         class="w-full h-auto object-cover rounded-lg mb-4">
                     <p class="text-sm text-slate-400">Figure 1: The robotic leg assembly, highlighting the key joints
                         and motor components.</p>
@@ -243,7 +296,7 @@
 
                 <div
                     class="my-8 rounded-xl overflow-hidden border border-slate-800 shadow-lg bg-slate-900/50 p-6 text-center max-w-3xl mx-auto">
-                    <img src="assets/images/blog/dodo/enetwiring.png" alt="EtherCAT wiring diagram"
+                    <img src="../images/enetwiring.png" alt="EtherCAT wiring diagram"
                         class="w-full h-auto object-cover rounded-lg mb-4">
                     <p class="text-sm text-slate-400">Figure 2: EtherCAT daisy-chain topology for synchronized
                         multi-motor control.</p>
@@ -251,7 +304,7 @@
 
                 <hr>
 
-                <h2>3. Tuning the Muscles: MotionLab 3 Configuration 🛠️</h2>
+                <h2>🛠️ 3. Tuning the Muscles: MotionLab 3 Configuration</h2>
                 <p>With the hardware connected, the next step was configuring and tuning the drivers using the
                     <strong>MotionLab 3</strong> software.
                 </p>
@@ -268,7 +321,7 @@
 
                 <hr>
 
-                <h2>4. The Brains: Bridging MATLAB, Simulink & TwinCAT 3 🧠</h2>
+                <h2>🧠 4. The Brains: Bridging MATLAB, Simulink & TwinCAT 3</h2>
                 <p>This is where the magic happens. A beautifully tuned motor is useless without intelligent commands.
                     We needed to bridge our high-level gait simulations with the low-level industrial hardware.</p>
 
@@ -278,7 +331,7 @@
                         Pendulum Model (LIPM)</strong>.</p>
                 <div
                     class="my-8 rounded-xl overflow-hidden border border-slate-800 shadow-lg bg-slate-900/50 p-6 text-center max-w-md mx-auto flex flex-col justify-between">
-                    <img src="assets/images/blog/dodo/model.gif" alt="LIPM Gait Model"
+                    <img src="../images/model.gif" alt="LIPM Gait Model"
                         class="w-full h-auto object-cover rounded-lg mb-4">
                     <p class="text-sm text-slate-400">Figure 3(a): Simulated LIPM gait model.</p>
                 </div>
@@ -291,7 +344,7 @@
 
                 <div
                     class="my-8 rounded-xl overflow-hidden border border-slate-800 shadow-lg bg-slate-900/50 p-6 text-center w-full mx-auto flex flex-col justify-between">
-                    <img src="assets/images/blog/dodo/simulink.png" alt="Simulink model"
+                    <img src="../images/simulink.png" alt="Simulink model"
                         class="w-full h-auto object-cover rounded-lg mb-4">
                     <p class="text-sm text-slate-400">Figure 3(b): The core Simulink model controlling the robot's
                         LIPM gait.</p>
@@ -315,7 +368,7 @@
 
                 <div
                     class="my-8 rounded-xl overflow-hidden border border-slate-800 shadow-lg bg-slate-900/50 p-6 text-center max-w-2xl mx-auto">
-                    <img src="assets/images/blog/dodo/twincat3.png" alt="Structure integrating Simulink interface"
+                    <img src="../images/twincat3.png" alt="Structure integrating Simulink interface"
                         class="w-full h-auto object-cover rounded-lg mb-4">
                     <p class="text-sm text-slate-400">Figure 4: The full-loop communication architecture bridging
                         Simulink, TwinCAT, and the physical motors.</p>
@@ -323,7 +376,7 @@
 
                 <hr>
 
-                <h2>5. Architectural Thinking: The 3-Level Control System 🏗️</h2>
+                <h2>🏗️ 5. Architectural Thinking: The 3-Level Control System</h2>
                 <p>As the system grew in complexity, it became clear that we needed a strict <strong>Hierarchical
                         Control Architecture</strong>. I structured the system into three distinct tiers:</p>
                 <ol>
@@ -339,7 +392,7 @@
                 </ol>
                 <div
                     class="my-8 rounded-xl overflow-hidden border border-slate-800 shadow-lg bg-slate-900/50 p-6 text-center max-w-3xl mx-auto">
-                    <img src="assets/images/blog/dodo/high.png" alt="3-Level Control System Architecture"
+                    <img src="../images/high.png" alt="3-Level Control System Architecture"
                         class="w-full h-auto object-cover rounded-lg mb-4">
                     <p class="text-sm text-slate-400">Figure 5: Hierarchical 3-Level Control System Architecture
                         separating cognition, strategy, and execution.</p>
@@ -348,7 +401,7 @@
 
                 <hr>
 
-                <h2>6. The First Test: Successes and Lessons Learned 📊</h2>
+                <h2>📊 6. The First Test: Successes and Lessons Learned</h2>
                 <p>To validate our entire pipeline, we ran a position control experiment using a <strong>Sinusoidal wave
                         signal</strong>, testing all four joints of the single leg individually.</p>
                 <p><strong>The Good News:</strong><br>Looking at the oscilloscope data, the system successfully tracked
@@ -365,26 +418,26 @@
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 my-8 max-w-5xl mx-auto">
                     <div
                         class="rounded-xl overflow-hidden border border-slate-800 shadow-lg bg-slate-900/50 p-2 text-center">
-                        <img src="assets/images/blog/dodo/rotation.gif" alt="Rotation joint test"
+                        <img src="../images/rotation.gif" alt="Rotation joint test"
                             class="w-full h-auto object-cover rounded-lg mb-2">
                         <p class="text-xs text-slate-400">Rotation Joint</p>
                     </div>
                     <div
                         class="rounded-xl overflow-hidden border border-slate-800 shadow-lg bg-slate-900/50 p-2 text-center">
-                        <img src="assets/images/blog/dodo/hip.gif" alt="Hip joint test"
+                        <img src="../images/hip.gif" alt="Hip joint test"
                             class="w-full h-auto object-cover rounded-lg mb-2">
                         <p class="text-xs text-slate-400">Hip Joint <span
                                 class="text-rose-400 opacity-80">(Struggled)</span></p>
                     </div>
                     <div
                         class="rounded-xl overflow-hidden border border-slate-800 shadow-lg bg-slate-900/50 p-2 text-center">
-                        <img src="assets/images/blog/dodo/knee.gif" alt="Knee joint test"
+                        <img src="../images/knee.gif" alt="Knee joint test"
                             class="w-full h-auto object-cover rounded-lg mb-2">
                         <p class="text-xs text-slate-400">Knee Joint</p>
                     </div>
                     <div
                         class="rounded-xl overflow-hidden border border-slate-800 shadow-lg bg-slate-900/50 p-2 text-center">
-                        <img src="assets/images/blog/dodo/foot.gif" alt="Foot joint test"
+                        <img src="../images/foot.gif" alt="Foot joint test"
                             class="w-full h-auto object-cover rounded-lg mb-2">
                         <p class="text-xs text-slate-400">Foot Joint</p>
                     </div>
@@ -392,7 +445,7 @@
 
                 <div
                     class="my-8 rounded-xl overflow-hidden border border-slate-800 shadow-lg bg-slate-900/50 p-6 text-center max-w-3xl mx-auto">
-                    <img src="assets/images/blog/dodo/wave.gif" alt="Sinusoidal signal oscilloscope data"
+                    <img src="../images/wave.gif" alt="Sinusoidal signal oscilloscope data"
                         class="w-full h-auto object-cover rounded-lg mb-4">
                     <p class="text-sm text-slate-400">Figure 6: Oscilloscope data from the sine wave tracking test.
                         Position tracking was accurate, but revealed a power bottleneck at the hip joint.</p>
@@ -400,7 +453,7 @@
 
                 <hr>
 
-                <h2>7. Final Thoughts & What's Next 🌱</h2>
+                <h2>🌱 7. Final Thoughts & What's Next</h2>
                 <p>Going from a pile of mechanical parts and idle motors to a fully integrated, real-time control system
                     bridging MATLAB and industrial EtherCAT drivers has been an incredibly rewarding journey.</p>
                 <p>That failure with the hip joint? That’s my favorite part of the project. It’s a harsh but beautiful
@@ -428,6 +481,55 @@
 
     <script>
         lucide.createIcons();
+
+        // ====== DODO Terminal Animation Core ======
+        document.addEventListener("DOMContentLoaded", () => {
+            const terminalEl = document.getElementById("dodo-text");
+            let isAnimating = false;
+
+            const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+            const typeText = async (text, speed = 80, prefix = "> ") => {
+                terminalEl.innerText = prefix;
+                for (let i = 0; i < text.length; i++) {
+                    terminalEl.innerText += text.charAt(i);
+                    await sleep(speed + Math.random() * 50);
+                }
+            };
+
+            window.bootSequence = async () => {
+                if (isAnimating) return;
+                isAnimating = true;
+
+                terminalEl.innerText = "> ";
+                await sleep(600);
+
+                await typeText("EXTINCTION_OVERRIDE :: REBORN", 100);
+                await sleep(1500);
+
+                const totalBlocks = 10;
+                for (let i = 0; i <= totalBlocks; i++) {
+                    const filled = "█".repeat(i);
+                    const empty = "░".repeat(totalBlocks - i);
+                    const percent = (i * 10).toString().padStart(3, ' ');
+
+                    terminalEl.innerText = `> BOOT_BIONIC_CORE [${filled}${empty}] ${percent}%`;
+
+                    const loadDelay = i === 4 || i === 8 ? 800 : 250 + Math.random() * 150;
+                    await sleep(loadDelay);
+                }
+                await sleep(1000);
+
+                terminalEl.innerText = "> ";
+                await sleep(300);
+
+                await typeText("BIONIC_CORE_ONLINE :: SYSTEM_AWAKE", 90);
+                isAnimating = false;
+            };
+
+            // Initial boot
+            window.bootSequence();
+        });
     </script>
 </body>
 

@@ -1,0 +1,1123 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advancing Safety in Complex Systems: The Role of Control Barrier Functions | Zeqi Li</title>
+
+    <!-- Favicon -->
+    <link rel="apple-touch-icon" sizes="180x180" href="favicon_io/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon_io/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon_io/favicon-16x16.png">
+    <link rel="manifest" href="favicon_io/site.webmanifest">
+
+    <!-- 引入 Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Tailwind 配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'inter': ['Inter', 'sans-serif'],
+                        'mono': ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
+                    },
+                    colors: {
+                        'primary': tailwind.colors.violet,
+                    },
+                }
+            }
+        }
+    </script>
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- MathJax 渲染公式 -->
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                tags: 'ams' // 允许公式自动编号
+            },
+            svg: {
+                fontCache: 'global'
+            }
+        };
+    </script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+        }
+
+        /* Custom styles for article content */
+        .article-content h2 {
+            font-size: 1.875rem;
+            font-weight: 800;
+            color: #fff;
+            margin-top: 3.5rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #1e293b;
+            display: flex;
+            align-items: center;
+        }
+
+        .article-content h3 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #e2e8f0;
+            margin-top: 2.5rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .article-content p {
+            font-size: 1.125rem;
+            line-height: 1.75;
+            color: #cbd5e1;
+            margin-bottom: 1.5rem;
+        }
+
+        .article-content ul,
+        .article-content ol {
+            font-size: 1.125rem;
+            line-height: 1.75;
+            color: #cbd5e1;
+            margin-bottom: 1.5rem;
+            padding-left: 1.5rem;
+        }
+
+        .article-content li {
+            margin-bottom: 0.5rem;
+        }
+
+        .article-content ul {
+            list-style-type: disc;
+        }
+
+        .article-content ol {
+            list-style-type: decimal;
+        }
+
+        .article-content strong {
+            color: #f8fafc;
+            font-weight: 600;
+        }
+
+        .article-content em {
+            font-style: italic;
+            color: #a78bfa;
+        }
+
+        .article-content blockquote {
+            border-left: 4px solid #8b5cf6;
+            margin-left: 0;
+            margin-right: 0;
+            font-style: italic;
+            color: #a1a1aa;
+            background-color: rgba(139, 92, 246, 0.05);
+            padding: 1.5rem;
+            border-radius: 0 0.5rem 0.5rem 0;
+            margin-bottom: 2rem;
+        }
+
+        .article-content hr {
+            border-color: #1e293b;
+            margin: 3rem 0;
+        }
+
+        /* ====== CBF Interactive Widget ====== */
+        .cbf-widget {
+            font-family: 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', monospace;
+            font-size: 12px;
+            font-weight: bold;
+            padding: 4px 12px;
+            border-radius: 4px;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            cursor: crosshair;
+            user-select: none;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            background-color: rgba(15, 23, 42, 0.85);
+            /* Tailwind slate-900 approx */
+            height: 32px;
+        }
+
+        .cbf-math {
+            font-size: 12px;
+            padding-right: 10px;
+            border-right: 1px dashed currentcolor;
+            opacity: 0.9;
+            min-width: 60px;
+            text-align: center;
+        }
+
+        .cbf-text {
+            letter-spacing: 0.5px;
+            width: 302px;
+            /* Fixed width to prevent the box from resizing when text changes */
+        }
+
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            transition: all 0.3s;
+        }
+
+        /* State: SAFE */
+        .state-safe {
+            color: #34d399;
+            /* emerald-400 */
+            border: 1px solid rgba(52, 211, 153, 0.3);
+            box-shadow: 0 0 10px rgba(52, 211, 153, 0.1), inset 0 0 5px rgba(52, 211, 153, 0.1);
+        }
+
+        .state-safe .status-indicator {
+            background-color: #34d399;
+            box-shadow: 0 0 8px #34d399;
+            animation: pulse-safe 2s infinite alternate;
+        }
+
+        /* State: WARNING */
+        .state-warning {
+            color: #fbbf24;
+            /* amber-400 */
+            border: 1px solid rgba(251, 191, 36, 0.8);
+            box-shadow: 0 0 20px rgba(251, 191, 36, 0.4), inset 0 0 10px rgba(251, 191, 36, 0.2);
+            transform: scale(1.02);
+        }
+
+        .state-warning .status-indicator {
+            background-color: #fbbf24;
+            box-shadow: 0 0 12px #fbbf24;
+            animation: pulse-warning 0.5s infinite alternate;
+        }
+
+        /* State: DANGER */
+        .state-danger {
+            color: #f43f5e;
+            /* rose-500 */
+            border: 1px solid #f43f5e;
+            box-shadow: 0 0 25px rgba(244, 63, 94, 0.6), inset 0 0 15px rgba(244, 63, 94, 0.4);
+            text-shadow: 0 0 5px rgba(244, 63, 94, 0.8);
+            transform: scale(0.98);
+        }
+
+        .state-danger .status-indicator {
+            background-color: #f43f5e;
+            box-shadow: 0 0 15px #f43f5e;
+            animation: pulse-danger 0.15s infinite alternate;
+        }
+
+        /* State: INACTIVE */
+        .state-inactive {
+            color: #64748b;
+            /* slate-500 */
+            border: 1px solid #334155;
+            /* slate-700 */
+            box-shadow: none;
+        }
+
+        .state-inactive .status-indicator {
+            background-color: #475569;
+            /* slate-600 */
+            box-shadow: none;
+            animation: none;
+        }
+
+        @keyframes pulse-safe {
+            0% {
+                opacity: 0.5;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+
+        @keyframes pulse-warning {
+            0% {
+                opacity: 0.6;
+                transform: scale(0.9);
+            }
+
+            100% {
+                opacity: 1;
+                transform: scale(1.2);
+            }
+        }
+
+        @keyframes pulse-danger {
+            0% {
+                opacity: 0.8;
+                transform: scale(0.8);
+            }
+
+            100% {
+                opacity: 1;
+                transform: scale(1.3);
+            }
+        }
+
+        /* 公式容器样式优化：极客数学块 */
+        .math-box {
+            background-color: rgba(30, 41, 59, 0.5);
+            border: 1px solid #334155;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin: 2rem 0;
+            box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+            overflow-x: auto;
+        }
+
+        .math-box-title {
+            font-family: 'ui-monospace', monospace;
+            font-size: 0.85rem;
+            color: #8b5cf6;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .mjx-chtml {
+            color: #e2e8f0 !important;
+            padding: 0.5em 0;
+        }
+    </style>
+</head>
+
+<body class="antialiased selection:bg-primary-500/30">
+    <!-- Navbar -->
+    <nav
+        class="fixed w-full z-50 bg-slate-900/80 backdrop-blur-md border-b border-slate-800 transition-all duration-300">
+        <div class="max-w-6xl mx-auto px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Logo / Back button -->
+                <a href="../../../../index.html#blog"
+                    class="flex items-center text-slate-300 hover:text-white transition-colors group">
+                    <i data-lucide="arrow-left"
+                        class="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform"></i>
+                    <span class="font-medium">Back to Portfolio</span>
+                </a>
+                <div class="hidden md:block">
+                    <div id="cbf-widget" class="cbf-widget state-safe" title="Click to toggle shield">
+                        <span id="cbf-math" class="cbf-math">h(x) ≥ 0</span>
+                        <div class="status-indicator"></div>
+                        <span id="cbf-text" class="cbf-text">BARRIER: ACTIVE | STATUS: SAFE</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="pt-32 pb-24">
+        <article class="max-w-6xl mx-auto px-6 lg:px-8">
+            <!-- Header -->
+            <header class="mb-12">
+                <h1 class="text-4xl md:text-5xl lg:text-6xl font-black text-white mb-6 leading-tight tracking-tight">
+                    Advancing Safety in Complex Systems: The Role of Control Barrier Functions
+                </h1>
+
+                <div class="flex flex-wrap items-center gap-4 text-slate-400 font-mono text-sm mb-6">
+                    <div class="flex items-center">
+                        <i data-lucide="calendar" class="w-4 h-4 mr-2"></i>
+                        <time datetime="2024-02-14">February 14, 2024</time>
+                    </div>
+                    <div class="flex items-center">
+                        <i data-lucide="book-open" class="w-4 h-4 mr-2"></i>
+                        <span>Cyber-Physical Systems</span>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap gap-2 mb-8">
+                    <span
+                        class="text-xs font-mono bg-slate-800 border border-slate-700 text-primary-400 px-3 py-1 rounded-full">#ControlTheory</span>
+                    <span
+                        class="text-xs font-mono bg-slate-800 border border-slate-700 text-primary-400 px-3 py-1 rounded-full">#CyberPhysicalSystems</span>
+                    <span
+                        class="text-xs font-mono bg-slate-800 border border-slate-700 text-primary-400 px-3 py-1 rounded-full">#CBF</span>
+                    <span
+                        class="text-xs font-mono bg-slate-800 border border-slate-700 text-primary-400 px-3 py-1 rounded-full">#NMPC</span>
+                </div>
+            </header>
+
+            <!-- Hero Image -->
+            <div class="rounded-2xl overflow-hidden mb-12 border border-slate-800 shadow-2xl max-w-5xl mx-auto">
+                <img src="../images/cbfcover.png" alt="CBF Cover" class="w-full h-auto object-cover">
+            </div>
+
+            <!-- Content Body -->
+            <div class="article-content">
+                <blockquote class="text-lg">
+                    <strong>Abstract:</strong> Safety is an important topic in control systems. In the past few decades,
+                    the rapid development of large-scale complex cyber-physical systems has dramatically stimulated the
+                    need for safety, and <strong>Control Barrier Functions (CBFs)</strong> have emerged as an advanced,
+                    flexible, and efficient method. Upon comparison of QP-based and MPC-based control frameworks, we
+                    discovered that by employing slack variables to balance safety and feasibility, frameworks like
+                    NMPC-DCBF are able to effectively achieve a perfect balance.
+                </blockquote>
+
+                <h2><i data-lucide="alert-triangle" class="w-6 h-6 mr-3 text-rose-400"></i> 1. Introduction: The Urgent
+                    Need for Safety</h2>
+
+                <p>The importance of safety for cyber-physical systems (CPS) cannot be overstated. These systems
+                    integrate computation with physical processes and are ubiquitous in critical applications such as
+                    self-driving cars, robotic systems, traffic management, and industrial automation.</p>
+
+                <div class="grid md:grid-cols-2 gap-6 my-8">
+                    <div class="bg-slate-800/50 border border-slate-700 p-6 rounded-xl">
+                        <h3 class="!mt-0 !mb-2 text-primary-400"><i data-lucide="target"
+                                class="w-5 h-5 mr-2 inline"></i> Primary Motivation</h3>
+                        <p class="text-sm"><strong>Safety Assurance:</strong> To provide a systematic approach for
+                            ensuring that safety constraints are satisfied at all times during the operation of a
+                            system.</p>
+                    </div>
+                    <div class="bg-slate-800/50 border border-slate-700 p-6 rounded-xl">
+                        <h3 class="!mt-0 !mb-2 text-emerald-400"><i data-lucide="layers"
+                                class="w-5 h-5 mr-2 inline"></i> Advanced Motivation</h3>
+                        <p class="text-sm"><strong>Integration with Complex Systems:</strong> CBFs can be seamlessly
+                            integrated with existing control objectives (like tracking or optimization) allowing for
+                            simultaneous achievement of safety and performance.</p>
+                    </div>
+                </div>
+
+                <!-- Motivation Image Comparison -->
+                <div
+                    class="my-8 rounded-xl overflow-hidden border border-slate-800 shadow-lg bg-slate-900/50 p-6 max-w-4xl mx-auto">
+                    <img src="../images/1BoundCBF.jpg" alt="CBF Boundary vs Traditional Boundary"
+                        class="w-full h-auto rounded-lg">
+                    <p class="text-sm text-slate-500 mt-4 text-center italic">Figure 1: Evolution from traditional
+                        boundaries to dynamic CBF constraints.</p>
+                </div>
+
+                <hr>
+
+                <h2><i data-lucide="function-square" class="w-6 h-6 mr-3 text-primary-400"></i> 2. The Mathematical
+                    Foundation of CBFs</h2>
+                <p>At their essence, CBFs are powerful mathematical tools designed to implement safety control policies.
+                    We start by assuming a nonlinear affine control system:</p>
+
+                <div class="math-box">
+                    <div class="math-box-title">// Non-linear Affine Control System</div>
+                    $$\dot{\mathbf{x}} = f(\mathbf{x}) + g(\mathbf{x})\mathbf{u}$$
+                </div>
+
+                <p>Based on this, we formulate the <strong>safe set</strong> $\mathcal{C}$ using a continuous function
+                    $h(\mathbf{x})$. As long as the derivative of the CBF satisfies the safe condition, the set
+                    $\mathcal{C}$ remains forward invariant (safe):</p>
+
+                <div class="math-box">
+                    <div class="math-box-title">// Core CBF Constraint & Safe Condition</div>
+                    $$\mathcal{C}=\{\mathbf{x}\in\mathbb{R}^n:h(\mathbf{x})\geq 0\}$$
+                    $$\dot{b}(\mathbf{x},\mathbf{u}) \geq -\alpha(b(\mathbf{x})) \iff \mathcal{C} \text{ is safe}$$
+                </div>
+
+                <div class="my-6 border-l-4 border-slate-600 pl-4 text-sm text-slate-400 italic">
+                    Note: This visualization and core formulation was heavily inspired by Aaron Ames' Stanford Seminar
+                    on Safety-Critical Control of Dynamic Robots.
+                </div>
+
+                <h3>From Stability to Safety: CLFs and CBFs</h3>
+                <p>The CBF evolved from the safety-based Barrier Function and the stability-based Lyapunov Function. To
+                    understand CBFs, we must first look at <strong>Control Lyapunov Functions (CLFs)</strong>, which
+                    play a critical role in the stability analysis of dynamical systems. A CLF
+                    $V(\mathbf{x},\mathbf{u})$ is positive definite and satisfies:</p>
+
+                <div class="math-box">
+                    <div class="math-box-title">// Control Lyapunov Function (CLF)</div>
+                    $$\inf_{\mathbf{u}\in\mathbb{R}^m}\dot{V}(\mathbf{x},\mathbf{u})\leq-\gamma(V(\mathbf{x},\mathbf{u}))$$
+                </div>
+
+                <p>where $\gamma$ is the control gain. Higher values of $\gamma$ usually lead to a faster response
+                    towards equilibrium but increase the risk of instability. The infimum maintains stability under all
+                    possible control inputs.</p>
+
+                <p>On the other hand, <strong>Barrier functions</strong> and <strong>Barrier certificates</strong> were
+                    developed to prevent boundary violations by distinguishing safe and unsafe regions. When combining
+                    the principles of CLFs and Barrier Certificates, we derive the CBF formulation. Compared with the
+                    CLF constraint which provides an exponential decay with the upper bound converging to zero, the CBF
+                    constraint provides a lower bound of exponential decay to keep the system state within safe
+                    boundaries across all possible control inputs.</p>
+
+                <h3>The Evolution: Variants of CBFs</h3>
+                <p>Traditional CBFs are primarily designed for first-order continuous systems (where the control
+                    directly influences the derivative of the state). However, modern robotics face challenges like
+                    <strong>high-order dynamics, discrete-time control, and uncertainty.</strong>
+                </p>
+
+                <ol>
+                    <li><strong>Exponential CBFs (ECBFs):</strong> Extends safety to high-order systems (like
+                        considering velocity and acceleration simultaneously).</li>
+                </ol>
+                <div class="math-box ml-8">
+                    <div class="math-box-title">// Exponential CBF (ECBF)</div>
+                    $$b^{(r)}(\mathbf{x},\mathbf{u}) \geq -K\eta(\mathbf{x}), \text{ where }
+                    \eta(\mathbf{x})=\begin{bmatrix}b(\mathbf{x})\\\dot{b}(\mathbf{x})\\\ddot{b}(\mathbf{x})\\\vdots\\b^{(r-1)}(\mathbf{x})\end{bmatrix}$$
+                </div>
+                <ul class="ml-8 text-sm">
+                    <li><span class="text-primary-400">►</span> <strong>Exponential Convergence:</strong> $b(
+                        \mathbf{x}(t) ) \geq Ce^{At}\eta( \mathbf{x}_0) \geq 0$</li>
+                    <li><span class="text-primary-400">►</span> <strong>Advantages:</strong> Rapid Convergence, Enhanced
+                        Robustness.</li>
+                </ul>
+
+                <ol start="2" class="mt-6">
+                    <li><strong>High-Order Control Barrier Functions (HOCBFs):</strong> Also developed to handle
+                        higher-order derivatives of the system state using class $\mathcal{K}$ functions ($\alpha_i$).
+                    </li>
+                </ol>
+                <div class="math-box ml-8">
+                    <div class="math-box-title">// High-Order CBF (HOCBF)</div>
+                    $$\sup_{\mathbf{u}\in\mathbb{R}}\left[L_f^rb(\mathbf{x},\mathbf{u})+L_gL_f^{r-1}b(\mathbf{x},\mathbf{u})\mathbf{u}+\mathcal{O}(b)\right]\geq-\alpha_r(\psi_{r-1}(\mathbf{x},\mathbf{u}))$$
+                    $$\text{where }
+                    \begin{bmatrix}\psi_1(\mathbf{x},\mathbf{u})\\\vdots\\\psi_{r-1}(\mathbf{x},\mathbf{u})\end{bmatrix}=\begin{bmatrix}\dot{b}(\mathbf{x},\mathbf{u})+\alpha_1b(\mathbf{x},\mathbf{u})\\\vdots\\\dot{\psi}_{r-2}(\mathbf{x},\mathbf{u})+\alpha_{r-1}\psi_{r-2}(\mathbf{x},\mathbf{u})\end{bmatrix}$$
+                </div>
+                <ul class="ml-8 text-sm">
+                    <li><span class="text-blue-400">►</span> <strong>Advantages:</strong> Enables a nuanced control
+                        strategy considering overall system dynamics.</li>
+                </ul>
+
+                <ol start="3" class="mt-6">
+                    <li><strong>Discrete-Time CBFs (DCBFs):</strong> The foundation for digital control algorithms
+                        running on discrete-time steps $k$:</li>
+                </ol>
+                <div class="math-box ml-8">
+                    <div class="math-box-title">// Discrete-Time CBF</div>
+                    $$\text{Control system: } \mathbf{x}_{k+1}=f(\mathbf{x}_{k},\mathbf{u}_{k})$$
+                    $$\text{Safe condition: } \Delta b(\mathbf{x}_k,\mathbf{u}_k) \ge -\alpha_k b(\mathbf{x}_k)$$
+                </div>
+                <ul class="ml-8 text-sm">
+                    <li><span class="text-amber-400">►</span> <strong>Advantages:</strong> Multi-step predictions, Local
+                        Deadlock Prevention, handles Non-Convex Constraints.</li>
+                </ul>
+
+                <div class="bg-slate-800/40 border-l-4 border-emerald-500 p-5 mt-8 mb-4 rounded-r-lg">
+                    <h4 class="text-emerald-400 font-bold mb-2">Comparing the Variants</h4>
+                    <p class="text-sm mb-3"><strong class="text-slate-200">ECBFs vs HOCBFs:</strong> Both apply to
+                        high-order control systems and degenerate to ordinary CBFs when $r=1$, allowing mutual
+                        conversion. <strong>HOCBFs</strong> are well-suited for high-dynamic complex environments where
+                        various aspects of behavior must be addressed simultaneously. <strong>ECBFs</strong> excel in
+                        scenarios demanding immediate reactions to imminent dangers by converging at an exponential
+                        rate.</p>
+                    <p class="text-sm mb-0"><strong class="text-slate-200">DCBFs:</strong> Specifically enforce
+                        constraints at discrete time steps. Segmenting the temporal domain facilitates handling
+                        non-convex constraints but introduces potentially impactful discretization errors.</p>
+                </div>
+
+                <hr>
+
+                <h2><i data-lucide="cpu" class="w-6 h-6 mr-3 text-amber-400"></i> 3. CBFs in Optimal Control Systems
+                </h2>
+                <p>In applications like Adaptive Cruise Control (ACC) where we must adjust speed while maintaining a
+                    safe distance, we rely on three pillars: <strong>CLFs</strong> for stability, <strong>CBFs</strong>
+                    for safety boundaries, and <strong>Quadratic Programming (QP)</strong> to solve the mathematical
+                    optimization.</p>
+
+                <!-- Comparison Cards for QP Frameworks -->
+                <h3 class="mb-6">Controller Design: CBF-QP vs CLF-CBF-QP</h3>
+                <div class="grid md:grid-cols-2 gap-6 mb-8">
+                    <div class="bg-slate-800/40 border border-slate-700 rounded-xl p-6">
+                        <div class="text-xl font-mono font-bold text-white border-b border-slate-700 pb-3 mb-4">CBF-QP
+                        </div>
+                        <ul class="space-y-3 text-sm">
+                            <li><strong class="text-slate-300">Motivation:</strong> Standard ACC Problem</li>
+                            <li><strong class="text-slate-300">Structure:</strong> QP + CBF constraint</li>
+                            <li><strong class="text-emerald-400">Benefits:</strong> Safety, real-time performance</li>
+                            <li><strong class="text-rose-400">Drawbacks:</strong> Ignores stability; performance merely
+                                meets the safety constraint limits.</li>
+                        </ul>
+                    </div>
+                    <div class="bg-slate-800/40 border border-slate-700 rounded-xl p-6 relative overflow-hidden">
+                        <div class="absolute top-0 right-0 bg-primary-600 text-xs font-bold px-3 py-1 rounded-bl-lg">
+                            Advanced</div>
+                        <div class="text-xl font-mono font-bold text-white border-b border-slate-700 pb-3 mb-4">
+                            CLF-CBF-QP</div>
+                        <ul class="space-y-3 text-sm">
+                            <li><strong class="text-slate-300">Motivation:</strong> ACC Problem + Stability</li>
+                            <li><strong class="text-slate-300">Structure:</strong> QP + CBF constraint + CLF constraint
+                                (with slack variable)</li>
+                            <li><strong class="text-emerald-400">Benefits:</strong> Safety, stability, real-time
+                                performance</li>
+                            <li><strong class="text-rose-400">Drawbacks:</strong> Computational complexity, requires
+                                slack variable tuning.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <p>The CBF-based QP approach optimizes autonomous vehicle performance by minimizing a cost function
+                    while considering safety constraints. The core framework is as follows:</p>
+
+                <div class="math-box">
+                    <div class="math-box-title">// CBF-QP Framework</div>
+                    $$\mathbf{u}(\mathbf{x}) = \operatorname*{argmin}_{\mathbf{u}}
+                    {\frac{1}{2}}\mathbf{u}^{T}H(\mathbf{x})\mathbf{u} + F^{T}(\mathbf{x})\mathbf{u}$$
+                    $$\text{s.t. } L_fb(\mathbf{x},\mathbf{u})+L_gb(\mathbf{x},\mathbf{u})\mathbf{u} \geq
+                    -\alpha(b(\mathbf{x},\mathbf{u}))$$
+                    $$\mathbf{u} \in \mathcal{U}_{adm}(\mathbf{x})$$
+                </div>
+
+                <p>In CLF-CBF-QP, we introduce a <strong>slack variable $\delta$</strong> to prevent the QP optimization
+                    from becoming infeasible due to strict, conflicting constraints. It permits a certain level of
+                    violation of the CLF constraints (stability), whereas violations of the CBF constraints (safety) are
+                    strictly impermissible.</p>
+
+                <div class="math-box">
+                    <div class="math-box-title">// CLF-CBF-QP Framework Formulation</div>
+                    $$\mathbf{u}(\mathbf{x}) = \operatorname*{argmin}_{\mathbf{u}, \delta}
+                    {\frac{1}{2}}\mathbf{u}^{T}H(\mathbf{x})\mathbf{u} + F^{T}(\mathbf{x})\mathbf{u} + \phi(\delta)$$
+                    $$\text{s.t. } L_fb(\mathbf{x},\mathbf{u})+L_gb(\mathbf{x},\mathbf{u})\mathbf{u} \geq
+                    -\alpha(b(\mathbf{x},\mathbf{u}))$$
+                    $$L_fV(\mathbf{x})+L_gV(\mathbf{x})\mathbf{u} \leq -\gamma(V(\mathbf{x})) + \delta$$
+                </div>
+
+                <h3>Model Predictive Control with CBFs</h3>
+                <p>Pure QP acts greedily in one step. <strong>Model Predictive Control (MPC)</strong> optimizes control
+                    inputs by predicting the future states of the system at each time step. Before introducing standard
+                    MPC, we first consider unifying DCBF and DCLF into one optimization program for discrete-time
+                    domains:</p>
+
+                <div class="math-box">
+                    <div class="math-box-title">// DCLF-DCBF Framework</div>
+                    $$\mathbf{u}_{k}=\operatorname*{argmin}_{(\mathbf{u}_{k},\delta)\in\mathbb{R}^{m+1}}
+                    \mathbf{u}_{k}^{T}H(\mathbf{x})\mathbf{u}_{k}+F^{T}(\mathbf{x})\mathbf{u}_{k}+\phi(\delta_k)$$
+                    $$\text{s.t. } \Delta V(\mathbf{x}_{k},\mathbf{u}_{k})+\gamma_{k}V(\mathbf{x}_{k})\leq \delta_k$$
+                    $$\Delta b(\mathbf{x}_{k},\mathbf{u}_{k})+\alpha_{k}b(\mathbf{x}_{k})\geq 0, \quad
+                    \mathbf{u}_{k}\in\mathcal{U}$$
+                </div>
+
+                <p>By bringing this into a predictive horizon, <strong>MPC-DCBF</strong> achieves enhanced safety by
+                    projecting multi-step cost functions. For example, a racing car can predictively overtake an
+                    opponent safely avoiding boundaries.</p>
+
+                <div class="math-box">
+                    <div class="math-box-title">// MPC-DCBF Framework</div>
+                    $$J_t^*(\mathbf{x}_t) = \min_\mathbf{u}p(\mathbf{x}_{t+N|t}) +
+                    \sum_{k=0}^{N-1}q(\mathbf{x}_{t+k|t},\mathbf{u}_{t+k|t})$$
+                    $$\text{s.t. } \mathbf{x}_{t+k+1|t} = f(\mathbf{x}_{t+k|t},\mathbf{u}_{t+k|t})$$
+                    $$\Delta b(\mathbf{x}_{t+k|t},\mathbf{u}_{t+k|t}) \geq -\alpha_{k}b(\mathbf{x}_{t+k|t})$$
+                </div>
+
+                <div class="bg-rose-900/20 border-l-4 border-rose-500 p-4 mb-8 text-sm">
+                    <strong>The Drawback:</strong> Discretization issues in standard MPC-DCBF lead to approximation
+                    errors over the prediction horizon. Finding solutions on the boundary of the state-invariant set
+                    often leads to danger when model uncertainty increases.
+                </div>
+
+                <h3>The Ultimate Conflict: Nonlinear MPC (NMPC)</h3>
+                <p class="text-lg text-amber-300 font-semibold italic text-center my-8">"Feasibility of the optimization
+                    and the system safety cannot be enhanced at the same time theoretically."</p>
+                <p>To balance this inherent conflict, we introduce slack variables $\omega_k$ directly into the CBF
+                    bounds within NMPC frameworks. NMPC utilizes predictive models to handle non-linear dynamic
+                    behaviors, preventing boundary stagnation.</p>
+
+                <!-- Comparison Cards for NMPC Frameworks -->
+                <div class="grid md:grid-cols-2 gap-6 mb-8">
+                    <div class="bg-slate-900 border border-slate-700 rounded-xl p-6">
+                        <div class="text-xl font-mono font-bold text-blue-400 border-b border-slate-700 pb-3 mb-4">
+                            NMPC-DCBF</div>
+                        <ul class="space-y-3 text-sm">
+                            <li><strong class="text-slate-300">Structure:</strong> Cost function with CLF + CBF
+                                constraint with slack variable.</li>
+                            <li><strong class="text-slate-300">Difference:</strong> CLF is used as a terminal cost,
+                                amplified by parameter $\beta$.</li>
+                            <li><strong class="text-emerald-400">Benefits:</strong> Balances feasibility with safety
+                                perfectly. Slack $\omega_k$ relaxes the CBF decay rate.</li>
+                        </ul>
+                    </div>
+                    <div class="bg-slate-900 border border-slate-700 rounded-xl p-6">
+                        <div class="text-xl font-mono font-bold text-purple-400 border-b border-slate-700 pb-3 mb-4">
+                            NMPC-DCLF-DCBF</div>
+                        <ul class="space-y-3 text-sm">
+                            <li><strong class="text-slate-300">Structure:</strong> Cost function + CBF constraint
+                                (slack) + CLF constraint (slack).</li>
+                            <li><strong class="text-slate-300">Difference:</strong> CLF is isolated as a constraint with
+                                its own slack variable $\delta_k$.</li>
+                            <li><strong class="text-emerald-400">Benefits:</strong> Adjusts the time step of constraints
+                                (e.g. $M_\mathrm{CLF}$), maximizing control over computation complexity.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="math-box">
+                    <div class="math-box-title">// NMPC-DCBF Framework Formulation</div>
+                    $$J_t^*(\mathbf{x}_t)=\min_{\mathbf{u},\omega_{k}} \beta V(\mathbf{x}_{t+N|t}) +
+                    \sum_{k=0}^{N-1}q(\mathbf{x}_{t+k|t},\mathbf{u}_{t+k|t}) + \psi(\omega_k)$$
+                    $$\text{s.t. } b(\mathbf{x}_{t+k+1|t}) \geq \omega_{k}(1-\alpha_{k})b(\mathbf{x}_{t+k|t}), \quad
+                    \omega_{k}\geq0$$
+                </div>
+
+                <div class="math-box">
+                    <div class="math-box-title">// NMPC-DCLF-DCBF Framework Formulation</div>
+                    $$J_{t}^{*}(\mathbf{x}_{t})=\min_{\mathbf{u},\omega_{k},\delta_{k}}\sum_{k=0}^{N-1}q(\mathbf{x}_{t+k|t},\mathbf{u}_{t+k|t})+\psi(\omega_{k})+\phi(\delta_{k})$$
+                    $$\text{s.t. } b(\mathbf{x}_{t+k+1|t})\geq\omega_{k}(1-\alpha_{k})b(\mathbf{x}_{t+k|t}), \quad
+                    \omega_{k}\geq0$$
+                    $$V(\mathbf{x}_{t+k+1|t})\leq(1-\gamma_{k})V(\mathbf{x}_{t+k|t})+\delta_{k}, \quad
+                    k=0,...,M_{\mathrm{CLF}}{-}1$$
+                </div>
+
+                <h3 class="mt-12 mb-6">Comparison of Optimization Frameworks</h3>
+                <p>The system safety can be influenced by many factors. Decreasing $\alpha_k$ increases overall system
+                    safety but restricts the feasible region, creating a trade-off. NMPC-DCBF and NMPC-DCLF-DCBF
+                    introduce the slack variable $\omega_k \geq 0$ which ensures the safety set doesn't needlessly
+                    shrink, thus resolving the conflict between optimization feasibility and strict safety bounds.</p>
+
+                <div class="overflow-x-auto my-8">
+                    <table
+                        class="w-full text-sm text-left align-middle mb-4 border border-slate-700 rounded-lg overflow-hidden">
+                        <thead class="text-xs text-slate-300 uppercase bg-slate-800/80 border-b border-slate-700">
+                            <tr>
+                                <th scope="col" class="px-6 py-4 border-r border-slate-700 w-1/4">Approaches</th>
+                                <th scope="col" class="px-6 py-4 text-center">Stability Criteria</th>
+                                <th scope="col" class="px-6 py-4 text-center">Safety Criteria</th>
+                                <th scope="col" class="px-6 py-4 text-center">Constraint(s)</th>
+                                <th scope="col" class="px-6 py-4 text-center">Opt. Feasibility</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-slate-400">
+                            <tr
+                                class="bg-slate-900/50 border-b border-slate-800 hover:bg-slate-800/50 transition-colors">
+                                <th scope="row"
+                                    class="px-6 py-4 font-mono font-medium text-white border-r border-slate-800">CBF-QP
+                                </th>
+                                <td class="px-6 py-4 text-center">Cost</td>
+                                <td class="px-6 py-4 text-center">Constraint</td>
+                                <td class="px-6 py-4 text-center font-mono">one-step</td>
+                                <td class="px-6 py-4 text-center"><span
+                                        class="px-2 py-1 bg-amber-500/10 text-amber-400 rounded text-xs border border-amber-500/20">Medium</span>
+                                </td>
+                            </tr>
+                            <tr
+                                class="bg-slate-900/50 border-b border-slate-800 hover:bg-slate-800/50 transition-colors">
+                                <th scope="row"
+                                    class="px-6 py-4 font-mono font-medium text-white border-r border-slate-800">
+                                    CLF-CBF-QP</th>
+                                <td class="px-6 py-4 text-center">Constraint</td>
+                                <td class="px-6 py-4 text-center">Constraint</td>
+                                <td class="px-6 py-4 text-center font-mono">one-step</td>
+                                <td class="px-6 py-4 text-center"><span
+                                        class="px-2 py-1 bg-amber-500/10 text-amber-400 rounded text-xs border border-amber-500/20">Medium</span>
+                                </td>
+                            </tr>
+                            <tr
+                                class="bg-slate-900/50 border-b border-slate-800 hover:bg-slate-800/50 transition-colors">
+                                <th scope="row"
+                                    class="px-6 py-4 font-mono font-medium text-amber-300 border-r border-slate-800">
+                                    DCLF-DCBF</th>
+                                <td class="px-6 py-4 text-center">Constraint</td>
+                                <td class="px-6 py-4 text-center">Constraint</td>
+                                <td class="px-6 py-4 text-center font-mono">one-step</td>
+                                <td class="px-6 py-4 text-center"><span
+                                        class="px-2 py-1 bg-amber-500/10 text-amber-400 rounded text-xs border border-amber-500/20">Medium</span>
+                                </td>
+                            </tr>
+                            <tr
+                                class="bg-slate-900/50 border-b border-slate-800 hover:bg-slate-800/50 transition-colors">
+                                <th scope="row"
+                                    class="px-6 py-4 font-mono font-medium text-rose-300 border-r border-slate-800">
+                                    MPC-DCBF</th>
+                                <td class="px-6 py-4 text-center">Cost</td>
+                                <td class="px-6 py-4 text-center">Constraints</td>
+                                <td class="px-6 py-4 text-center font-mono">multi-step</td>
+                                <td class="px-6 py-4 text-center"><span
+                                        class="px-2 py-1 bg-rose-500/10 text-rose-400 rounded text-xs border border-rose-500/20">Low</span>
+                                </td>
+                            </tr>
+                            <tr
+                                class="bg-slate-900/50 border-b border-slate-800 hover:bg-slate-800/50 transition-colors">
+                                <th scope="row"
+                                    class="px-6 py-4 font-mono font-medium text-emerald-300 border-r border-slate-800">
+                                    NMPC-DCBF</th>
+                                <td class="px-6 py-4 text-center">Cost</td>
+                                <td class="px-6 py-4 text-center">Constraint(s)</td>
+                                <td class="px-6 py-4 text-center font-mono">one/multi-step</td>
+                                <td class="px-6 py-4 text-center"><span
+                                        class="px-2 py-1 bg-emerald-500/10 text-emerald-400 rounded text-xs border border-emerald-500/20">High</span>
+                                </td>
+                            </tr>
+                            <tr class="bg-slate-900/50 hover:bg-slate-800/50 transition-colors">
+                                <th scope="row"
+                                    class="px-6 py-4 font-mono font-medium text-emerald-300 border-r border-slate-800">
+                                    NMPC-DCLF-DCBF</th>
+                                <td class="px-6 py-4 text-center">Constraint(s)</td>
+                                <td class="px-6 py-4 text-center">Constraint(s)</td>
+                                <td class="px-6 py-4 text-center font-mono">one/multi-step</td>
+                                <td class="px-6 py-4 text-center"><span
+                                        class="px-2 py-1 bg-emerald-500/10 text-emerald-400 rounded text-xs border border-emerald-500/20">High</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p class="text-xs text-slate-500 text-center">Table 1: Optimization structure and performance
+                        comparison of control methods. All methods ensure Strong System Safety.</p>
+                </div>
+
+                <hr>
+
+                <h2><i data-lucide="infinity" class="w-6 h-6 mr-3 text-fuchsia-400"></i> 4. Signal Temporal Logic (STL)
+                    Tasks</h2>
+                <p><strong>Signal Temporal Logic (STL)</strong> is a formal language for specifying temporal properties
+                    of signals in dynamic systems. It allows the expression of complex temporal behaviors such as
+                    "eventually," "always," or "until." When combined with CBFs, the STL specification can be encoded
+                    into a safety set $S$, enabling the synthesis of controllers that ensure safety and comply with
+                    temporal logic requirements.</p>
+
+                <p>The STL fragment consists of temporal operators and logical operations. The syntax is given by:</p>
+                <div class="math-box">
+                    <div class="math-box-title">// STL Syntax</div>
+                    $$\psi ::= \mathcal{T} \mid \mu \mid \neg\mu \mid \psi_1 \wedge \psi_2$$
+                    $$\varphi ::= G_{[a,b]}\psi \mid F_{[a,b]}\psi \mid \psi_1 U_{[a,b]} \psi_2 \mid \varphi_1 \wedge
+                    \varphi_2$$
+                    $$\phi ::= \varphi_1 \vee \varphi_2$$
+                </div>
+
+                <p>In this fragment, $\mu$ denotes atomic propositions which are Boolean-valued functions of the state.
+                    $G_{[a,b]}\psi$ ("always") means $\psi$ must hold at all times within $[a, b]$, while
+                    $F_{[a,b]}\psi$ ("eventually") means $\psi$ must hold at some point within $[a, b]$. $U_{[a,b]}$
+                    ("until") means $\psi_1$ must hold until $\psi_2$ becomes true.</p>
+
+                <h3>Smoothing Approximation</h3>
+                <p>Smoothing approximation is used to encode conjunctions in STL tasks, typically using the log-sum-exp
+                    function as a proxy for the minimum operator. Given a set of time-varying CBFs
+                    $b_i(\mathbf{x},\mathbf{u},t)$, the smooth approximation of the minimum operator (conjunction) is
+                    defined as:</p>
+
+                <div class="math-box">
+                    <div class="math-box-title">// Smooth Conjunction (AND) Approximation</div>
+                    $$b_j(\mathbf{x},\mathbf{u},t) := - \ln \left( \sum_{i=1}^p \exp(-b_i(\mathbf{x},\mathbf{u},t))
+                    \right)$$
+                </div>
+
+                <p>As the positive parameter $\eta \to \infty$, the approximation becomes an exact representation of the
+                    min operator. The smooth approximation of the disjunction (OR) of CBFs is defined as:</p>
+
+                <div class="math-box">
+                    <div class="math-box-title">// Smooth Disjunction (OR) Approximation</div>
+                    $$b(\mathbf{x},\mathbf{u},t) := \frac{\sum_{j=1}^q b_j(\mathbf{x},t)\exp(\eta
+                    b_j(\mathbf{x},t))}{\sum_{j=1}^q \exp(\eta b_j(\mathbf{x},t))}$$
+                </div>
+
+                <h3>Encoding STL Specifications with time-varying CBFs</h3>
+
+                <div class="grid md:grid-cols-2 gap-6 my-6">
+                    <div class="bg-slate-800/40 border border-slate-700 p-5 rounded-lg">
+                        <h4 class="text-fuchsia-400 font-bold mb-2">1. Single Temporal Operators</h4>
+                        <ul class="text-sm space-y-2 text-slate-300">
+                            <li><strong class="text-slate-100">Globally $G$:</strong> Define $b_1(v,t) \geq h_1(v)$ for
+                                all $t \in [a, b]$.</li>
+                            <li><strong class="text-slate-100">Finally $F$:</strong> Ensure $b_1(v,t)$ reaches threshold
+                                $h_1(v)$ at some time within $[a, b]$.</li>
+                            <li><strong class="text-slate-100">Until $U$:</strong> Define $b_1$ and $b_2$ to ensure
+                                $\mu_1$ holds until $\mu_2$ holds. The condition $b(\mathbf{x},\mathbf{u},t) \geq 0$
+                                ensures satisfaction.</li>
+                        </ul>
+                    </div>
+                    <div class="bg-slate-800/40 border border-slate-700 p-5 rounded-lg">
+                        <h4 class="text-fuchsia-400 font-bold mb-2">2. Conjunctions within single operators</h4>
+                        <p class="text-sm text-slate-300">For sequences containing conjunctions (e.g., $G_{[a,b]}(\mu_1
+                            \land \mu_2)$ or $F$ or $U$ variants), multiple CBFs are defined for each predicate $\mu_i$
+                            and combined using the smooth approximation technique to encode the conjunction.</p>
+                    </div>
+                </div>
+
+                <div class="bg-slate-900 border border-slate-700 rounded-lg p-6 mb-8 relative">
+                    <div
+                        class="absolute -left-2 -top-2 bg-fuchsia-600 text-xs font-bold px-2 py-1 rounded shadow-lg transform -rotate-2">
+                        Advanced</div>
+                    <h4 class="text-white font-bold mb-3">3. Hybrid Control for Conjunctions & Disjunctions of Temporal
+                        Operators</h4>
+                    <p class="text-sm text-slate-300 mb-4">To manage combinations of different temporal operators, a
+                        hybrid control scheme is introduced with a switching mechanism:</p>
+                    <ul class="text-sm space-y-3 text-slate-300 mb-4">
+                        <li><span class="text-fuchsia-400">►</span> <strong>Switching Mechanism:</strong> A function
+                            $o_i(t) \in \{0, 1\}$ activates or deactivates CBFs based on current relevance.</li>
+                        <li><span class="text-fuchsia-400">►</span> <strong>Conjunction Composite CFB:</strong>
+                            $b_j(\mathbf{x},\mathbf{u},t) := - \ln \left( \sum_{i=1}^p
+                            o_i(t)\exp(-b_i(\mathbf{x},\mathbf{u},t)) \right)$</li>
+                        <li><span class="text-fuchsia-400">►</span> <strong>Disjunction Composite CFB:</strong>
+                            $b(\mathbf{x},\mathbf{u},t) := \frac{\sum_{j=1}^q o_j(t)b_j(\mathbf{x},t)\exp(\eta
+                            b_j(\mathbf{x},t))}{\sum_{j=1}^q o_j(t)\exp(\eta b_j(\mathbf{x},t))}$</li>
+                    </ul>
+                    <p class="text-sm text-emerald-400 mt-2 italic border-t border-slate-800 pt-3">The temporal
+                        properties of CBFs need to be designed taking STL semantics into account. Controllers can
+                        guarantee both absolute safety and complex timing compliance.</p>
+                </div>
+
+                <hr>
+
+                <h2><i data-lucide="network" class="w-6 h-6 mr-3 text-purple-400"></i> 5. Reinforcement Learning in
+                    Complex Systems</h2>
+
+                <p>Integrating safety measures within the reinforcement learning framework is an essential topic. In
+                    relatively simple or low-dimensional systems, model-based Safety-Critical approaches make it easy to
+                    validate system performance. However, when encountering Safety-Critical control problems in complex
+                    and high-dimensional systems, pure model-based approaches face challenges. Model-free reinforcement
+                    learning methods can provide full-order dynamics models.</p>
+                <p>To address model uncertainty in Safety-Critical control problems, a unified reinforcement
+                    learning-based framework <strong>RL-CBF-CLF-QPs</strong> is designed for learning model uncertainty
+                    in CLF, CBF, and other affine constraints by dynamic control in a single learning process.</p>
+
+                <div class="bg-amber-900/20 border border-amber-500/30 rounded-lg p-4 mb-6">
+                    <h4 class="text-amber-400 font-bold text-sm mb-1"><i data-lucide="alert-circle"
+                            class="w-4 h-4 inline mr-1"></i> The Main Challenge</h4>
+                    <p class="text-sm text-slate-300 mb-0">Without proper bounds, RL agents will potentially learn
+                        unsafe policies by repeatedly experimenting with the inevitable encounters with constraint
+                        violations during the exploration phase. The CBF mathematically prevents this.</p>
+                </div>
+
+                <div
+                    class="my-8 rounded-xl overflow-hidden border border-slate-800 shadow-lg bg-slate-900/50 p-6 text-center max-w-3xl mx-auto">
+                    <!-- RL Architecture -->
+                    <div class="rounded-lg mb-4 flex relative overflow-hidden border border-slate-700">
+                        <img src="../images/rl.png" alt="RL Architecture" class="w-full h-auto object-cover">
+                    </div>
+                    <p class="text-sm text-slate-400">Figure 2: RL-CBF-CLF-QP framework mapping learned uncertainties to
+                        safety bounds (Choi, J., et al. 2020).</p>
+                </div>
+
+                <h3>Beyond Model-Free: Model-Based Constraint RL</h3>
+                <p>Model-free reinforcement learning can only learn safety policies by repeatedly experimenting with the
+                    inevitable encounters with constraint violations, which can pose serious safety problems during
+                    training.</p>
+                <p>A recent <strong>model-based constraint reinforcement learning approach</strong> incorporating a CBF
+                    directly addresses this. This approach applies the CBF to handle state constraints by mathematically
+                    penalizing tendencies to approach constraint boundaries. Leveraging model information, it enables
+                    the safe optimization of reinforcement learning policies <em>without ever violating actual safety
+                        constraints</em>. Furthermore, an adaptive mechanism is implicitly introduced to automatically
+                    select appropriate parameters, thereby strictly enhancing the performance of constraint satisfaction
+                    in high-dimensional deployments.</p>
+
+                <hr>
+
+                <h2><i data-lucide="car-front" class="w-6 h-6 mr-3 text-blue-400"></i> 6. Real-World Applications</h2>
+                <p>The control strategy explored in the previous sections is designed to ensure that the system does not
+                    enter an unsafe state or region during operation. Consequently, in domains where safety is
+                    paramount, the application of CBFs becomes critical.</p>
+                <p>In <strong>self-driving technology</strong>, CBFs ensure the vehicle stays within a safe operating
+                    range while driving. For example, they can avoid collisions or maintain lanes. In <strong>robotic
+                        systems</strong>, CBFs ensure that robots remain safe while avoiding obstacles and accomplishing
+                    tasks. They help robots navigate safely in complex environments. In <strong>manufacturing and
+                        industry</strong>, CBFs are used to ensure that robotic arms or automated equipment operate
+                    within safe constraints to prevent mechanical failure.</p>
+
+                <p>Following this, CBFs are revolutionizing physical systems across four major domains:</p>
+
+                <!-- 4-Grid Applications -->
+                <div class="grid grid-cols-2 gap-4 my-8 max-w-4xl mx-auto">
+                    <div
+                        class="bg-slate-800/50 rounded-lg p-2 border border-slate-700 flex flex-col items-center text-center hover:bg-slate-800 transition-colors">
+                        <img src="../images/app1.png" alt="Autonomous Driving"
+                            class="w-full h-32 object-cover rounded mb-2">
+                        <h4 class="font-bold text-slate-200">Autonomous Driving</h4>
+                    </div>
+                    <div
+                        class="bg-slate-800/50 rounded-lg p-2 border border-slate-700 flex flex-col items-center text-center hover:bg-slate-800 transition-colors">
+                        <img src="../images/app2.png" alt="Manipulator Robots"
+                            class="w-full h-32 object-cover rounded mb-2">
+                        <h4 class="font-bold text-slate-200">Manipulator Robots</h4>
+                    </div>
+                    <div
+                        class="bg-slate-800/50 rounded-lg p-2 border border-slate-700 flex flex-col items-center text-center hover:bg-slate-800 transition-colors">
+                        <img src="../images/app3.png" alt="Traffic Management"
+                            class="w-full h-32 object-cover rounded mb-2">
+                        <h4 class="font-bold text-slate-200">Traffic Management</h4>
+                    </div>
+                    <div
+                        class="bg-slate-800/50 rounded-lg p-2 border border-slate-700 flex flex-col items-center text-center hover:bg-slate-800 transition-colors">
+                        <img src="../images/app4.jpg" alt="Multi-Agent Systems"
+                            class="w-full h-32 object-cover rounded mb-2">
+                        <h4 class="font-bold text-slate-200">Multi-Agent Systems</h4>
+                    </div>
+                </div>
+
+                <p>Three core automotive application scenarios will be introduced in detail:</p>
+
+                <h3 class="mt-8">6.1 Lane Changing</h3>
+                <p>A new Safety-Critical lane change controller has been developed using a Finite State Machine (FSM)
+                    comprising five states: two <em>Lane Change States</em>, two <em>Midway Return States</em>, and an
+                    <em>ACC State</em>.
+                </p>
+                <p>The <strong>CLF-CBF-QP</strong> framework is used to compute the optimal inputs to the system through
+                    a rule-based control strategy. The CLF constraint tracks the desired position without needing a
+                    reference trajectory, while the CBF constraint ensures the ego vehicle maintains a safe distance
+                    from surrounding vehicles.</p>
+
+                <div
+                    class="my-8 rounded-xl overflow-hidden border border-slate-800 shadow-lg bg-slate-900/50 p-6 max-w-5xl mx-auto">
+                    <div class="grid md:grid-cols-3 gap-4 mb-4">
+                        <!-- Simulation 1 -->
+                        <div class="bg-slate-800 rounded-lg p-2 border border-slate-700 relative group overflow-hidden">
+                            <img src="../images/001.jpg" alt="Simulation 1" class="w-full rounded">
+                            <p class="text-xs text-slate-400 mt-2 text-center h-10 flex items-center justify-center">(a)
+                                Ego vehicle overtakes a slow leading one</p>
+                        </div>
+                        <!-- Simulation 2 -->
+                        <div class="bg-slate-800 rounded-lg p-2 border border-slate-700 relative group overflow-hidden">
+                            <img src="../images/002.jpg" alt="Simulation 2" class="w-full rounded">
+                            <p class="text-xs text-slate-400 mt-2 text-center h-10 flex items-center justify-center">(b)
+                                Vehicle in target lane approaches ego one</p>
+                        </div>
+                        <!-- Simulation 3 -->
+                        <div class="bg-slate-800 rounded-lg p-2 border border-slate-700 relative group overflow-hidden">
+                            <img src="../images/003.jpg" alt="Simulation 3" class="w-full rounded">
+                            <p class="text-xs text-slate-400 mt-2 text-center h-10 flex items-center justify-center">(c)
+                                Ego vehicle avoids another surrounding vehicle</p>
+                        </div>
+                    </div>
+                    <p class="text-sm text-slate-400 text-center">Figure 3: Simulations of lane changing using
+                        CLF-CBF-QP (red represents ego vehicle) (He, et al. 2021).</p>
+                </div>
+
+                <p>The rule is that during advancement, the FSM can automatically switch between different states
+                    according to driver commands and the traffic environment. This allows the ego vehicle to find safe
+                    opportunities for collision-free lane-changing maneuvers. At each moment, the vehicle can keep its
+                    distance and either avoid colliding with surrounding vehicles or successfully change lanes.</p>
+
+                <h3 class="mt-8">6.2 Lane Merging</h3>
+                <p>To improve traffic network performance, traffic management at merging points is crucial. The traffic
+                    merging problem of Connected and Automated Vehicles (CAVs) involves vehicles randomly arriving at
+                    lane origins $O$ and $O'$ and merging at a point $M$, where conflicts frequently occur.</p>
+
+                <div
+                    class="my-8 rounded-xl overflow-hidden border border-slate-800 shadow-lg bg-slate-900/50 p-6 text-center max-w-2xl mx-auto">
+                    <div
+                        class="bg-slate-800 border border-slate-700 rounded-lg mb-4 flex items-center justify-center relative overflow-hidden">
+                        <img src="../images/merging.jpg" alt="Lane Merging" class="w-full h-auto object-cover">
+                    </div>
+                    <p class="text-sm text-slate-400">Figure 4: Vehicles merging at the merging point from two lanes
+                        using CBF-QP (Xiao, Wei, et al.).</p>
+                </div>
+
+                <p>There must be sufficient safety space at point $M$, meaning the distance between the vehicle on the
+                    lane and the vehicle in front at $M$ is large enough. In addition to this constraint, the distance
+                    and speed of vehicles in the same lane must be limited. We map these safety constraints for state
+                    $x$ using <strong>CBF-QP</strong> to compute a series of subproblems in real-time.</p>
+
+                <h3 class="mt-8">6.3 Overtaking</h3>
+                <p>In standard MPC frameworks (without CBFs), the safety criterion is usually enforced with a Euclidean
+                    distance constraint. This ensures the distance between two cars remains greater than a specified
+                    safety factor. However, this often results in the car not taking evasive maneuvers until it is
+                    alarmingly close.</p>
+
+                <div
+                    class="rounded-xl overflow-hidden border border-slate-800 shadow-lg bg-slate-900/50 p-6 text-center max-w-2xl mx-auto mb-8">
+                    <div
+                        class="bg-slate-800 border border-slate-700 rounded-lg mb-4 flex items-center justify-center relative overflow-hidden">
+                        <img src="../images/overtake.jpg" alt="Overtaking" class="w-full h-auto object-cover">
+                    </div>
+                    <p class="text-sm text-slate-400">Figure 5: Overtaking another car using MPC-DCBF through predicted
+                        reachable trajectories (Zeng, J., et al. 2021).</p>
+                </div>
+
+                <p>The solution involves integrating MPC with DCBF into a single optimization problem known as
+                    <strong>MPC-DCBF</strong>. The CBF constraint compels the system to proactively avoid the other car
+                    along a projected reachable set. This approach ensures stable trajectory tracking without deviations
+                    while safely maintaining distance throughout the entire overtaking maneuver.
+                </p>
+
+                <hr>
+
+                <h2><i data-lucide="rocket" class="w-6 h-6 mr-3 text-emerald-400"></i> 7. Conclusions</h2>
+                <p>To summarize our deep dive into Control Barrier Functions:</p>
+
+                <ul class="space-y-4">
+                    <li><span class="text-primary-400 font-bold">► CBFs:</span> The ultimate safety policy mechanism in
+                        modern cyber-physical systems.</li>
+                    <li><span class="text-primary-400 font-bold">► Control Systems:</span> Seamlessly solves standard
+                        ACC problems and handles complex MPC optimization tasks.</li>
+                    <li><span class="text-primary-400 font-bold">► Complex Systems:</span> Bridges the gap in
+                        unpredictable environments, specifically for Reinforcement Learning (RL) tasks.</li>
+                    <li><span class="text-rose-400 font-bold">► The Challenge:</span> The eternal conflict between
+                        absolute safety and operational performance.</li>
+                    <li><span class="text-emerald-400 font-bold">► Ongoing Future:</span> Developing <strong>Adaptive
+                            CBFs</strong> to dynamically adjust constraints based on real-time environmental context.
+                    </li>
+                </ul>
+            </div>
+        </article>
+    </main>
+
+    <footer class="text-center py-8 border-t border-slate-800 relative z-10 bg-slate-900/50 backdrop-blur">
+        <p class="text-slate-500 text-sm">© 2026 Zeqi Li. All rights reserved.</p>
+        <p class="text-slate-600 text-xs mt-1">Built with Tailwind CSS, Lucide Icons & MathJax</p>
+    </footer>
+
+    <script>
+        lucide.createIcons();
+
+        // ====== CBF Interactive Widget Core ======
+        document.addEventListener("DOMContentLoaded", () => {
+            const widget = document.getElementById("cbf-widget");
+            const mathEl = document.getElementById("cbf-math");
+            const textEl = document.getElementById("cbf-text");
+
+            const STATES = {
+                SAFE: { class: 'state-safe', math: 'h(x) ≥ 0', text: 'BARRIER: ACTIVE | STATUS: SAFE' },
+                WARNING: { class: 'state-warning', math: 'h(x) → 0', text: 'BARRIER: LIMITING | STATUS: INTERVENING' },
+                DANGER: { class: 'state-danger', math: 'h(x) < 0', text: 'BARRIER: BREACHED | STATUS: VIOLATION' },
+                INACTIVE: { class: 'state-inactive', math: 'h(x) = ?', text: 'BARRIER: INACTIVE | STATUS: OFFLINE' }
+            };
+
+            let currentState = 'SAFE';
+            let isSystemActive = true;
+
+            const updateState = (newStateName) => {
+                if (currentState === newStateName) return;
+
+                widget.classList.remove(STATES[currentState].class);
+                widget.classList.add(STATES[newStateName].class);
+
+                mathEl.innerText = STATES[newStateName].math;
+                textEl.innerText = STATES[newStateName].text;
+
+                currentState = newStateName;
+            };
+
+            document.addEventListener("mousemove", (e) => {
+                if (!isSystemActive) return;
+
+                const rect = widget.getBoundingClientRect();
+
+                // Distance to bounding box
+                const dx = Math.max(rect.left - e.clientX, 0, e.clientX - rect.right);
+                const dy = Math.max(rect.top - e.clientY, 0, e.clientY - rect.bottom);
+                const distance = Math.sqrt(dx * dx + dy * dy);
+
+                if (distance === 0) {
+                    updateState('DANGER');
+                } else if (distance > 0 && distance < 150) {
+                    updateState('WARNING');
+                } else {
+                    updateState('SAFE');
+                }
+            });
+
+            document.addEventListener("mouseleave", () => {
+                if (isSystemActive) updateState('SAFE');
+            });
+
+            widget.addEventListener("click", () => {
+                isSystemActive = !isSystemActive;
+                if (!isSystemActive) {
+                    updateState('INACTIVE');
+                } else {
+                    updateState('SAFE');
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

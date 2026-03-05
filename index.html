@@ -506,7 +506,7 @@
                 <div
                     class="absolute -inset-1 bg-gradient-to-r from-primary-600 to-cyan-600 rounded-full blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-tilt">
                 </div>
-                <img src="assets/images/home/profile.png" alt="个人头像"
+                <img src="assets/home/profile.png" alt="个人头像"
                     class="relative w-24 h-24 rounded-full mx-auto mb-4 border-2 border-slate-700 object-cover animate-pulse-glow">
             </div>
             <h1 class="text-2xl font-bold text-white mt-4" data-i18n-key="profile.name">李泽其</h1>
@@ -903,9 +903,10 @@
                     <h3 class="text-2xl font-bold text-white">Project Practice</h3>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <a href="blog-dodo.html" class="block rounded-xl shadow-2xl overflow-hidden card-interactive"
+                    <a href="assets/blog/dodo/page/blog-dodo.html"
+                        class="block rounded-xl shadow-2xl overflow-hidden card-interactive"
                         style="transition-delay: 100ms;">
-                        <img src="assets/images/blog/dodo/dodocover.png" alt="博客封面" class="w-full h-40 object-cover">
+                        <img src="assets/blog/dodo/images/dodocover.png" alt="博客封面" class="w-full h-40 object-cover">
                         <div class="p-6">
                             <p class="text-sm text-slate-400 mb-2 font-mono" data-i18n-key="blog.item1.date">July 28,
                                 2024
@@ -935,8 +936,28 @@
                     <h3 class="text-2xl font-bold text-white">Frontier Exploration</h3>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <a href="#" class="block rounded-xl shadow-2xl overflow-hidden card-interactive relative"
+                    <a href="assets/blog/cbf/page/blog-cbf.html"
+                        class="block rounded-xl shadow-2xl overflow-hidden card-interactive scroll-animate"
                         style="transition-delay: 200ms;">
+                        <img src="assets/blog/cbf/images/cbfcover.png" alt="博客封面" class="w-full h-40 object-cover">
+                        <div class="p-6">
+                            <p class="text-sm text-slate-400 mb-2 font-mono" data-i18n-key="blog.cbf.date">Feb 14, 2024
+                            </p>
+                            <h3 class="text-lg font-bold text-white mb-3" data-i18n-key="blog.cbf.title">Advancing
+                                Safety in Complex Systems: The Role
+                                of Control Barrier Functions</h3>
+                            <p class="text-slate-400 text-sm mb-4" data-i18n-key="blog.cbf.desc">Exploring how Control
+                                Barrier Functions (CBFs)
+                                balance safety and feasibility in cyber-physical systems and reinforcement learning.</p>
+                            <div class="flex flex-wrap gap-2"><span
+                                    class="text-xs bg-slate-700 text-primary-300 px-2 py-1 rounded"
+                                    data-i18n-key="blog.cbf.tag1">ControlTheory</span><span
+                                    class="text-xs bg-slate-700 text-primary-300 px-2 py-1 rounded"
+                                    data-i18n-key="blog.cbf.tag2">CBF</span></div>
+                        </div>
+                    </a>
+                    <a href="#" class="block rounded-xl shadow-2xl overflow-hidden card-interactive relative"
+                        style="transition-delay: 300ms;">
                         <!-- Construction Badge -->
                         <div
                             class="absolute top-4 right-4 bg-amber-500/90 text-amber-950 text-xs font-bold px-3 py-1 rounded-full shadow-lg z-20 backdrop-blur-sm font-mono tracking-wider flex items-center">
@@ -1045,6 +1066,7 @@
                 'journey.item4.date': '2017年9月 - 2020年9月', 'journey.item4.degree': '工学学士, 自动化 (第一阶段)', 'journey.item4.school': '中德科技学院, 青岛科技大学, 青岛, 中国', 'journey.item4.desc': '转换 GPA: 3.6 / 4.0',
                 'blog.title': '所思所想',
                 'blog.item1.date': '2024年7月28日', 'blog.item1.title': '构建 DODO：连接鸟形双足机器人的仿真与现实', 'blog.item1.desc': '从零开始开发双足机器人：连接硬件、调试电机，并将 MATLAB/Simulink 与实时 TwinCAT 3 桥接。', 'blog.item1.tag1': '双足行走', 'blog.item1.tag2': 'Simulink', 'blog.item1.tag3': 'TwinCAT',
+                'blog.cbf.date': '2024年2月14日', 'blog.cbf.title': '提升复杂系统的安全性：控制障碍函数的作用', 'blog.cbf.desc': '探讨控制障碍函数 (CBF) 如何在信息物理系统和强化学习中平衡安全性与可行性。', 'blog.cbf.tag1': '控制理论', 'blog.cbf.tag2': 'CBF',
                 'blog.item2.date': '2025年10月28日', 'blog.item2.title': 'ROS 2 vs. ROS 1: 为什么迁移是必要的', 'blog.item2.desc': 'ROS 1 即将停止支持。探讨 ROS 2 的新特性 (DDS, 实时性) 及其对现代机器人系统的重要性。', 'blog.item2.tag2': '中间件',
                 'blog.item3.date': '2025年9月15日', 'blog.item3.title': 'Sim-to-Real 鸿沟：挑战与机遇', 'blog.item3.desc': '在模拟中训练的模型在部署到真实硬件时总会遇到问题。梳理领域随机化和系统辨识的最新方法。', 'blog.item3.tag2': 'RL',
                 'contact.title': '与我联系', 'contact.desc': '我目前正在寻找2026年秋季入学的博士项目机会。如果我的研究兴趣与您契合，欢迎随时通过邮件与我联系。',
@@ -1077,6 +1099,7 @@
                 'journey.item4.date': 'Sep 2017 - Sep 2020', 'journey.item4.degree': 'B.Sc. in Automation (Phase I)', 'journey.item4.school': 'Chinese-German Technical Faculty, Qingdao University of Science and Technology, Qingdao, China', 'journey.item4.desc': 'Transferred GPA: 3.6 / 4.0',
                 'blog.title': 'Thoughts & Notes',
                 'blog.item1.date': 'July 28, 2024', 'blog.item1.title': 'Building DODO: Bridging Simulation and Reality in Bird-like Bipedal Robotics', 'blog.item1.desc': 'Developing a bipedal robot from scratch: wiring hardware, tuning motors, and bridging MATLAB/Simulink with real-time TwinCAT 3.', 'blog.item1.tag1': 'BipedalLocomotion', 'blog.item1.tag2': 'Simulink', 'blog.item1.tag3': 'TwinCAT',
+                'blog.cbf.date': 'Feb 14, 2024', 'blog.cbf.title': 'Advancing Safety in Complex Systems: The Role of Control Barrier Functions', 'blog.cbf.desc': 'Exploring how Control Barrier Functions (CBFs) balance safety and feasibility in cyber-physical systems and reinforcement learning.', 'blog.cbf.tag1': 'ControlTheory', 'blog.cbf.tag2': 'CBF',
                 'blog.item2.date': 'Oct 28, 2025', 'blog.item2.title': 'ROS 2 vs. ROS 1: Why Migration is Necessary', 'blog.item2.desc': 'ROS 1 is approaching EOL. Discussing the new features of ROS 2 (DDS, Real-time) and their importance for modern robotics.', 'blog.item2.tag2': 'Middleware',
                 'blog.item3.date': 'Sep 15, 2025', 'blog.item3.title': 'The Sim-to-Real Gap: Challenges & Opportunities', 'blog.item3.desc': 'Models trained in simulation often fail on real hardware. Reviewing recent methods in domain randomization and system ID.', 'blog.item3.tag2': 'RL',
                 'contact.title': 'Get In Touch', 'contact.desc': 'I am currently seeking Ph.D. opportunities for Fall 2026 entry. If my research interests align with yours, please feel free to contact me via email.',
@@ -1109,6 +1132,7 @@
                 'journey.item4.date': 'Sep 2017 - Sep 2020', 'journey.item4.degree': 'B.Sc. in Automatisierungstechnik (Phase I)', 'journey.item4.school': 'Chinesisch-Deutsche Technische Fakultät, Qingdao University of Science and Technology, Qingdao, China', 'journey.item4.desc': 'Übertragene Note: 1.4',
                 'blog.title': 'Gedanken & Notizen',
                 'blog.item1.date': '28. Juli 2024', 'blog.item1.title': 'DODO bauen: Brücke zwischen Simulation und Realität in der vogelähnlichen bipedalen Robotik', 'blog.item1.desc': 'Entwicklung eines bipedalen Roboters von Grund auf: Hardware-Verkabelung, Motorabstimmung und Überbrückung von MATLAB/Simulink mit Echtzeit-TwinCAT 3.', 'blog.item1.tag1': 'Bipedale Fortbewegung', 'blog.item1.tag2': 'Simulink', 'blog.item1.tag3': 'TwinCAT',
+                'blog.cbf.date': '14. Feb 2024', 'blog.cbf.title': 'Erhöhung der Sicherheit in komplexen Systemen: Die Rolle von Control Barrier Functions', 'blog.cbf.desc': 'Untersuchung, wie Control Barrier Functions (CBFs) Sicherheit und Machbarkeit in cyber-physischen Systemen und beim verstärkenden Lernen ausbalancieren.', 'blog.cbf.tag1': 'Regelungstechnik', 'blog.cbf.tag2': 'CBF',
                 'blog.item2.date': '28. Okt 2025', 'blog.item2.title': 'ROS 2 vs. ROS 1: Warum die Migration notwendig ist', 'blog.item2.desc': 'ROS 1 nähert sich dem EOL. Diskussion der neuen Funktionen von ROS 2 (DDS, Echtzeit) und ihrer Bedeutung für moderne Robotik.', 'blog.item2.tag2': 'Middleware',
                 'blog.item3.date': '15. Sep 2025', 'blog.item3.title': 'Die Sim-to-Real-Lücke: Herausforderungen & Chancen', 'blog.item3.desc': 'In Simulation trainierte Modelle scheitern oft auf realer Hardware. Ein Überblick über aktuelle Methoden der Domänenrandomisierung.', 'blog.item3.tag2': 'RL',
                 'contact.title': 'Kontakt aufnehmen', 'contact.desc': 'Ich suche derzeit nach einer Doktorandenstelle für Herbst 2026. Wenn meine Forschungsinteressen mit Ihren übereinstimmen, zögern Sie nicht, mich per E-Mail zu kontaktieren.',
