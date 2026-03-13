@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Falsifying Reachset Conformance in Cyber-Physical Systems using Bayesian Optimization | Zeqi Li</title>
+
+    <!-- Favicon -->
+    <link rel="apple-touch-icon" sizes="180x180" href="favicon_io/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon_io/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon_io/favicon-16x16.png">
+    <link rel="manifest" href="favicon_io/site.webmanifest">
+
+    <!-- 引入 Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Tailwind 配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'inter': ['Inter', 'sans-serif'],
+                        'mono': ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
+                    },
+                    colors: {
+                        'primary': tailwind.colors.violet,
+                    },
+                }
+            }
+        }
+    </script>
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- MathJax 渲染公式 -->
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                tags: 'ams' // 允许公式自动编号
+            },
+            svg: {
+                fontCache: 'global'
+            }
+        };
+    </script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+        }
+
+        /* Custom styles for article content */
+        .article-content h2 {
+            font-size: 1.875rem;
+            font-weight: 800;
+            color: #fff;
+            margin-top: 3.5rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #1e293b;
+            display: flex;
+            align-items: center;
+        }
+
+        .article-content h3 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #e2e8f0;
+            margin-top: 2.5rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .article-content p {
+            font-size: 1.125rem;
+            line-height: 1.75;
+            color: #cbd5e1;
+            margin-bottom: 1.5rem;
+        }
+
+        .article-content ul,
+        .article-content ol {
+            font-size: 1.125rem;
+            line-height: 1.75;
+            color: #cbd5e1;
+            margin-bottom: 1.5rem;
+            padding-left: 1.5rem;
+        }
+
+        .article-content li {
+            margin-bottom: 0.5rem;
+        }
+
+        .article-content ul {
+            list-style-type: disc;
+        }
+
+        .article-content ol {
+            list-style-type: decimal;
+        }
+
+        .article-content strong {
+            color: #f8fafc;
+            font-weight: 600;
+        }
+
+        .article-content em {
+            font-style: italic;
+            color: #a78bfa;
+        }
+
+        .article-content blockquote {
+            border-left: 4px solid #8b5cf6;
+            margin-left: 0;
+            margin-right: 0;
+            font-style: italic;
+            color: #a1a1aa;
+            background-color: rgba(139, 92, 246, 0.05);
+            padding: 1.5rem;
+            border-radius: 0 0.5rem 0.5rem 0;
+            margin-bottom: 2rem;
+        }
+
+        .article-content hr {
+            border-color: #1e293b;
+            margin: 3rem 0;
+        }
+
+        /* 公式容器样式优化：极客数学块 */
+        .math-box {
+            background-color: rgba(30, 41, 59, 0.5);
+            border: 1px solid #334155;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin: 2rem 0;
+            box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+            overflow-x: auto;
+        }
+
+        .math-box-title {
+            font-family: 'ui-monospace', monospace;
+            font-size: 0.85rem;
+            color: #8b5cf6;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .mjx-chtml {
+            color: #e2e8f0 !important;
+            padding: 0.5em 0;
+        }
+    </style>
+</head>
+
+<body class="antialiased selection:bg-primary-500/30">
+    <!-- Navbar -->
+    <nav
+        class="fixed w-full z-50 bg-slate-900/80 backdrop-blur-md border-b border-slate-800 transition-all duration-300">
+        <div class="max-w-6xl mx-auto px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Logo / Back button -->
+                <a href="../../../../index.html#blog"
+                    class="flex items-center text-slate-300 hover:text-white transition-colors group">
+                    <i data-lucide="arrow-left"
+                        class="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform"></i>
+                    <span class="font-medium">Back to Portfolio</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="pt-32 pb-24">
+        <article class="max-w-6xl mx-auto px-6 lg:px-8">
+            <!-- Header -->
+            <header class="mb-12">
+                <h1 class="text-4xl md:text-5xl lg:text-6xl font-black text-white mb-6 leading-tight tracking-tight">
+                    Falsifying Reachset Conformance in Cyber-Physical Systems using Bayesian Optimization
+                </h1>
+
+                <div class="flex flex-wrap items-center gap-4 text-slate-400 font-mono text-sm mb-6">
+                    <div class="flex items-center">
+                        <i data-lucide="calendar" class="w-4 h-4 mr-2"></i>
+                        <time datetime="2024-03-07">March 7, 2024</time>
+                    </div>
+                    <div class="flex items-center">
+                        <i data-lucide="book-open" class="w-4 h-4 mr-2"></i>
+                        <span>Cyber-Physical Systems</span>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap gap-2 mb-8">
+                    <span
+                        class="text-xs font-mono bg-slate-800 border border-slate-700 text-primary-400 px-3 py-1 rounded-full">#BayesianOptimization</span>
+                    <span
+                        class="text-xs font-mono bg-slate-800 border border-slate-700 text-primary-400 px-3 py-1 rounded-full">#ReachabilityAnalysis</span>
+                    <span
+                        class="text-xs font-mono bg-slate-800 border border-slate-700 text-primary-400 px-3 py-1 rounded-full">#CyberPhysicalSystems</span>
+                    <span
+                        class="text-xs font-mono bg-slate-800 border border-slate-700 text-primary-400 px-3 py-1 rounded-full">#SafetyVerification</span>
+                </div>
+            </header>
+
+            <!-- Hero Image placeholder -->
+            <div class="rounded-2xl overflow-hidden mb-12 border border-slate-800 shadow-2xl max-w-5xl mx-auto">
+                <img src="../images/falsi_cover.png" alt="BO Cover" class="w-full h-auto object-cover" onerror="this.style.display='none'">
+            </div>
+
+            <!-- Content Body -->
+            <div class="article-content">
+                <p>The safety of Cyber-Physical Systems (CPS)—such as autonomous vehicles, smart factories, and robotics—has always been a critical issue of great concern. Because these systems involve tight coupling between physical dynamics and computational algorithms, a breach in safety could lead to personal injury, financial loss, or worse.</p>
+
+                <p>Traditionally, we rely on verification-based methodologies like model checking, non-standard analysis, or deductive verification. However, as system architectures become increasingly complex and complete mathematical models become inaccessible, these traditional methods struggle to scale.</p>
+
+                <p>Enter <strong>Search-Based Testing</strong>. By treating falsification (the act of finding a counterexample that breaks system safety) as an optimization problem, we can smartly explore the state space. In this post, we’ll explore a <strong>Robustness-Guided Search</strong> utilizing <strong>Bayesian Optimization (BO)</strong>. We will use this method to falsify <strong>Reachset Conformance</strong> between an abstract kinematic model and a highly complex dynamic vehicle model.</p>
+
+                <hr>
+
+                <h2><i data-lucide="target" class="w-6 h-6 mr-3 text-emerald-400"></i> 1. Reachability Analysis & Conformance Testing</h2>
+
+                <h3>What is a Reachable Set?</h3>
+                <p>In a dynamical system, a reachable set contains all the possible states a system can reach at a certain moment $t$, given a set of initial states and inputs. Because natural systems (like autonomous vehicles) are non-deterministic—plagued by control uncertainty and environmental disturbances—we must account for non-deterministic terms $\omega \in \mathcal{W}$.</p>
+
+                <p>The reachable set $\mathcal{R}^{non}(u)$ extended by non-determinism is formulated using the Minkowski sum ($\oplus$):</p>
+                <div class="math-box">
+                    $$\mathcal{R}^{non}(u)=\left\{x(t) \mid \dot{x}(t)\in f(\mathcal{X}(k),\mathcal{U}(k))\oplus\mathcal{W}, x(0)\in\mathcal{X}^0, u(t)\in\mathcal{U}, \omega\in\mathcal{W}\right\}$$
+                </div>
+                <p><em>(Note: The Minkowski sum adds every point vector in the uncertainty set $\mathcal{W}$ to every point in the system's state derivatives, creating a bounding envelope of all possible physical realities).</em></p>
+
+                <p>To compute and represent these sets efficiently, we use <strong>Zonotopes</strong>.</p>
+                
+                <div class="bg-slate-800/40 border-l-4 border-emerald-500 p-5 mt-8 mb-4 rounded-r-lg">
+                    <h4 class="text-emerald-400 font-bold mb-2">Definition: Zonotope</h4>
+                    <p class="text-sm mb-3">Given a center vector $c\in\mathbb{R}^n$ and a generator matrix $G\in\mathbb{R}^{n\times q}$, a zonotope is defined as:</p>
+                    <div class="math-box !mt-2 !mb-2">
+                        $$\mathcal{Z} = \left\{ c + \sum_{j=1}^{q} \beta_j G_{(\cdot, j)}\ \middle|\ \beta_j \in \left[-1,1\right] \right\}$$
+                    </div>
+                </div>
+
+                <p>Zonotopes are brilliant for this because they are closed under linear transformations and naturally represent bounds (measurement noise, external disturbances) modeled as intervals.</p>
+
+                <h3>Reachset Conformance</h3>
+                <p>To plan motion efficiently, autonomous agents use a simplified <strong>Abstract Model</strong> (a white-box system). But we must guarantee that this simplified model is a safe representation of the <strong>Complex Model</strong> (the real, highly complex, black-box vehicle).</p>
+
+                <p><strong>Reachset Conformance</strong> dictates that if the true trajectory of the complex model is <em>always</em> contained within the reachable set of the abstract model, the complex model is conformant to the abstract model:</p>
+                <div class="math-box">
+                    $$\forall t: \forall u\in\mathcal{U}: Trace_t(S_c,u)\subseteq Reach_t(S_a,u)\Leftrightarrow S_c\mathrm{~conf}_{\mathcal{R~}}S_a$$
+                </div>
+                <p>Our goal is <strong>Falsification</strong>: finding a specific test case (input sequence) where the complex trajectory breaches the boundaries of the abstract reachable set.</p>
+
+                <hr>
+
+                <h2><i data-lucide="function-square" class="w-6 h-6 mr-3 text-primary-400"></i> 2. Guiding the Search: Bayesian Optimization</h2>
+
+                <p>Because simulating complex dynamic models is computationally expensive, we cannot use brute-force grid search. Gradient descent is also out of the picture because our system is a black-box and gradients aren't available (and it's prone to local minima).</p>
+
+                <p>We use <strong>Bayesian Optimization (BO)</strong>, an algorithm explicitly designed for black-box, derivative-free global optimization.</p>
+
+                <pre class="bg-slate-900 border border-slate-700 rounded-xl p-4 overflow-x-auto text-sm font-mono text-slate-300 my-6"><code>Algorithm 1: Bayesian Optimization
+---------------------------------------------------------
+Require: Input domain X; Initial dataset D_0
+1: GP_MODEL &lt;- GP_REGRESSION(D_0)
+2: for t = 1, ..., N do
+3:     x_t &lt;- argmax_{x \in X} AC(GP_MODEL(x))
+4:     y_t &lt;- OB(x_t)
+5:     D_t &lt;- D_{t-1} U {(x_t, y_t)}
+6:     GP_MODEL &lt;- GP_REGRESSION(D_t)
+7: end for
+8: return D_N</code></pre>
+
+                <p>BO consists of two critical components:</p>
+
+                <h3>A. Gaussian Process Regression (GPR)</h3>
+                <p>GPR acts as the surrogate model fitting our objective function. Instead of outputting a single value, GPR models the <em>entire distribution</em> of possible outputs, uniquely determined by a mean function $\mu(x)$ and a covariance (kernel) function $K(x, x')$. This provides not just a prediction, but a measure of <strong>uncertainty</strong> ($\sigma(x)$).</p>
+
+                <h3>B. Acquisition Function (AC)</h3>
+                <p>The Acquisition Function uses the GP's posterior distribution to score which test case $x$ we should sample next, balancing <strong>exploration</strong> (high variance/uncertainty) and <strong>exploitation</strong> (low mean/known good results). We evaluate three distinct functions:</p>
+                <ol>
+                    <li><strong>Upper Confidence Bound (UCB):</strong> $UCB(x) = \mu(x) + \kappa \sigma(x)$</li>
+                    <li><strong>Probability of Improvement (PI):</strong> Focuses on the probability that a new sample will improve over the best current observation.</li>
+                    <li><strong>Expected Improvement (EI):</strong> Quantifies the expected <em>magnitude</em> of improvement.</li>
+                </ol>
+
+                <hr>
+
+                <h2><i data-lucide="car" class="w-6 h-6 mr-3 text-amber-400"></i> 3. Modeling the Vehicles & Defining the Objective</h2>
+
+                <p>To perform our tests, we define two mathematical models.</p>
+
+                <h3>The Abstract Model (Kinematic Single-Track)</h3>
+                <p>This is the "Bicycle Model". It simplifies four wheels into two and focuses on steering dynamics, ignoring complex slip angles. It is governed by:</p>
+                <div class="math-box">
+                    $$\begin{aligned}
+                    \dot{x}_1 &= x_{4}\cos(\beta+x_{5}) + \omega_1 \\
+                    \dot{x}_2 &= x_{4}\sin(\beta+x_{5}) + \omega_2 \\
+                    \dot{x}_3 &= 0.98 * u_{1} + \omega_3 \\
+                    \dot{x}_4 &= 0.98 * u_{2} + \omega_4 \\
+                    \dot{x}_5 &= x_{4}\cos(\beta)\frac{\tan\left(x_{3}\right)}{l} + \omega_5
+                    \end{aligned}$$
+                </div>
+                <p>Where the state vector $\textbf{x}=[p_x,p_y,\delta,v,\psi]^\top$ tracks position, steering angle, velocity, and yaw angle. To compute its reachable sets, we discretize the system using the Taylor series inside MATLAB's <strong>Continuous Reachability Analyzer (CORA)</strong> toolbox.</p>
+
+                <div class="overflow-x-auto my-8">
+                    <p class="text-xs text-slate-500 text-center mb-2"><em>Table 1: Options of the reachability analysis algorithm in CORA</em></p>
+                    <table class="w-full text-sm text-left align-middle mb-4 border border-slate-700 rounded-lg overflow-hidden">
+                        <thead class="text-xs text-slate-300 uppercase bg-slate-800/80 border-b border-slate-700">
+                            <tr>
+                                <th scope="col" class="px-6 py-4 border-r border-slate-700">Options</th>
+                                <th scope="col" class="px-6 py-4 text-center">timeStep ($\Delta t$)</th>
+                                <th scope="col" class="px-6 py-4 text-center">alg</th>
+                                <th scope="col" class="px-6 py-4 text-center">tensorOrder ($k$)</th>
+                                <th scope="col" class="px-6 py-4 text-center">taylorTerms ($\eta$)</th>
+                                <th scope="col" class="px-6 py-4 text-center">zonotopeOrder ($\rho$)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-slate-400">
+                            <tr class="bg-slate-900/50 hover:bg-slate-800/50 transition-colors">
+                                <th scope="row" class="px-6 py-4 font-mono font-medium text-white border-r border-slate-800">Value</th>
+                                <td class="px-6 py-4 text-center">0.01</td>
+                                <td class="px-6 py-4 text-center text-primary-400">'lin'</td>
+                                <td class="px-6 py-4 text-center">2</td>
+                                <td class="px-6 py-4 text-center">5</td>
+                                <td class="px-6 py-4 text-center">200</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="my-8 rounded-xl overflow-hidden border border-slate-800 shadow-lg bg-slate-900/50 p-6 max-w-4xl mx-auto flex flex-col items-center">
+                    <img src="../images/2_Bounding.png" alt="Bounding Sets" class="max-h-96 w-auto rounded-lg object-contain" onerror="this.style.display='none'">
+                    <p class="text-sm text-slate-500 mt-4 text-center italic">Image: Bounding high-order reachable sets using Zonotopes, aligned to vehicle-fixed coordinates.</p>
+                </div>
+
+                <h3>The Complex Model (7-Dimensional Single-Track)</h3>
+                <p>Our complex model behaves like a real vehicle. It calculates lateral forces, side slip angles $\beta$, yaw angle velocity $\dot\psi$, and cornering stiffness $C_{S}$.</p>
+
+                <div class="overflow-x-auto my-8">
+                    <p class="text-xs text-slate-500 text-center mb-2"><em>Table 2: Complex Vehicle parameters</em></p>
+                    <table class="w-full text-sm text-left align-middle mb-4 border border-slate-700 rounded-lg overflow-hidden">
+                        <thead class="text-xs text-slate-300 uppercase bg-slate-800/80 border-b border-slate-700">
+                            <tr>
+                                <th scope="col" class="px-6 py-4 border-r border-slate-700">Description</th>
+                                <th scope="col" class="px-6 py-4 text-center">Symbol</th>
+                                <th scope="col" class="px-6 py-4 text-center">Value</th>
+                                <th scope="col" class="px-6 py-4 text-center">Unit</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-slate-400">
+                            <tr class="bg-slate-900/50 border-b border-slate-800 hover:bg-slate-800/50 transition-colors">
+                                <th scope="row" class="px-6 py-4 font-medium text-white border-r border-slate-800">Vehicle mass</th>
+                                <td class="px-6 py-4 text-center">$m$</td>
+                                <td class="px-6 py-4 text-center">1093.3</td>
+                                <td class="px-6 py-4 text-center text-primary-300">kg</td>
+                            </tr>
+                            <tr class="bg-slate-900/50 border-b border-slate-800 hover:bg-slate-800/50 transition-colors">
+                                <th scope="row" class="px-6 py-4 font-medium text-white border-r border-slate-800">Moment of inertia (yaw)</th>
+                                <td class="px-6 py-4 text-center">$I_z$</td>
+                                <td class="px-6 py-4 text-center">1791.6</td>
+                                <td class="px-6 py-4 text-center text-primary-300">kg $\cdot$ m$^2$</td>
+                            </tr>
+                            <tr class="bg-slate-900/50 border-b border-slate-800 hover:bg-slate-800/50 transition-colors">
+                                <th scope="row" class="px-6 py-4 font-medium text-white border-r border-slate-800">Dist. from c.g. to front axle</th>
+                                <td class="px-6 py-4 text-center">$l_f$</td>
+                                <td class="px-6 py-4 text-center">1.1562</td>
+                                <td class="px-6 py-4 text-center text-primary-300">m</td>
+                            </tr>
+                            <tr class="bg-slate-900/50 border-b border-slate-800 hover:bg-slate-800/50 transition-colors">
+                                <th scope="row" class="px-6 py-4 font-medium text-white border-r border-slate-800">Cornering stiffness coeff.</th>
+                                <td class="px-6 py-4 text-center">$C_{S,i}$</td>
+                                <td class="px-6 py-4 text-center">20.898</td>
+                                <td class="px-6 py-4 text-center text-primary-300">1 / rad</td>
+                            </tr>
+                            <tr class="bg-slate-900/50 hover:bg-slate-800/50 transition-colors">
+                                <th scope="row" class="px-6 py-4 font-medium text-white border-r border-slate-800">Friction coefficient</th>
+                                <td class="px-6 py-4 text-center">$\mu$</td>
+                                <td class="px-6 py-4 text-center">[0.8, 1]</td>
+                                <td class="px-6 py-4 text-center text-primary-300">-</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h3>Parameterizing the Test Cases</h3>
+                <p>To optimize effectively, we parameterize the steering angle input $u(t)$ into geometric curves. We explored three types:</p>
+                <ol>
+                    <li><strong>Sinusoid Curve:</strong> Governed by Amplitude $A$, Period $T$, and Shift $T_s$.</li>
+                    <li><strong>Bézier Curve:</strong> Uses polynomial control points ($p_1, p_2, p_3$).</li>
+                    <li><strong>Sigmoid Curve:</strong> Creates S-shaped steering transitions.</li>
+                </ol>
+
+                <div class="my-8 rounded-xl overflow-hidden border border-slate-800 shadow-lg bg-slate-900/50 p-6 max-w-4xl mx-auto flex flex-col items-center">
+                    <img src="../images/3_testcasecurve.png" alt="Test case curves" class="max-h-96 w-auto rounded-lg object-contain" onerror="this.style.display='none'">
+                    <p class="text-sm text-slate-500 mt-4 text-center italic">Image: Sinusoid, Bézier, and Sigmoid steering angle and velocity behaviors over time.</p>
+                </div>
+
+                <h3>The Objective Function: Robustness</h3>
+                <p>The "score" BO is trying to minimize is <strong>Robustness</strong>. We define robustness as the minimum Euclidean distance between the complex model's trajectory points $\mathcal{T}_C^{t_k}(u)$ and the abstract model's reachable set boundary $\mathcal{R}_A^{t_k}(u)$ across all time steps.</p>
+
+                <p>We also account for measurement error $\varepsilon$ using an infimum distance formula:</p>
+                <div class="math-box">
+                    $$dist(x,\mathcal{R}) = \begin{cases}
+                    \inf\{d(x,y)\mid y\in\mathcal{X}\backslash\mathcal{R}\}-\varepsilon & \mathrm{~if~}x\in\mathcal{R}\\
+                    -\inf\{d(x,y)\mid y\in\mathcal{R}\}-\varepsilon & \mathrm{~if~}x\notin\mathcal{R}
+                    \end{cases}$$
+                </div>
+
+                <ul>
+                    <li><span class="text-emerald-400">►</span> <strong>Positive Robustness:</strong> The trajectory is safely inside the reachable set.</li>
+                    <li><span class="text-rose-400">►</span> <strong>Negative Robustness:</strong> The trajectory breached the reachable set (Falsification achieved!).</li>
+                </ul>
+
+                <div class="my-8 rounded-xl overflow-hidden border border-slate-800 shadow-lg bg-slate-900/50 p-6 max-w-4xl mx-auto flex flex-col items-center">
+                    <img src="../images/4_distance.png" alt="Robustness Distance" class="max-h-96 w-auto rounded-lg object-contain" onerror="this.style.display='none'">
+                    <p class="text-sm text-slate-500 mt-4 text-center italic">Image: Calculation of distance between a trajectory point and the boundary, accounting for measurement error epsilon.</p>
+                </div>
+
+                <hr>
+
+                <h2><i data-lucide="bar-chart-2" class="w-6 h-6 mr-3 text-rose-400"></i> 4. Simulation Results & Discussion</h2>
+
+                <h3>Unit Testing Bayesian Optimization</h3>
+                <p>Because BO relies heavily on prior knowledge and complex updates, we first validated our architecture using a <strong>Unit Test</strong>. We ran the system on a simplified linear model:</p>
+                <ul>
+                    <li><strong>Complex Linear:</strong> 3 states ($\dot{x}(t) = A_{3\times3}x + B u$)</li>
+                    <li><strong>Abstract Linear:</strong> 2 states ($\dot{x}(t) = A_{2\times2}x + B u$)</li>
+                </ul>
+                <p>The code successfully verified modifications to the CORA backend, bounding robustness values tightly within $[-0.25, 0.25]$ and confirming BO’s ability to find negative robustness.</p>
+
+                <h3>Efficacy of the Search</h3>
+                <p>Transitioning to the non-linear vehicle models, we initialized BO with a 5-sample dataset using the Sinusoid curve:</p>
+
+                <div class="overflow-x-auto my-4">
+                    <p class="text-xs text-slate-500 text-center mb-2"><em>Table 3: Initial dataset for Bayesian Optimization</em></p>
+                    <table class="w-full text-sm text-left align-middle mb-4 border border-slate-700 rounded-lg overflow-hidden">
+                        <thead class="text-xs text-slate-300 uppercase bg-slate-800/80 border-b border-slate-700">
+                            <tr>
+                                <th scope="col" class="px-6 py-4 border-r border-slate-700 text-center">Test case</th>
+                                <th scope="col" class="px-6 py-4 text-center">A</th>
+                                <th scope="col" class="px-6 py-4 text-center">T</th>
+                                <th scope="col" class="px-6 py-4 text-center">$T_s$</th>
+                                <th scope="col" class="px-6 py-4 text-center">v</th>
+                                <th scope="col" class="px-6 py-4 text-center">Robustness</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-slate-400">
+                            <tr class="bg-slate-900/50 border-b border-slate-800 hover:bg-slate-800/50 transition-colors">
+                                <th scope="row" class="px-6 py-4 font-medium text-white border-r border-slate-800 text-center">1</th>
+                                <td class="px-6 py-4 text-center">6</td>
+                                <td class="px-6 py-4 text-center">7</td>
+                                <td class="px-6 py-4 text-center">2</td>
+                                <td class="px-6 py-4 text-center">3</td>
+                                <td class="px-6 py-4 text-center">$2.6099 \times 10^{-5}$</td>
+                            </tr>
+                            <tr class="bg-slate-900/50 hover:bg-slate-800/50 transition-colors">
+                                <th scope="row" class="px-6 py-4 font-medium text-white border-r border-slate-800 text-center">3</th>
+                                <td class="px-6 py-4 text-center">2</td>
+                                <td class="px-6 py-4 text-center">4</td>
+                                <td class="px-6 py-4 text-center">3</td>
+                                <td class="px-6 py-4 text-center">5</td>
+                                <td class="px-6 py-4 text-center">$2.1534 \times 10^{-5}$</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <p>Using the <strong>UCB</strong> acquisition function with a 50-iteration limit, BO efficiently navigated the search space. By the 25th iteration, BO discovered a set of parameters <code>[7.99, 4.00, 3.99, 5.99]</code> that drove the robustness value to <strong class="text-rose-400">$-0.2587$</strong>. We successfully falsified the model!</p>
+
+                <div class="my-8 rounded-xl overflow-hidden border border-slate-800 shadow-lg bg-slate-900/50 p-6 max-w-4xl mx-auto flex flex-col items-center">
+                    <img src="../images/5_falsi.png" alt="Trajectory falsification" class="max-h-96 w-auto rounded-lg object-contain" onerror="this.style.display='none'">
+                    <p class="text-sm text-slate-500 mt-4 text-center italic">Image: Above - Trajectory safely inside the reachset. Below - The exact falsification moment where the complex trajectory breaks out of the Zonotope reachable set.</p>
+                </div>
+
+                <h3>Comparing Acquisition Functions</h3>
+                <p>The choice of acquisition function drastically impacts performance:</p>
+                <ul>
+                    <li><strong class="text-emerald-400">UCB (Upper Confidence Bound):</strong> Successfully found the global minimum by cleanly balancing mean and variance.</li>
+                    <li><strong class="text-amber-400">EI (Expected Improvement):</strong> Exhibited high fluctuation. It required bumping iterations up to 100 to finally identify the global minimum.</li>
+                    <li><strong class="text-rose-400">PI (Probability of Improvement):</strong> Rapidly stabilized early in the run but got <strong>trapped in a local minimum</strong>, failing to find the true falsification case regardless of extra iterations.</li>
+                </ul>
+
+                <div class="my-8 rounded-xl overflow-hidden border border-slate-800 shadow-lg bg-slate-900/50 p-6 max-w-4xl mx-auto flex flex-col items-center">
+                    <img src="../images/8_EI.png" alt="Acquisition Functions" class="max-h-96 w-auto rounded-lg object-contain" onerror="this.style.display='none'">
+                    <p class="text-sm text-slate-500 mt-4 text-center italic">Image: Searched robustness of EI (left) showing massive fluctuation, and PI (right) flatlining in a local minimum.</p>
+                </div>
+
+                <p>Furthermore, swapping the Sinusoid curve for <strong>Bézier</strong> and <strong>Sigmoid</strong> curves yielded similarly successful falsifications within 50 iterations, proving the flexibility of the parameterization.</p>
+
+                <div class="my-8 rounded-xl overflow-hidden border border-slate-800 shadow-lg bg-slate-900/50 p-6 max-w-4xl mx-auto flex flex-col items-center">
+                    <img src="../images/9_beziertest.png" alt="Curve Conformance" class="max-h-96 w-auto rounded-lg object-contain" onerror="this.style.display='none'">
+                    <p class="text-sm text-slate-500 mt-4 text-center italic">Image: Conformance relationship falsification using Bézier and Sigmoid test case curves.</p>
+                </div>
+
+                <h3>Generalizability: Semi-Trailer Truck Model</h3>
+                <p>To ensure this methodology scales to highly complex industry use-cases, we replaced the simple car with a <strong>Semi-trailer truck model</strong> (Tractor, Hitch, and Trailer).</p>
+
+                <p>The abstract representation tracks planar motion and hitch angle $\alpha$. The complex counterpart is a Simulink 3DOF Vehicle Dynamics Blockset model that accounts for aerodynamic drag $F_{\mathrm{aero}}$, rolling resistance $F_{\mathrm{roll}}$, and requires a closed-loop forward feedback controller to align torque $T$ inputs with the abstract model's acceleration.</p>
+
+                <div class="my-8 rounded-xl overflow-hidden border border-slate-800 shadow-lg bg-slate-900/50 p-6 max-w-4xl mx-auto flex flex-col items-center">
+                    <img src="../images/11_axis.png" alt="Two-axle tractor towing a two-axle trailer" class="max-h-96 w-auto rounded-lg object-contain" onerror="this.style.display='none'">
+                    <p class="text-sm text-slate-500 mt-4 text-center italic">Image: Simulink dynamic model architecture for a two-axle tractor towing a trailer.</p>
+                </div>
+
+                <p>After 50 iterations, BO evaluated the individual conformance of the Tractor, Hitch, and Trailer. The algorithm successfully identified a test case where the trajectory of the <strong>Hitch</strong> narrowly exceeded its reachable set, proving the method's robust generalizability to multi-body dynamical systems.</p>
+
+                <div class="my-8 rounded-xl overflow-hidden border border-slate-800 shadow-lg bg-slate-900/50 p-6 max-w-4xl mx-auto flex flex-col items-center">
+                    <img src="../images/12_gene.png" alt="Semi-trailer Conformance" class="max-h-96 w-auto rounded-lg object-contain" onerror="this.style.display='none'">
+                    <p class="text-sm text-slate-500 mt-4 text-center italic">Image: Conformance relationship of Trailer center, Hitch center, and Tractor center.</p>
+                </div>
+
+                <h2><i data-lucide="compass" class="w-6 h-6 mr-3 text-cyan-400"></i> 5. Deep Dive: Why This Architecture, and Is It Reasonable?</h2>
+
+                <p>If you look closely at the methodology, you might wonder: <em>Why go through the trouble of combining abstract models, complex models, continuous robustness metrics, and Bayesian Optimization?</em></p>
+
+                <p>Let's break down the engineering pain points and the logical chain that makes this architecture not just reasonable, but a highly elegant solution for the industry.</p>
+
+                <h3>The Logical Chain: Why do it this way?</h3>
+
+                <p><strong>1. The Abstract vs. Complex Dilemma</strong></p>
+                <ul>
+                    <li><span class="text-rose-400">►</span> <strong>The Pain Point:</strong> High-fidelity vehicle models (like a 7-DOF Simulink model) are computationally heavy and essentially "black boxes." If an autonomous driving system uses this for real-time trajectory planning, the compute lag would be fatal.</li>
+                    <li><span class="text-emerald-400">►</span> <strong>The Solution:</strong> The vehicle runs a highly simplified "Bicycle Kinematic Model" (the Abstract Model) which calculates quickly and can generate mathematical "safety boundaries" (Reachable Sets).</li>
+                    <li><span class="text-amber-400">►</span> <strong>The Catch:</strong> How do you prove your simplified model isn't <em>too</em> simple? What if the real vehicle's physical inertia pushes it outside those safety boundaries? Hence, we need <strong>Reachset Conformance Testing</strong> to pit the real physics against the simplified math.</li>
+                </ul>
+
+                <p><strong>2. Escaping the "Boolean Trap" with a Robustness Metric</strong></p>
+                <ul>
+                    <li><span class="text-rose-400">►</span> <strong>The Pain Point:</strong> If we just check if a trajectory breaches the reachable set, the output is binary: <code>True</code> (safe) or <code>False</code> (unsafe). For a search algorithm, this is like trying to find a hole in a massive flat field while blindfolded—there is no sense of direction.</li>
+                    <li><span class="text-emerald-400">►</span> <strong>The Solution:</strong> The authors transformed a Boolean problem into a <strong>continuous distance problem</strong>. By calculating the <em>distance</em> from the trajectory to the safety boundary, the algorithm gets a "Robustness Score."
+                        <ul class="mt-2 list-none">
+                            <li><i data-lucide="check" class="w-4 h-4 inline-block mr-1 text-emerald-400"></i> Distance > 0: Safe (but tells us how far we are from danger).</li>
+                            <li><i data-lucide="x" class="w-4 h-4 inline-block mr-1 text-rose-400"></i> Distance < 0: Breach! (Falsification successful).</li>
+                        </ul>
+                    </li>
+                    <li><span class="text-cyan-400">►</span> <strong>The Result:</strong> The search algorithm now has a gradient. It simply follows the path where the robustness number keeps getting smaller.</li>
+                </ul>
+
+                <p><strong>3. Why Bayesian Optimization?</strong></p>
+                <ul>
+                    <li><span class="text-rose-400">►</span> <strong>The Pain Point:</strong> We need to find the exact input that causes a negative robustness score.
+                        <ul class="mt-2 list-none">
+                            <li>- <em>Random Search</em> is too inefficient.</li>
+                            <li>- <em>Grid Search</em> causes a combinatorial explosion.</li>
+                            <li>- <em>Gradient Descent</em> is impossible because the complex vehicle simulator is a derivative-free black box.</li>
+                        </ul>
+                    </li>
+                    <li><span class="text-emerald-400">►</span> <strong>The Solution:</strong> <strong>Bayesian Optimization (BO)</strong> is custom-built for expensive, black-box functions. By building a Gaussian Process surrogate model in its "mind," BO guesses where the minimum might be while mathematically balancing the exploration of unknown areas.</li>
+                </ul>
+
+                <p><strong>4. Beating the Curse of Dimensionality via Parameterization</strong></p>
+                <ul>
+                    <li><span class="text-rose-400">►</span> <strong>The Pain Point:</strong> A steering sequence over 5 seconds might contain hundreds of data points (time steps). If BO tries to optimize a 500-dimensional array, the math breaks down.</li>
+                    <li><span class="text-emerald-400">►</span> <strong>The Solution:</strong> The authors forced the steering inputs to follow geometric curves (like Sinusoid or Bézier). Instead of optimizing 500 individual points, BO only needs to tweak 3 or 4 parameters (e.g., Amplitude, Period, Shift).</li>
+                </ul>
+
+                <h3>The Verdict: Is this approach reasonable?</h3>
+
+                <p><strong>Yes, it is a highly reasonable and cutting-edge engineering trade-off.</strong></p>
+
+                <p>Think of Bayesian Optimization in this context as a brilliant detective: Instead of interrogating every single suspect in a city (Grid Search), the detective interrogates a few key people, models the probability of where the culprit is hiding (Gaussian Process), and catches the suspect in just 25 to 50 attempts.</p>
+
+                <p><strong>The Strengths:</strong></p>
+                <ul>
+                    <li><span class="text-emerald-400">►</span> <strong>Extreme Sample Efficiency:</strong> It saves massive amounts of compute time. Running a heavy Simulink trailer simulation thousands of times is unfeasible; doing it 50 times is trivial.</li>
+                    <li><span class="text-emerald-400">►</span> <strong>Black-Box Friendly:</strong> This methodology requires zero knowledge of the complex model's internal differential equations. This perfectly matches the automotive industry, where OEMs often use compiled, black-box models provided by Tier-1 suppliers.</li>
+                </ul>
+
+                <p><strong>The Inherent Risks (The "Gotchas"):</strong></p>
+                <p>However, the architecture does have bounds:</p>
+                <ol>
+                    <li><strong>The "Flat Landscape" Trap:</strong> If the abstract model is given too much uncertainty ($\omega$), the reachable set becomes a massive envelope. The trajectory might run parallel to the boundary, resulting in a constant robustness score. If the score doesn't change, BO loses its "scent" and searches blindly.</li>
+                    <li><strong>Dimensionality Limits:</strong> While parameterizing inputs into 4 dimensions works beautifully, if we were to test a highly complex urban scenario (requiring 30+ parameters for pedestrians, traffic lights, and multiple vehicles), the $O(N^3)$ matrix inversion complexity of BO's Gaussian Process would cause the algorithm itself to bottleneck.</li>
+                </ol>
+
+                <p>Ultimately, by bridging formal reachability analysis with probabilistic machine learning, this framework offers a highly scalable, practical path forward for testing the un-testable in Cyber-Physical Systems.</p>
+
+                <hr>
+
+                <h2><i data-lucide="lightbulb" class="w-6 h-6 mr-3 text-amber-400"></i> 6. Conclusion & Future Outlook</h2>
+
+                <p>While Bayesian Optimization is sample-efficient and mathematically elegant, the research highlighted specific challenges:</p>
+
+                <ol>
+                    <li><strong>Flat Robustness Landscapes:</strong> If the abstract model’s non-determinism bounds ($\mathcal{W}$) are overly conservative (too large), the trajectory maintains a constant distance to the nearest set edge. This creates a flat optimization landscape (constant robustness), starving the Gaussian Process of gradients and preventing it from escaping local minima.
+                        <div class="mt-4 mb-6"><img src="../images/13_notgoodshape.png" alt="Flat Landscape" class="max-h-64 object-contain rounded-lg border border-slate-800" onerror="this.style.display='none'"></div>
+                    </li>
+                    <li><strong>Poor Abstract Model Design:</strong> If the abstract model fundamentally fails to capture the complex dynamics, trajectories will wildly deviate. Falsification becomes trivial, but the resulting test cases are useless for edge-case debugging.
+                        <div class="mt-4 mb-6"><img src="../images/14_notgoodmodel.png" alt="Poor Abstract Model" class="max-h-64 object-contain rounded-lg border border-slate-800" onerror="this.style.display='none'"></div>
+                    </li>
+                    <li><strong>Hardware & Time Constraints:</strong> BO's GP updates scale poorly ($O(N^3)$) with dataset size. Limiting iterations prevents finding the global optimum if the space is highly non-linear.</li>
+                </ol>
+
+                <p><strong>Future Directions:</strong><br>
+                To escape deep local minima, future iterations could integrate <strong>Monte Carlo Tree Search (MCTS)</strong> as an upper-layer guide for BO, effectively combining global tree exploration with BO's local exploitation. Furthermore, integrating Bayesian Optimization natively into reachability toolboxes (like CORA) as an alternative to classical Rapidly-exploring Random Trees (RRT) presents an exciting frontier for conformance synthesis.</p>
+
+                <div class="bg-slate-800/50 border border-slate-700 p-8 rounded-xl my-10 shadow-lg">
+                    <h3 class="!mt-0 !mb-4 text-2xl font-bold text-white flex items-center">
+                        <i data-lucide="check-circle" class="w-6 h-6 mr-3 text-primary-400"></i>
+                        Conclusion
+                    </h3>
+                    <p class="text-slate-300">This project demonstrates that coupling Reachset Conformance checking with Robustness-Guided Bayesian Optimization is a highly effective, generalized approach for test case generation. By parameterizing inputs and treating safety verification as an optimization problem, we can systematically hunt down system vulnerabilities—ensuring that the cyber-physical systems of tomorrow are fundamentally safer.</p>
+                </div>
+
+            </div>
+        </article>
+    </main>
+
+    <!-- Footer Script -->
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+    </script>
+</body>
+</html>
