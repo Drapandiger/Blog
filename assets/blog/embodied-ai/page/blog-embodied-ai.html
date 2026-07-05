@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh" class="scroll-smooth">
+<html lang="en" class="scroll-smooth">
 
 <head>
     <meta charset="UTF-8">
@@ -10,31 +10,56 @@
     <link rel="apple-touch-icon" sizes="180x180" href="../../../../favicon_io/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="../../../../favicon_io/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="../../../../favicon_io/favicon-16x16.png">
+    <link rel="manifest" href="../../../../favicon_io/site.webmanifest">
 
-    <!-- Tailwind CSS -->
+    <meta name="theme-color" content="#FBFAF7" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#171512" media="(prefers-color-scheme: dark)">
+
+    <!-- Pre-paint theme script: must run before Tailwind to avoid a dark-mode flash -->
+    <script>
+        (function () {
+            var stored = localStorage.getItem('theme'); // 'light' | 'dark' | null
+            var mq = window.matchMedia('(prefers-color-scheme: dark)');
+            function apply(dark) { document.documentElement.classList.toggle('dark', dark); }
+            apply(stored ? stored === 'dark' : mq.matches);
+            mq.addEventListener('change', function (e) {
+                if (!localStorage.getItem('theme')) apply(e.matches);
+            });
+        })();
+    </script>
+
+    <!-- Tailwind CSS (CDN) -->
     <script src="https://cdn.tailwindcss.com"></script>
-
-    <!-- Tailwind Config -->
     <script>
         tailwind.config = {
+            darkMode: 'class',
             theme: {
                 extend: {
-                    fontFamily: {
-                        'inter': ['Inter', 'sans-serif'],
-                        'mono': ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
-                    },
                     colors: {
-                        'primary': tailwind.colors.violet,
+                        paper: 'var(--bg)', subtle: 'var(--bg-subtle)', surface: 'var(--surface)',
+                        ink: 'var(--ink)', body: 'var(--ink-secondary)', muted: 'var(--muted)',
+                        faint: 'var(--faint)', line: 'var(--border)', 'line-strong': 'var(--border-strong)',
+                        accent: 'var(--accent)', 'accent-hover': 'var(--accent-hover)',
+                        'accent-soft': 'var(--accent-soft)', 'accent-on': 'var(--accent-on)',
+                        status: 'var(--status)', 'status-soft': 'var(--status-soft)',
+                        warn: 'var(--warn)', 'warn-soft': 'var(--warn-soft)'
                     },
+                    fontFamily: {
+                        serif: ['Source Serif 4', 'Georgia', 'Songti SC', 'STSong', 'SimSun', 'serif'],
+                        sans: ['Inter', 'system-ui', '-apple-system', 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans CJK SC', 'sans-serif'],
+                        mono: ['IBM Plex Mono', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Consolas', 'monospace']
+                    },
+                    borderRadius: { sm: 'var(--r-sm)', md: 'var(--r-md)', lg: 'var(--r-lg)' },
+                    boxShadow: { sm: 'var(--shadow-sm)', md: 'var(--shadow-md)', lg: 'var(--shadow-lg)' }
                 }
             }
         }
     </script>
 
     <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://unpkg.com/lucide@0.454.0"></script>
 
-    <!-- MathJax Configuration and Script -->
+    <!-- MathJax 3 -->
     <script>
         window.MathJax = {
             tex: {
@@ -42,432 +67,495 @@
                 displayMath: [['$$', '$$'], ['\\[', '\\]']],
                 tags: 'ams'
             },
-            svg: {
-                fontCache: 'global'
+            chtml: {
+                scale: 1.0
             }
         };
     </script>
-    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 
+    <!-- Google Fonts: Source Serif 4 + Inter + IBM Plex Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #0f172a;
-            color: #f8fafc;
+        /* ============ Design tokens (The Preprint) ============ */
+        :root {
+            --bg: #FBFAF7;
+            --bg-subtle: #F4F1EA;
+            --surface: #FFFFFF;
+            --ink: #1F1D1A;
+            --ink-secondary: #44403A;
+            --muted: #78716C;
+            --faint: #A8A29B;
+            --border: #E7E2D8;
+            --border-strong: #D6CFC2;
+            --accent: #9A3B26;
+            --accent-hover: #7C2D1B;
+            --accent-soft: #F5E9E4;
+            --accent-on: #FFFFFF;
+            --status: #3F6C51;
+            --status-soft: #E9F0EB;
+            --warn: #8A6D1F;
+            --warn-soft: #F6EFDC;
+            --selection-bg: #EBD9D2;
+            --focus-ring: #9A3B26;
+
+            --r-sm: 4px;
+            --r-md: 8px;
+            --r-lg: 12px;
+            --r-full: 999px;
+
+            --shadow-sm: 0 1px 2px rgba(31, 29, 26, 0.05);
+            --shadow-md: 0 2px 8px rgba(31, 29, 26, 0.06), 0 1px 2px rgba(31, 29, 26, 0.04);
+            --shadow-lg: 0 8px 24px rgba(31, 29, 26, 0.09), 0 2px 6px rgba(31, 29, 26, 0.05);
+
+            --font-serif: 'Source Serif 4', Georgia, 'Songti SC', 'STSong', 'SimSun', serif;
+            --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans CJK SC', sans-serif;
+            --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+            --ease: cubic-bezier(0.25, 0.1, 0.25, 1);
+            --t-fast: 150ms;
+            --t-med: 300ms;
         }
+
+        html.dark {
+            --bg: #171512;
+            --bg-subtle: #211E1A;
+            --surface: #1E1B17;
+            --ink: #EDE9E1;
+            --ink-secondary: #C9C3B8;
+            --muted: #948D82;
+            --faint: #6B655C;
+            --border: #322E28;
+            --border-strong: #453F37;
+            --accent: #D98E75;
+            --accent-hover: #E5A992;
+            --accent-soft: #33241E;
+            --accent-on: #1F1D1A;
+            --status: #8AB99A;
+            --status-soft: #22302A;
+            --warn: #CDB068;
+            --warn-soft: #2E2817;
+            --selection-bg: #4A2E24;
+            --focus-ring: #D98E75;
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+            --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.45), 0 1px 2px rgba(0, 0, 0, 0.3);
+            --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+        }
+
+        /* ============ Base ============ */
+        body {
+            background: var(--bg);
+            color: var(--ink-secondary);
+            font-family: var(--font-sans);
+        }
+
+        h1, h2, h3, h4 { color: var(--ink); }
+        ::selection { background: var(--selection-bg); }
+        :focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+
+        /* ============ Reading progress bar ============ */
+        #progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 2px;
+            width: 0;
+            background: var(--accent);
+            z-index: 60;
+        }
+
+        /* ============ Header ============ */
+        #site-header {
+            background: color-mix(in srgb, var(--bg) 92%, transparent);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+
+        .nav-link {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--ink-secondary);
+            transition: color var(--t-fast) var(--ease);
+        }
+        .nav-link:hover { color: var(--ink); }
+
+        .theme-toggle {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 6px;
+            color: var(--muted);
+            transition: color var(--t-fast) var(--ease);
+        }
+        .theme-toggle:hover { color: var(--accent); }
+        .icon-sun { display: none; }
+        html.dark .icon-sun { display: inline-flex; }
+        html.dark .icon-moon { display: none; }
+        .icon-moon { display: inline-flex; }
+
+        /* ============ Article header ============ */
+        .kicker {
+            font-family: var(--font-mono);
+            font-weight: 500;
+            font-size: 0.75rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .article-title {
+            font-size: clamp(2rem, 4.5vw, 3rem);
+            line-height: 1.15;
+            letter-spacing: -0.01em;
+        }
+
+        .mono-meta {
+            font-family: var(--font-mono);
+            font-size: 0.8125rem;
+            color: var(--muted);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .tag {
+            font-family: var(--font-mono);
+            font-size: 0.6875rem;
+            color: var(--muted);
+            background: var(--bg-subtle);
+            border: 1px solid var(--border);
+            border-radius: var(--r-sm);
+            padding: 2px 8px;
+        }
+
+        /* ============ Article body typography ============ */
+        .article-content {
+            font-family: var(--font-serif);
+            font-size: 1.125rem;
+            line-height: 1.8;
+            color: var(--ink-secondary);
+        }
+        @media (max-width: 767px) {
+            .article-content { font-size: 1.0625rem; line-height: 1.75; }
+        }
+
+        /* 42rem prose measure; figures may break out to 52rem */
+        .article-content > * { max-width: 42rem; margin-inline: auto; }
+        .article-content > .fig-block { max-width: 52rem; }
+
+        .article-content p { margin-bottom: 1.25em; }
+        .article-content strong { font-weight: 600; color: var(--ink); }
+
+        .article-content a {
+            color: var(--accent);
+            text-decoration: underline;
+            text-underline-offset: 3px;
+            text-decoration-color: color-mix(in srgb, var(--accent) 40%, transparent);
+            transition: color var(--t-fast) var(--ease), text-decoration-color var(--t-fast) var(--ease);
+        }
+        .article-content a:hover { color: var(--accent-hover); text-decoration-color: currentColor; }
 
         .article-content h2 {
-            font-size: 1.875rem;
-            font-weight: 800;
-            color: #fff;
-            margin-top: 3.5rem;
-            margin-bottom: 1.5rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 1px solid #1e293b;
-            display: flex;
-            align-items: center;
-        }
-
-        .article-content p {
-            font-size: 1.125rem;
-            line-height: 1.75;
-            color: #cbd5e1;
-            margin-bottom: 1.5rem;
-        }
-
-        .article-content blockquote {
-            border-left: 4px solid #8b5cf6;
-            margin-left: 0;
-            margin-right: 0;
-            font-style: italic;
-            color: #a1a1aa;
-            background-color: rgba(139, 92, 246, 0.05);
-            padding: 1.5rem;
-            border-radius: 0 0.5rem 0.5rem 0;
-            margin-bottom: 2rem;
-        }
-
-        .article-content ul {
-            font-size: 1.125rem;
-            line-height: 1.75;
-            color: #cbd5e1;
-            margin-bottom: 1.5rem;
-            padding-left: 1.5rem;
-            list-style-type: disc;
-        }
-
-        .article-content strong {
-            color: #f8fafc;
             font-weight: 600;
-        }
-
-        .article-content h3 {
             font-size: 1.5rem;
-            font-weight: 700;
-            color: #e2e8f0;
-            margin-top: 2.5rem;
+            line-height: 1.3;
+            margin-top: 3rem;
             margin-bottom: 1rem;
         }
-
-        .article-content h4 {
-            font-size: 1.25rem;
+        .article-content h2::before {
+            content: '';
+            display: block;
+            width: 3rem;
+            height: 2px;
+            background: var(--accent);
+            margin-bottom: 1rem;
+        }
+        .article-content h3 {
             font-weight: 600;
-            color: #cbd5e1;
+            font-size: 1.1875rem;
+            line-height: 1.35;
             margin-top: 2rem;
             margin-bottom: 0.75rem;
         }
-
-        .article-content table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 2rem;
-            text-align: left;
-            font-size: 1rem;
-        }
-
-        .article-content th,
-        .article-content td {
-            padding: 1rem;
-            border: 1px solid #334155;
-        }
-
-        .article-content th {
-            background-color: #1e293b;
-            color: #f8fafc;
+        .article-content h4 {
+            font-family: var(--font-sans);
             font-weight: 600;
+            font-size: 1rem;
+            margin-top: 1.5rem;
+            margin-bottom: 0.5rem;
         }
 
-        .article-content td {
-            color: #cbd5e1;
-            background-color: rgba(15, 23, 42, 0.5);
+        /* Hover-revealed heading anchors */
+        .hanchor {
+            margin-left: 0.5rem;
+            font-family: var(--font-sans);
+            font-weight: 400;
+            color: var(--faint) !important;
+            text-decoration: none !important;
+            opacity: 0;
+            transition: opacity var(--t-fast) var(--ease), color var(--t-fast) var(--ease);
+        }
+        .article-content h2:hover .hanchor,
+        .article-content h3:hover .hanchor { opacity: 1; }
+        .hanchor:hover { color: var(--accent) !important; }
+
+        .article-content ul {
+            list-style: disc;
+            padding-left: 1.5rem;
+            margin-bottom: 1.25em;
+        }
+        .article-content ol {
+            list-style: decimal;
+            padding-left: 1.5rem;
+            margin-bottom: 1.25em;
+        }
+        .article-content li { margin-bottom: 0.5em; }
+        .article-content li::marker { color: var(--muted); }
+
+        .article-content hr {
+            border: 0;
+            border-top: 1px solid var(--border);
+            margin-block: 3rem;
         }
 
-        .article-content pre {
-            background-color: #1e293b;
-            padding: 1.5rem;
-            border-radius: 0.5rem;
-            overflow-x: auto;
-            color: #e2e8f0;
-            font-family: 'ui-monospace', monospace;
-            margin-bottom: 1.5rem;
-            border: 1px solid #334155;
-            line-height: 1.5;
+        .article-content blockquote {
+            border-left: 3px solid var(--border-strong);
+            padding-left: 1.25rem;
+            margin-block: 1.5rem;
+        }
+        .article-content .callout-title {
+            font-family: var(--font-sans);
+            font-weight: 600;
+            font-size: 0.9375rem;
+            color: var(--ink);
+            margin-bottom: 0.5rem;
+        }
+        .article-content blockquote p:not(.callout-title) {
+            font-size: 1.0625rem;
+            color: var(--ink-secondary);
         }
 
         .article-content code {
-            font-family: 'ui-monospace', monospace;
-            color: #a78bfa;
-            background-color: rgba(139, 92, 246, 0.1);
-            padding: 0.2rem 0.4rem;
-            border-radius: 0.25rem;
-            font-size: 0.9em;
+            font-family: var(--font-mono);
+            font-size: 0.875em;
+            background: var(--bg-subtle);
+            border: 1px solid var(--border);
+            border-radius: var(--r-sm);
+            padding: 1px 5px;
+            color: var(--ink);
         }
-
-        .article-content hr {
-            border-color: #334155;
-            margin: 3rem 0;
-        }
-
-        /* ====== Latin Motto Decoration ====== */
-        .latin-motto-container {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-family: 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', monospace;
-            font-size: 14px;
-            z-index: 1000;
-        }
-
-        .motto-node {
-            display: flex;
-            align-items: center;
-            cursor: crosshair;
-            color: #64748b;
-            transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
-        }
-
-        .motto-node .node-id {
-            font-weight: 700;
-            padding: 4px 8px;
-            background: rgba(30, 41, 59, 0.8);
-            border: 1px solid #334155;
-            border-radius: 4px;
-            transition: all 0.3s ease;
-        }
-
-        .motto-node .node-text {
-            max-width: 0;
-            opacity: 0;
-            overflow: hidden;
-            white-space: nowrap;
-            font-style: italic;
-            color: #10b981;
-            transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
-        }
-
-        .latin-motto-container:hover .motto-node {
-            opacity: 0.3;
-            filter: blur(1px);
-        }
-
-        .latin-motto-container .motto-node:hover {
-            opacity: 1;
-            filter: blur(0);
-        }
-
-        .latin-motto-container .motto-node.active .node-id,
-        .latin-motto-container .motto-node:hover .node-id {
-            color: #0f172a;
-        }
-
-        .latin-motto-container .motto-node.active .node-text,
-        .latin-motto-container .motto-node:hover .node-text {
-            max-width: 300px;
-            opacity: 1;
-            padding-left: 12px;
-        }
-
-        /* --- Individual Colors for Nodes --- */
-
-        /* Node 1: Blue */
-        .motto-node.node-1 .node-text {
-            color: #3b82f6;
-        }
-
-        .latin-motto-container .motto-node.node-1.active .node-id,
-        .latin-motto-container .motto-node.node-1:hover .node-id {
-            background: #3b82f6;
-            border-color: #3b82f6;
-            box-shadow: 0 0 12px rgba(59, 130, 246, 0.6);
-        }
-
-        /* Node 2: Purple */
-        .motto-node.node-2 .node-text {
-            color: #a855f7;
-        }
-
-        .latin-motto-container .motto-node.node-2.active .node-id,
-        .latin-motto-container .motto-node.node-2:hover .node-id {
-            background: #a855f7;
-            border-color: #a855f7;
-            box-shadow: 0 0 12px rgba(168, 85, 247, 0.6);
-        }
-
-        /* Node 3: Emerald (Default from before) */
-        .motto-node.node-3 .node-text {
-            color: #10b981;
-        }
-
-        .latin-motto-container .motto-node.node-3.active .node-id,
-        .latin-motto-container .motto-node.node-3:hover .node-id {
-            background: #10b981;
-            border-color: #10b981;
-            box-shadow: 0 0 12px rgba(16, 185, 129, 0.6);
-        }
-
-        /* Node 4: Rose */
-        .motto-node.node-4 .node-text {
-            color: #f43f5e;
-        }
-
-        .latin-motto-container .motto-node.node-4.active .node-id,
-        .latin-motto-container .motto-node.node-4:hover .node-id {
-            background: #f43f5e;
-            border-color: #f43f5e;
-            box-shadow: 0 0 12px rgba(244, 63, 94, 0.6);
-        }
-
-        /* Node 5: Cyan */
-        .motto-node.node-5 .node-text {
-            color: #06b6d4;
-        }
-
-        .latin-motto-container .motto-node.node-5.active .node-id,
-        .latin-motto-container .motto-node.node-5:hover .node-id {
-            background: #06b6d4;
-            border-color: #06b6d4;
-            box-shadow: 0 0 12px rgba(6, 182, 212, 0.6);
-        }
-
-        /* Node Ω: Amber (Golden) */
-        .motto-node.omega .node-text {
-            color: #f59e0b;
-        }
-
-        .latin-motto-container .motto-node.omega.active .node-id,
-        .latin-motto-container .motto-node.omega:hover .node-id {
-            background: #f59e0b;
-            border-color: #f59e0b;
-            box-shadow: 0 0 12px rgba(245, 158, 11, 0.6);
-        }
-
-        /* Node 3: Emerald (Default from before) */
-        .motto-node.node-3 .node-text {
-            color: #10b981;
-        }
-
-        .latin-motto-container .motto-node.node-3.active .node-id,
-        .latin-motto-container .motto-node.node-3:hover .node-id {
-            background: #10b981;
-            border-color: #10b981;
-            box-shadow: 0 0 12px rgba(16, 185, 129, 0.6);
-        }
-
-        /* Node 4: Rose */
-        .motto-node.node-4 .node-text {
-            color: #f43f5e;
-        }
-
-        .latin-motto-container .motto-node.node-4.active .node-id,
-        .latin-motto-container .motto-node.node-4:hover .node-id {
-            background: #f43f5e;
-            border-color: #f43f5e;
-            box-shadow: 0 0 12px rgba(244, 63, 94, 0.6);
-        }
-
-        /* Node 5: Cyan */
-        .motto-node.node-5 .node-text {
-            color: #06b6d4;
-        }
-
-        .latin-motto-container .motto-node.node-5.active .node-id,
-        .latin-motto-container .motto-node.node-5:hover .node-id {
-            background: #06b6d4;
-            border-color: #06b6d4;
-            box-shadow: 0 0 12px rgba(6, 182, 212, 0.6);
-        }
-
-        /* Node Ω: Amber (Golden) */
-        .motto-node.omega .node-text {
-            color: #f59e0b;
-        }
-
-        .latin-motto-container .motto-node.omega.active .node-id,
-        .latin-motto-container .motto-node.omega:hover .node-id {
-            background: #f59e0b;
-            border-color: #f59e0b;
-            box-shadow: 0 0 12px rgba(245, 158, 11, 0.6);
-        }
-
-        /* 公式容器样式优化：极客数学块 */
-        .math-box {
-            background-color: rgba(30, 41, 59, 0.5);
-            border: 1px solid #334155;
-            border-radius: 0.75rem;
-            padding: 1.5rem;
-            margin: 2rem 0;
-            box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+        .article-content pre {
+            background: var(--bg-subtle);
+            border: 1px solid var(--border);
+            border-radius: var(--r-md);
+            padding: 1rem 1.25rem;
+            font-family: var(--font-mono);
+            font-size: 0.8125rem;
+            line-height: 1.7;
             overflow-x: auto;
+            margin-block: 1.5rem;
+        }
+        .article-content pre code { background: none; border: 0; padding: 0; }
+
+        /* ============ Figures & tables ============ */
+        .fig-block {
+            width: 100%;
+            margin-block: 2rem;
+        }
+        .fig-img {
+            width: 100%;
+            height: auto;
+            border-radius: var(--r-md);
+            border: 1px solid var(--border);
+        }
+        html.dark .fig-img { background: var(--surface); padding: 8px; }
+        .figcap {
+            font-family: var(--font-sans);
+            font-size: 0.8125rem;
+            line-height: 1.6;
+            color: var(--muted);
+            margin-top: 0.75rem;
+            text-align: left;
         }
 
-        .math-box-title {
-            font-family: 'ui-monospace', monospace;
-            font-size: 0.85rem;
-            color: #a78bfa;
-            margin-bottom: 0.5rem;
+        .fig-block table {
+            width: 100%;
+            min-width: 640px;
+            border-collapse: collapse;
+            font-family: var(--font-sans);
+            font-size: 0.875rem;
+            line-height: 1.55;
+            text-align: left;
+        }
+        .fig-block thead th {
+            font-weight: 600;
+            color: var(--ink);
+            border-bottom: 2px solid var(--border-strong);
+            padding: 0.625rem 0.875rem;
+            vertical-align: top;
+        }
+        .fig-block tbody th {
+            font-weight: 600;
+            color: var(--ink);
+            border-bottom: 1px solid var(--border);
+            padding: 0.625rem 0.875rem;
+            vertical-align: top;
+        }
+        .fig-block td {
+            color: var(--ink-secondary);
+            border-bottom: 1px solid var(--border);
+            padding: 0.625rem 0.875rem;
+            vertical-align: top;
+        }
+        .fig-block tbody tr { transition: background-color var(--t-fast) var(--ease); }
+        .fig-block tbody tr:hover { background: var(--bg-subtle); }
+        .td-mono { font-family: var(--font-mono); font-size: 0.75rem; }
+
+        /* ============ Comparison cards ============ */
+        .article-content .cmp-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--r-lg);
+            padding: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        .article-content .cmp-card.cmp-hl { border-color: var(--border-strong); }
+        .article-content .cmp-title {
+            font-family: var(--font-sans);
+            font-weight: 600;
+            font-size: 1rem;
+            color: var(--ink);
+            margin: 0 0 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+        .article-content .cmp-hl .cmp-title { color: var(--accent); }
+        .article-content .cmp-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            font-family: var(--font-mono);
+            font-size: 0.8125rem;
+            line-height: 1.6;
+            color: var(--ink-secondary);
+            flex: 1;
+        }
+        .article-content .cmp-list li {
+            border-bottom: 1px solid var(--border);
+            padding-block: 0.5rem;
+            margin: 0;
+        }
+        .article-content .cmp-list li:last-child { border-bottom: 0; }
+        .cmp-key {
+            display: block;
+            font-family: var(--font-mono);
+            font-size: 0.6875rem;
             text-transform: uppercase;
-            letter-spacing: 0.05em;
+            letter-spacing: 0.08em;
+            color: var(--faint);
+            margin-bottom: 0.25rem;
         }
 
-        .mjx-chtml {
-            color: #e2e8f0 !important;
-            padding: 0.5em 0;
+        /* ============ Math (MathJax 3, chtml) ============ */
+        .math-box {
+            margin-block: 1.75rem;
+            overflow-x: auto;
+            overflow-y: hidden;
+            padding-block: 0.25rem;
+        }
+        .math-box-title {
+            font-family: var(--font-mono);
+            font-size: 0.6875rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--faint);
+            margin-bottom: 0.25rem;
+        }
+        mjx-container { color: var(--ink-secondary); }
+        .math-box mjx-container[display="true"] { margin: 0.5em 0 !important; }
+
+        /* ============ Footer ============ */
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.9375rem;
+            font-weight: 500;
+            color: var(--accent);
+            transition: color var(--t-fast) var(--ease);
+        }
+        .back-link:hover { color: var(--accent-hover); text-decoration: underline; text-underline-offset: 3px; }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, ::before, ::after { transition: none !important; animation: none !important; }
+            html { scroll-behavior: auto; }
         }
     </style>
 </head>
 
-<body class="antialiased selection:bg-primary-500/30">
+<body class="antialiased">
 
-    <!-- Navigation -->
-    <nav
-        class="fixed w-full z-50 bg-slate-900/80 backdrop-blur-md border-b border-slate-800 transition-all duration-300">
-        <div class="max-w-6xl mx-auto px-6 lg:px-8">
-            <div class="flex items-center justify-between h-16">
-                <!-- Logo / Back button -->
-                <a href="../../../../index.html#blog"
-                    class="flex items-center text-slate-300 hover:text-white transition-colors group">
-                    <i data-lucide="arrow-left"
-                        class="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform"></i>
-                    <span class="font-medium tracking-wide">Back to Portfolio</span>
-                </a>
+    <!-- Reading progress bar -->
+    <div id="progress-bar" aria-hidden="true"></div>
 
-                <div class="hidden lg:flex latin-motto-container">
-                    <div class="motto-node node-1" data-target="section-1">
-                        <span class="node-id">Ⅰ</span>
-                        <span class="node-text">Motus sine mente, nihil.</span>
-                    </div>
-                    <div class="motto-node node-2" data-target="section-2">
-                        <span class="node-id">Ⅱ</span>
-                        <span class="node-text">Sentio, ergo ago.</span>
-                    </div>
-                    <div class="motto-node node-3" data-target="section-3">
-                        <span class="node-id">Ⅲ</span>
-                        <span class="node-text">Corpus mechanicum, anima digitalis.</span>
-                    </div>
-                    <div class="motto-node node-4" data-target="section-4">
-                        <span class="node-id">Ⅳ</span>
-                        <span class="node-text">Quaero, ergo capio.</span>
-                    </div>
-                    <div class="motto-node node-5" data-target="section-5">
-                        <span class="node-id">Ⅴ</span>
-                        <span class="node-text">Unus spiritus, multa corpora.</span>
-                    </div>
-                    <div class="motto-node omega" data-target="section-6">
-                        <span class="node-id">Ω</span>
-                        <span class="node-text">Finis instrumenti, principium agentis.</span>
-                    </div>
-                </div>
+    <!-- Sticky header -->
+    <header id="site-header" class="sticky top-0 z-50 border-b border-line">
+        <div class="max-w-6xl mx-auto px-6 md:px-10 h-14 md:h-16 flex items-center justify-between gap-4">
+            <a href="../../../../index.html" class="flex items-baseline gap-3 min-w-0">
+                <span class="font-serif font-semibold text-lg text-ink whitespace-nowrap">Zeqi Li</span>
+                <span class="font-mono text-xs text-muted hidden sm:inline">李泽其</span>
+            </a>
+            <div class="flex items-center gap-3 md:gap-5">
+                <a href="../../../../index.html#blog" class="nav-link md:hidden whitespace-nowrap">← Blog</a>
+                <nav class="hidden md:flex items-center gap-7">
+                    <a href="../../../../index.html#research" class="nav-link">Research</a>
+                    <a href="../../../../index.html#journey" class="nav-link">Journey</a>
+                    <a href="../../../../index.html#blog" class="nav-link">Blog</a>
+                    <a href="../../../../index.html#contact" class="nav-link">Contact</a>
+                </nav>
+                <span class="hidden md:block w-px h-4 bg-line-strong"></span>
+                <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode">
+                    <span class="icon-moon"><i data-lucide="moon" class="w-[18px] h-[18px]"></i></span>
+                    <span class="icon-sun"><i data-lucide="sun" class="w-[18px] h-[18px]"></i></span>
+                </button>
             </div>
         </div>
-    </nav>
+    </header>
 
     <!-- Main Content -->
-    <main class="pt-32 pb-24">
-        <article class="max-w-6xl mx-auto px-6 lg:px-8">
-            <!-- Header -->
-            <header class="mb-12">
-                <h1 class="text-4xl md:text-5xl lg:text-6xl font-black text-white mb-6 leading-tight tracking-tight">
+    <main>
+        <article class="px-5 pt-12 md:pt-16 pb-8">
+            <!-- Article header -->
+            <header class="max-w-[46rem] mx-auto mb-10">
+                <p class="kicker text-accent mb-4">Frontier Exploration</p>
+                <h1 class="font-serif font-semibold article-title">
                     From Tools to Agents: Embodied AI and Mobile Manipulators Driven by Large Models
                 </h1>
-
-                <div class="flex flex-wrap items-center gap-4 text-slate-400 font-mono text-sm mb-6">
-                    <div class="flex items-center">
-                        <i data-lucide="calendar" class="w-4 h-4 mr-2"></i>
-                        <time datetime=\"2024-12-31\">December 31, 2024</time>
-                    </div>
-                    <div class="flex items-center">
-                        <i data-lucide="book-open" class="w-4 h-4 mr-2"></i>
-                        <span>Embodied AI / LLMs</span>
-                    </div>
+                <p class="mono-meta mt-5">Zeqi Li · <time datetime="2024-12-31">December 31, 2024</time> · 26 min read</p>
+                <div class="flex flex-wrap gap-2 mt-5">
+                    <span class="tag">#Robotics</span>
+                    <span class="tag">#EmbodiedAI</span>
+                    <span class="tag">#FoundationModels</span>
+                    <span class="tag">#MobileManipulation</span>
                 </div>
-
-                <div class="flex flex-wrap gap-2 mb-8">
-                    <span
-                        class="text-xs font-mono bg-slate-800 border border-slate-700 text-primary-400 px-3 py-1 rounded-full">#Robotics</span>
-                    <span
-                        class="text-xs font-mono bg-slate-800 border border-slate-700 text-primary-400 px-3 py-1 rounded-full">#EmbodiedAI</span>
-                    <span
-                        class="text-xs font-mono bg-slate-800 border border-slate-700 text-primary-400 px-3 py-1 rounded-full">#FoundationModels</span>
-                    <span
-                        class="text-xs font-mono bg-slate-800 border border-slate-700 text-primary-400 px-3 py-1 rounded-full">#MobileManipulation</span>
-                </div>
-                <p class="text-xl text-slate-400 leading-relaxed italic">
+                <p class="font-serif italic text-lg leading-relaxed text-[var(--muted)] mt-6">
                     "To engineer the next generation of autonomous systems, an analytical deconstruction of traditional
                     robotic failure modes is required."
                 </p>
             </header>
 
-            <!-- Hero Image Placeholder -->
-            <div class="rounded-2xl overflow-hidden mb-12 border border-slate-800 shadow-2xl max-w-5xl mx-auto">
-                <img src="../images/coverimg.png" alt="Embodied AI Cover" class="w-full h-auto object-cover">
-            </div>
+            <!-- Cover figure -->
+            <figure class="max-w-[52rem] mx-auto mb-12">
+                <img src="../images/coverimg.png" alt="Embodied AI Cover" class="fig-img">
+            </figure>
 
             <!-- Article Body -->
             <div class="article-content">
 
                 <!-- Section 1 Anchor -->
-                <div id="section-1" class="scroll-mt-32"></div>
+                <div id="section-1" class="scroll-mt-24"></div>
                 <h2>🤖 1. The Systemic Bottlenecks of
                     Traditional Robotic Manipulators and the Dawn of Embodied AI</h2>
 
@@ -497,53 +585,53 @@
                 </p>
 
                 <div
-                    class="my-8 rounded-xl overflow-hidden border border-slate-800 shadow-lg bg-slate-900/50 p-6 text-center max-w-5xl mx-auto flex flex-col items-center">
-                    <div class="overflow-x-auto w-full mb-4">
+                    class="fig-block">
+                    <div class="overflow-x-auto w-full">
                         <table
-                            class="w-full text-sm text-left align-middle mb-4 border border-slate-700 rounded-lg overflow-hidden">
-                            <thead class="text-xs text-slate-300 uppercase bg-slate-800/80 border-b border-slate-700">
+                           >
+                            <thead>
                                 <tr>
-                                    <th scope="col" class="px-6 py-4 border-r border-slate-700">Macro-Category</th>
-                                    <th scope="col" class="px-6 py-4">Specific Sub-Tasks</th>
-                                    <th scope="col" class="px-6 py-4">Kinematic/Perception Requirement</th>
-                                    <th scope="col" class="px-6 py-4">Environmental Entropy</th>
+                                    <th scope="col">Macro-Category</th>
+                                    <th scope="col">Specific Sub-Tasks</th>
+                                    <th scope="col">Kinematic/Perception Requirement</th>
+                                    <th scope="col">Environmental Entropy</th>
                                 </tr>
                             </thead>
-                            <tbody class="text-slate-400">
+                            <tbody>
                                 <tr
-                                    class="bg-slate-900/50 border-b border-slate-800 hover:bg-slate-800/50 transition-colors">
+                                   >
                                     <th scope="row"
-                                        class="px-6 py-4 font-mono font-medium text-white border-r border-slate-800">
+                                       >
                                         Assistive & Logistics</th>
-                                    <td class="px-6 py-4">Machine tending, Part feeding (Multi-item), Transportation
+                                    <td>Machine tending, Part feeding (Multi-item), Transportation
                                     </td>
-                                    <td class="px-6 py-4">High payload, \(SE(2)\) navigation + End-effector positioning
+                                    <td>High payload, \(SE(2)\) navigation + End-effector positioning
                                     </td>
-                                    <td class="px-6 py-4">Low to Medium (Structured aisles, fixed stations)</td>
+                                    <td>Low to Medium (Structured aisles, fixed stations)</td>
                                 </tr>
                                 <tr
-                                    class="bg-slate-900/50 border-b border-slate-800 hover:bg-slate-800/50 transition-colors">
+                                   >
                                     <th scope="row"
-                                        class="px-6 py-4 font-mono font-medium text-white border-r border-slate-800">
+                                       >
                                         Service
                                         & Maintenance</th>
-                                    <td class="px-6 py-4">Cleaning, Inspection, MRO (Maintenance, Repair, Overhaul)</td>
-                                    <td class="px-6 py-4">Continuous trajectory tracking, force-torque sensing</td>
-                                    <td class="px-6 py-4">Medium (Static obstacles, predictable changes)</td>
+                                    <td>Cleaning, Inspection, MRO (Maintenance, Repair, Overhaul)</td>
+                                    <td>Continuous trajectory tracking, force-torque sensing</td>
+                                    <td>Medium (Static obstacles, predictable changes)</td>
                                 </tr>
-                                <tr class="bg-slate-900/50 hover:bg-slate-800/50 transition-colors">
+                                <tr>
                                     <th scope="row"
-                                        class="px-6 py-4 font-mono font-medium text-white border-r border-slate-800">
+                                       >
                                         Assembly</th>
-                                    <td class="px-6 py-4">Process execution, Pre-assembly, Part feeding (Single-item)
+                                    <td>Process execution, Pre-assembly, Part feeding (Single-item)
                                     </td>
-                                    <td class="px-6 py-4">Sub-millimeter repeatability, Impedance control</td>
-                                    <td class="px-6 py-4">Low (Jigs, fixtures, fixed reference frames)</td>
+                                    <td>Sub-millimeter repeatability, Impedance control</td>
+                                    <td>Low (Jigs, fixtures, fixed reference frames)</td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
-                    <p class="text-sm text-slate-400">Table 1: Operational Taxonomy of Traditional Mobile Manipulators
+                    <p class="figcap">Table 1: Operational Taxonomy of Traditional Mobile Manipulators
                     </p>
                 </div>
 
@@ -590,10 +678,10 @@
                         obstacles.</em>
                 </p>
 
-                <blockquote class="border-l-4 border-rose-500 pl-4 py-3 my-6 bg-slate-800/50 rounded-r-lg">
-                    <p class="text-rose-400 font-bold mb-2"><i data-lucide="alert-circle"
+                <blockquote>
+                    <p class="callout-title"><i data-lucide="alert-circle"
                             class="inline w-4 h-4 mr-1 mb-1"></i> The Semantic Deficit:</p>
-                    <p class="text-slate-300 m-0">
+                    <p>
                         This mathematical framework is devoid of <em>semantic affordance</em>. To a classical planner, a
                         "chair" is merely an arbitrary polygon mesh at Cartesian coordinate \((x, y, z)\). The algorithm
                         cannot compute the object's utility, fragility, or relational context. If a task requires
@@ -614,11 +702,11 @@
                 </p>
 
                 <div
-                    class="my-8 rounded-xl overflow-hidden border border-slate-800 shadow-lg bg-slate-900/50 p-6 text-center max-w-4xl mx-auto flex flex-col items-center">
+                    class="fig-block">
                     <img src="../images/fig1.png" alt="Traditional Sense-Plan-Act Pipeline Failure Diagram"
-                        class="w-full h-auto object-cover rounded-lg mb-4 hover:scale-[1.02] transition-transform duration-500">
+                        class="fig-img">
 
-                    <p class="text-sm text-slate-400">Figure 1: Traditional Sense-Plan-Act (SPA) Pipeline Failure</p>
+                    <p class="figcap">Figure 1: Traditional Sense-Plan-Act (SPA) Pipeline Failure</p>
                 </div>
 
                 <p>This rigid architecture results in:</p>
@@ -673,66 +761,64 @@
                 </ul>
 
                 <div
-                    class="my-8 rounded-xl overflow-hidden border border-slate-800 shadow-lg bg-slate-900/50 p-6 text-center max-w-5xl mx-auto flex flex-col items-center">
+                    class="fig-block">
                     <div class="grid md:grid-cols-2 gap-6 w-full mb-4">
                         <!-- Traditional Robotics -->
-                        <div class="bg-slate-800/50 border border-slate-700 p-6 rounded-xl flex flex-col h-full">
-                            <h3 class="!mt-0 !mb-4 text-slate-300 border-b border-slate-700 pb-2"><i data-lucide="cpu"
+                        <div class="cmp-card">
+                            <h3 class="cmp-title"><i data-lucide="cpu"
                                     class="w-5 h-5 mr-2 inline"></i> Traditional Robotics
                                 (Industry 4.0)</h3>
-                            <ul class="space-y-4 m-0 p-0 list-none font-mono text-sm flex-1">
-                                <li class="border-b border-slate-700/50 pb-2"><span
-                                        class="text-slate-500 block text-xs mb-1 uppercase tracking-wider">State
-                                        Representation</span><span class="text-slate-300">Explicit 6D Poses,
+                            <ul class="cmp-list">
+                                <li><span
+                                        class="cmp-key">State
+                                        Representation</span><span>Explicit 6D Poses,
                                         Coordinate Frames, Point Clouds</span></li>
-                                <li class="border-b border-slate-700/50 pb-2"><span
-                                        class="text-slate-500 block text-xs mb-1 uppercase tracking-wider">Task
-                                        Specification</span><span class="text-slate-300">Hardcoded ROS scripts,
+                                <li><span
+                                        class="cmp-key">Task
+                                        Specification</span><span>Hardcoded ROS scripts,
                                         Waypoints</span></li>
-                                <li class="border-b border-slate-700/50 pb-2"><span
-                                        class="text-slate-500 block text-xs mb-1 uppercase tracking-wider">Adaptability</span><span
-                                        class="text-rose-400">Brittleness to dynamic changes / Unseen objects</span>
+                                <li><span
+                                        class="cmp-key">Adaptability</span><span
+                                       >Brittleness to dynamic changes / Unseen objects</span>
                                 </li>
-                                <li class="border-b border-slate-700/50 pb-2"><span
-                                        class="text-slate-500 block text-xs mb-1 uppercase tracking-wider">Reasoning
-                                        Modality</span><span class="text-slate-300">Pure Geometric Math (\(SE(3)\)
+                                <li><span
+                                        class="cmp-key">Reasoning
+                                        Modality</span><span>Pure Geometric Math (\(SE(3)\)
                                         optimization)</span></li>
-                                <li><span class="text-slate-500 block text-xs mb-1 uppercase tracking-wider">Action
-                                        Generation</span><span class="text-slate-300">Inverse Kinematics + RRT*/A*
+                                <li><span class="cmp-key">Action
+                                        Generation</span><span>Inverse Kinematics + RRT*/A*
                                         Planners</span></li>
                             </ul>
                         </div>
                         <!-- Embodied AI -->
                         <div
-                            class="bg-slate-800/50 border border-emerald-500/50 shadow-[0_0_15px_rgba(16,185,129,0.1)] p-6 rounded-xl flex flex-col h-full relative overflow-hidden">
-                            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 to-teal-400">
-                            </div>
-                            <h3 class="!mt-0 !mb-4 text-emerald-400 border-b border-slate-700 pb-2"><i data-lucide="bot"
+                            class="cmp-card cmp-hl">
+                            <h3 class="cmp-title"><i data-lucide="bot"
                                     class="w-5 h-5 mr-2 inline"></i> Embodied AI (Spatial
                                 Intelligence)</h3>
-                            <ul class="space-y-4 m-0 p-0 list-none font-mono text-sm flex-1">
-                                <li class="border-b border-slate-700/50 pb-2"><span
-                                        class="text-emerald-500/70 block text-xs mb-1 uppercase tracking-wider">State
-                                        Representation</span><span class="text-emerald-100">Implicit Latent
+                            <ul class="cmp-list">
+                                <li><span
+                                        class="cmp-key">State
+                                        Representation</span><span>Implicit Latent
                                         Embeddings (Visual & Semantic)</span></li>
-                                <li class="border-b border-slate-700/50 pb-2"><span
-                                        class="text-emerald-500/70 block text-xs mb-1 uppercase tracking-wider">Task
-                                        Specification</span><span class="text-emerald-100">Natural Language (LLM
+                                <li><span
+                                        class="cmp-key">Task
+                                        Specification</span><span>Natural Language (LLM
                                         prompt-driven)</span></li>
-                                <li class="border-b border-slate-700/50 pb-2"><span
-                                        class="text-emerald-500/70 block text-xs mb-1 uppercase tracking-wider">Adaptability</span><span
-                                        class="text-emerald-300">Zero-shot / Few-shot generalization</span></li>
-                                <li class="border-b border-slate-700/50 pb-2"><span
-                                        class="text-emerald-500/70 block text-xs mb-1 uppercase tracking-wider">Reasoning
-                                        Modality</span><span class="text-emerald-100">Semantic & Physical Affordance
+                                <li><span
+                                        class="cmp-key">Adaptability</span><span
+                                       >Zero-shot / Few-shot generalization</span></li>
+                                <li><span
+                                        class="cmp-key">Reasoning
+                                        Modality</span><span>Semantic & Physical Affordance
                                         reasoning</span></li>
-                                <li><span class="text-emerald-500/70 block text-xs mb-1 uppercase tracking-wider">Action
-                                        Generation</span><span class="text-emerald-100">End-to-end Neural Policy
+                                <li><span class="cmp-key">Action
+                                        Generation</span><span>End-to-end Neural Policy
                                         (Transformer-based)</span></li>
                             </ul>
                         </div>
                     </div>
-                    <p class="text-sm text-slate-400">Comparison 1: Classical Robotics vs. Embodied AI Paradigms</p>
+                    <p class="figcap">Comparison 1: Classical Robotics vs. Embodied AI Paradigms</p>
                 </div>
 
                 <p><strong>Conclusion of Part 1:</strong></p>
@@ -748,7 +834,7 @@
                 <hr>
 
                 <!-- Section 2 Anchor -->
-                <div id="section-2" class="scroll-mt-32"></div>
+                <div id="section-2" class="scroll-mt-24"></div>
                 <h2>🧠 2. Equipping
                     Autonomous Agents with Cognitive and Perceptual Modalities – The Synthesis of Foundation
                     Models and Spatial Intelligence</h2>
@@ -862,10 +948,10 @@
                     \[F(p_j) = \frac{1}{|V|} \sum_{v \in V} f_v(u_j, v_j)\]
                 </div>
 
-                <blockquote class="border-l-4 border-emerald-500 pl-4 py-3 my-6 bg-slate-800/50 rounded-r-lg">
-                    <p class="text-emerald-400 font-bold mb-2"><i data-lucide="zap"
+                <blockquote>
+                    <p class="callout-title"><i data-lucide="zap"
                             class="inline w-4 h-4 mr-1 mb-1"></i> Why is this a breakthrough?</p>
-                    <p class="text-slate-300 m-0">
+                    <p>
                         It operates as a massive dimensionality reduction and computational filter. When an LLM
                         queries <em>"Where is the fragile glass?"</em>, the system does not need to analyze a
                         million raw spatial coordinates. It calculates the cosine similarity between the text
@@ -901,81 +987,78 @@
                 </p>
 
                 <div
-                    class="my-8 rounded-xl overflow-hidden border border-slate-800 shadow-lg bg-slate-900/50 p-6 text-center max-w-4xl mx-auto flex flex-col items-center">
+                    class="fig-block">
                     <img src="../images/fig2.png" alt="End-to-End Vision-Language-Action Architecture Pipeline"
-                        class="w-full h-auto object-cover rounded-lg mb-4 hover:scale-[1.02] transition-transform duration-500">
+                        class="fig-img">
 
-                    <p class="text-sm text-slate-400">Figure 2: End-to-End VLA Architectural Pipeline</p>
+                    <p class="figcap">Figure 2: End-to-End VLA Architectural Pipeline</p>
                 </div>
 
                 <div
-                    class="my-8 rounded-xl overflow-hidden border border-slate-800 shadow-lg bg-slate-900/50 p-6 text-center max-w-5xl mx-auto flex flex-col items-center">
+                    class="fig-block">
                     <div class="grid lg:grid-cols-3 gap-6 w-full mb-4">
                         <!-- Classical Robotics -->
-                        <div class="bg-slate-800/50 border border-slate-700 p-6 rounded-xl flex flex-col h-full">
-                            <h4 class="!mt-0 !mb-4 text-slate-300 border-b border-slate-700 pb-2">Classical Robotics
+                        <div class="cmp-card">
+                            <h4 class="cmp-title">Classical Robotics
                                 (Pipeline)</h4>
-                            <ul class="space-y-4 m-0 p-0 list-none font-mono text-sm text-slate-400 flex-1">
-                                <li class="border-b border-slate-700/50 pb-2"><span
-                                        class="text-slate-500 block text-xs mb-1 uppercase tracking-wider">State
-                                        Modality</span>6D Poses, SLAM Maps, Joint States</li>
-                                <li class="border-b border-slate-700/50 pb-2"><span
-                                        class="text-slate-500 block text-xs mb-1 uppercase tracking-wider">Execution
-                                        Engine</span>Trajectory Optimization (C++, ROS)</li>
-                                <li class="border-b border-slate-700/50 pb-2"><span
-                                        class="text-slate-500 block text-xs mb-1 uppercase tracking-wider">Adaptability</span><span
-                                        class="text-rose-400">None (Fails on 1cm deviation)</span></li>
+                            <ul class="cmp-list">
                                 <li><span
-                                        class="text-slate-500 block text-xs mb-1 uppercase tracking-wider">Latency</span><span
-                                        class="text-emerald-400">Extremely Low (\(<5\) ms)</span>
+                                        class="cmp-key">State
+                                        Modality</span>6D Poses, SLAM Maps, Joint States</li>
+                                <li><span
+                                        class="cmp-key">Execution
+                                        Engine</span>Trajectory Optimization (C++, ROS)</li>
+                                <li><span
+                                        class="cmp-key">Adaptability</span><span
+                                       >None (Fails on 1cm deviation)</span></li>
+                                <li><span
+                                        class="cmp-key">Latency</span><span
+                                       >Extremely Low (\(<5\) ms)</span>
                                 </li>
                             </ul>
                         </div>
                         <!-- Modular LLM -->
                         <div
-                            class="bg-slate-800/50 border border-amber-500/30 p-6 rounded-xl flex flex-col h-full relative overflow-hidden">
-                            <div class="absolute top-0 left-0 w-full h-1 bg-amber-500/50"></div>
-                            <h4 class="!mt-0 !mb-4 text-amber-300 border-b border-slate-700 pb-2">Modular
+                            class="cmp-card">
+                            <h4 class="cmp-title">Modular
                                 LLM-Robotics</h4>
-                            <ul class="space-y-4 m-0 p-0 list-none font-mono text-sm text-amber-100/70 flex-1">
-                                <li class="border-b border-slate-700/50 pb-2"><span
-                                        class="text-amber-500/50 block text-xs mb-1 uppercase tracking-wider">State
-                                        Modality</span>Bounding Boxes, PDDL logic states</li>
-                                <li class="border-b border-slate-700/50 pb-2"><span
-                                        class="text-amber-500/50 block text-xs mb-1 uppercase tracking-wider">Execution
-                                        Engine</span>LLM via API + Code Generation</li>
-                                <li class="border-b border-slate-700/50 pb-2"><span
-                                        class="text-amber-500/50 block text-xs mb-1 uppercase tracking-wider">Adaptability</span><span
-                                        class="text-amber-400">Medium (Requires discrete replanning)</span></li>
+                            <ul class="cmp-list">
                                 <li><span
-                                        class="text-amber-500/50 block text-xs mb-1 uppercase tracking-wider">Latency</span><span
-                                        class="text-rose-400">High (\(1 - 5\) seconds)</span></li>
+                                        class="cmp-key">State
+                                        Modality</span>Bounding Boxes, PDDL logic states</li>
+                                <li><span
+                                        class="cmp-key">Execution
+                                        Engine</span>LLM via API + Code Generation</li>
+                                <li><span
+                                        class="cmp-key">Adaptability</span><span
+                                       >Medium (Requires discrete replanning)</span></li>
+                                <li><span
+                                        class="cmp-key">Latency</span><span
+                                       >High (\(1 - 5\) seconds)</span></li>
                             </ul>
                         </div>
                         <!-- End-to-End VLA -->
                         <div
-                            class="bg-slate-800/50 border border-emerald-500/50 shadow-[0_0_15px_rgba(16,185,129,0.1)] p-6 rounded-xl flex flex-col h-full relative overflow-hidden">
-                            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 to-teal-400">
-                            </div>
-                            <h4 class="!mt-0 !mb-4 text-emerald-400 border-b border-slate-700 pb-2">End-to-End VLA
+                            class="cmp-card cmp-hl">
+                            <h4 class="cmp-title">End-to-End VLA
                                 Models</h4>
-                            <ul class="space-y-4 m-0 p-0 list-none font-mono text-sm text-emerald-100 flex-1">
-                                <li class="border-b border-slate-700/50 pb-2"><span
-                                        class="text-emerald-500/70 block text-xs mb-1 uppercase tracking-wider">State
-                                        Modality</span>Fused Multimodal Latent Embeddings</li>
-                                <li class="border-b border-slate-700/50 pb-2"><span
-                                        class="text-emerald-500/70 block text-xs mb-1 uppercase tracking-wider">Execution
-                                        Engine</span>Local Autoregressive Action Gen</li>
-                                <li class="border-b border-slate-700/50 pb-2"><span
-                                        class="text-emerald-500/70 block text-xs mb-1 uppercase tracking-wider">Adaptability</span><span
-                                        class="text-emerald-300">High (Continuous replanning)</span></li>
+                            <ul class="cmp-list">
                                 <li><span
-                                        class="text-emerald-500/70 block text-xs mb-1 uppercase tracking-wider">Latency</span><span
-                                        class="text-amber-300">Low to Medium (\(50 - 200\) ms)</span></li>
+                                        class="cmp-key">State
+                                        Modality</span>Fused Multimodal Latent Embeddings</li>
+                                <li><span
+                                        class="cmp-key">Execution
+                                        Engine</span>Local Autoregressive Action Gen</li>
+                                <li><span
+                                        class="cmp-key">Adaptability</span><span
+                                       >High (Continuous replanning)</span></li>
+                                <li><span
+                                        class="cmp-key">Latency</span><span
+                                       >Low to Medium (\(50 - 200\) ms)</span></li>
                             </ul>
                         </div>
                     </div>
-                    <p class="text-sm text-slate-400">Comparison 2: Paradigm Shift – Architectural Evolution in Robotic
+                    <p class="figcap">Comparison 2: Paradigm Shift – Architectural Evolution in Robotic
                         Manipulation</p>
                 </div>
 
@@ -999,7 +1082,7 @@
                     error-recovery loop without human intervention.
                 </p>
 
-                <ol class="list-decimal pl-6 space-y-2 mb-6 text-slate-300">
+                <ol>
                     <li><strong>Anomaly Detection:</strong> VLM detects the current state \(s_{t}\) does not
                         match the expected post-condition of task \(\tau_i\).</li>
                     <li><strong>Graph Restructuring:</strong> The LLM halts the DAG, generates an intermediate
@@ -1021,7 +1104,7 @@
                 <hr>
 
                 <!-- Section 3 Anchor -->
-                <div id="section-3" class="scroll-mt-32"></div>
+                <div id="section-3" class="scroll-mt-24"></div>
                 <h2>⚙️ 3. Deconstructing the
                     Embodied Agent – The Biomimetic Topology and Execution Architecture of Mobile Manipulators
                 </h2>
@@ -1057,76 +1140,76 @@
                 </p>
 
                 <div
-                    class="my-8 rounded-xl overflow-hidden border border-slate-800 shadow-lg bg-slate-900/50 p-6 text-center max-w-5xl mx-auto flex flex-col items-center">
-                    <div class="overflow-x-auto w-full mb-4">
+                    class="fig-block">
+                    <div class="overflow-x-auto w-full">
                         <table
-                            class="w-full text-sm text-left align-middle mb-4 border border-slate-700 rounded-lg overflow-hidden">
-                            <thead class="text-xs text-slate-300 uppercase bg-slate-800/80 border-b border-slate-700">
+                           >
+                            <thead>
                                 <tr>
-                                    <th scope="col" class="px-6 py-4 border-r border-slate-700">Biological Analog
+                                    <th scope="col">Biological Analog
                                     </th>
-                                    <th scope="col" class="px-6 py-4">Cyber-Physical Subsystem</th>
-                                    <th scope="col" class="px-6 py-4">Kinematic &amp; Computational Role</th>
+                                    <th scope="col">Cyber-Physical Subsystem</th>
+                                    <th scope="col">Kinematic &amp; Computational Role</th>
                                 </tr>
                             </thead>
-                            <tbody class="text-slate-400">
+                            <tbody>
                                 <tr
-                                    class="bg-slate-900/50 border-b border-slate-800 hover:bg-slate-800/50 transition-colors">
+                                   >
                                     <th scope="row"
-                                        class="px-6 py-4 font-mono font-medium text-white border-r border-slate-800">
+                                       >
                                         Locomotion (Legs)</th>
-                                    <td class="px-6 py-4 text-primary-300">Holonomic / Differential Drive Chassis
+                                    <td>Holonomic / Differential Drive Chassis
                                     </td>
-                                    <td class="px-6 py-4">Facilitates planar translation and yaw (\(x, y, \theta\)).
+                                    <td>Facilitates planar translation and yaw (\(x, y, \theta\)).
                                         Governed by non-holonomic or holonomic constraints. Executes global path
                                         planning via AMCL/SLAM.</td>
                                 </tr>
                                 <tr
-                                    class="bg-slate-900/50 border-b border-slate-800 hover:bg-slate-800/50 transition-colors">
+                                   >
                                     <th scope="row"
-                                        class="px-6 py-4 font-mono font-medium text-white border-r border-slate-800">
+                                       >
                                         Dexterity (Arm/Hand)</th>
-                                    <td class="px-6 py-4 text-primary-300">\(n\)-DoF Manipulator &amp; End-Effector
+                                    <td>\(n\)-DoF Manipulator &amp; End-Effector
                                     </td>
-                                    <td class="px-6 py-4">Delivers Cartesian precision (\(x, y, z, roll, pitch,
+                                    <td>Delivers Cartesian precision (\(x, y, z, roll, pitch,
                                         yaw\)). Resolves Operational Space Control (OSC) commands into joint torques
                                         via Jacobian transformations.</td>
                                 </tr>
                                 <tr
-                                    class="bg-slate-900/50 border-b border-slate-800 hover:bg-slate-800/50 transition-colors">
+                                   >
                                     <th scope="row"
-                                        class="px-6 py-4 font-mono font-medium text-white border-r border-slate-800">
+                                       >
                                         Perception (Eyes)</th>
-                                    <td class="px-6 py-4 text-primary-300">Exteroceptive Sensor Suite (RGB-D/LiDAR)
+                                    <td>Exteroceptive Sensor Suite (RGB-D/LiDAR)
                                     </td>
-                                    <td class="px-6 py-4">Generates dense depth matrices and RGB tensors for
+                                    <td>Generates dense depth matrices and RGB tensors for
                                         semantic segmentation, feature extraction, and voxel-based collision
                                         avoidance.</td>
                                 </tr>
                                 <tr
-                                    class="bg-slate-900/50 border-b border-slate-800 hover:bg-slate-800/50 transition-colors">
+                                   >
                                     <th scope="row"
-                                        class="px-6 py-4 font-mono font-medium text-white border-r border-slate-800">
+                                       >
                                         Nervous System</th>
-                                    <td class="px-6 py-4 text-primary-300">Proprioceptive Sensors</td>
-                                    <td class="px-6 py-4">Encoders and Force-Torque (F/T) sensors providing
+                                    <td>Proprioceptive Sensors</td>
+                                    <td>Encoders and Force-Torque (F/T) sensors providing
                                         closed-loop feedback on joint states (\(\theta, \dot{\theta}, \tau\)) and
                                         contact dynamics.</td>
                                 </tr>
-                                <tr class="bg-slate-900/50 hover:bg-slate-800/50 transition-colors">
+                                <tr>
                                     <th scope="row"
-                                        class="px-6 py-4 font-mono font-medium text-white border-r border-slate-800">
+                                       >
                                         Cognition (Brain)</th>
-                                    <td class="px-6 py-4 text-primary-300">Heterogeneous Compute Node (CPU/GPU/NPU)
+                                    <td>Heterogeneous Compute Node (CPU/GPU/NPU)
                                     </td>
-                                    <td class="px-6 py-4">Executes asynchronous threads: High-frequency (\(\sim
+                                    <td>Executes asynchronous threads: High-frequency (\(\sim
                                         500\)Hz) PID/Impedance control alongside low-frequency (\(\sim 10\)Hz)
                                         VLM/LLM tensor inferences.</td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
-                    <p class="text-sm text-slate-400">Table 2: Biomimetic Mapping of Mobile Manipulator Subsystems</p>
+                    <p class="figcap">Table 2: Biomimetic Mapping of Mobile Manipulator Subsystems</p>
                 </div>
 
                 <hr>
@@ -1197,11 +1280,11 @@
 
 
                 <div
-                    class="my-8 rounded-xl overflow-hidden border border-slate-800 shadow-lg bg-slate-900/50 p-6 text-center max-w-4xl mx-auto flex flex-col items-center">
+                    class="fig-block">
                     <img alt="Hierarchical VLA Execution Architecture"
-                        class="w-full h-auto object-cover rounded-lg mb-4 hover:scale-[1.02] transition-transform duration-500"
+                        class="fig-img"
                         src="../images/fig3.png" />
-                    <p class="text-sm text-slate-400 text-center mb-2">
+                    <p class="figcap">
                         Figure 3: Hierarchical VLA Execution Architecture
                     </p>
                 </div>
@@ -1263,7 +1346,7 @@
                 </p>
                 <hr />
                 <!-- Section 4 Anchor -->
-                <div class="scroll-mt-32" id="section-4">
+                <div class="scroll-mt-24" id="section-4">
                 </div>
                 <h2>
                     🎯 4. Letting the Machine Hunt – LLM-Guided Active Perception and Semantic ObjectNav
@@ -1340,10 +1423,10 @@
                     L_{prompt}, \mathcal{E}_{history})\]
                 </div>
                 <div
-                    class="my-8 rounded-xl overflow-hidden border border-slate-800 shadow-lg bg-slate-900/50 p-6 text-center max-w-4xl mx-auto flex flex-col items-center">
+                    class="fig-block">
                     <img src="../images/fig4.png" alt="LLM-Parameterized DFS Tree Execution"
-                        class="w-full h-auto object-cover rounded-lg mb-4 hover:scale-[1.02] transition-transform duration-500">
-                    <p class="text-sm text-slate-400 text-center mb-2">
+                        class="fig-img">
+                    <p class="figcap">
                         Figure 4: LLM-Parameterized Depth-First Search (DFS) Tree Execution
                     </p>
                 </div>
@@ -1415,11 +1498,11 @@
                 <hr>
 
                 <h3>Epistemic Uncertainty: Mitigating the Dark Side of Generative AI</h3>
-                <blockquote class="border-l-4 border-amber-500 pl-4 py-3 my-6 bg-slate-800/50 rounded-r-lg">
-                    <p class="text-amber-400 font-bold mb-2"><i data-lucide="alert-triangle"
+                <blockquote>
+                    <p class="callout-title"><i data-lucide="alert-triangle"
                             class="inline w-4 h-4 mr-1 mb-1"></i> Warning: Epistemic Uncertainty & Generative
                         Hallucinations</p>
-                    <p class="text-slate-300 mb-2">
+                    <p>
                         While the latent knowledge embedded within an LLM grants the robot unparalleled
                         zero-shot
                         adaptability, it inherently introduces <strong>Epistemic Uncertainty</strong>. Because
@@ -1428,7 +1511,7 @@
                         physical
                         constraints of reality.
                     </p>
-                    <p class="text-slate-300 m-0">
+                    <p>
                         If an unconstrained LLM commands a robot to "Search inside the solid brick wall for the
                         keys," the physical execution layer will crash. A robust agentic architecture must
                         strictly
@@ -1437,52 +1520,52 @@
                 </blockquote>
 
                 <div
-                    class="my-8 rounded-xl overflow-hidden border border-slate-800 shadow-lg bg-slate-900/50 p-6 text-center max-w-5xl mx-auto flex flex-col items-center">
-                    <div class="overflow-x-auto w-full mb-4">
+                    class="fig-block">
+                    <div class="overflow-x-auto w-full">
                         <table
-                            class="w-full text-sm text-left align-middle mb-4 border border-slate-700 rounded-lg overflow-hidden">
-                            <thead class="text-xs text-slate-300 uppercase bg-slate-800/80 border-b border-slate-700">
+                           >
+                            <thead>
                                 <tr>
-                                    <th scope="col" class="px-6 py-4 border-r border-slate-700">Generative Flaw</th>
-                                    <th scope="col" class="px-6 py-4">Manifestation in Robotic Execution</th>
-                                    <th scope="col" class="px-6 py-4">System-Level Architectural Mitigation</th>
+                                    <th scope="col">Generative Flaw</th>
+                                    <th scope="col">Manifestation in Robotic Execution</th>
+                                    <th scope="col">System-Level Architectural Mitigation</th>
                                 </tr>
                             </thead>
-                            <tbody class="text-slate-400">
+                            <tbody>
                                 <tr
-                                    class="bg-slate-900/50 border-b border-slate-800 hover:bg-slate-800/50 transition-colors">
+                                   >
                                     <th scope="row"
-                                        class="px-6 py-4 font-mono font-medium text-white border-r border-slate-800">
+                                       >
                                         Ontological Hallucination</th>
-                                    <td class="px-6 py-4 text-rose-300">The LLM invents a non-existent physical
+                                    <td>The LLM invents a non-existent physical
                                         affordance (e.g., "Open the solid wall," "The mug is inside the toaster").
                                     </td>
-                                    <td class="px-6 py-4"><strong>Semantic Grounding (VLM Cross-Check):</strong>
+                                    <td><strong>Semantic Grounding (VLM Cross-Check):</strong>
                                         Before kinematic execution, the proposed node is cross-referenced with the
                                         VLM's real-time scene graph. If no bounding box exists for the parent
                                         object, the node is pruned prior to actuation.</td>
                                 </tr>
                                 <tr
-                                    class="bg-slate-900/50 border-b border-slate-800 hover:bg-slate-800/50 transition-colors">
+                                   >
                                     <th scope="row"
-                                        class="px-6 py-4 font-mono font-medium text-white border-r border-slate-800">
+                                       >
                                         Latent Distribution Truncation (Omission)</th>
-                                    <td class="px-6 py-4 text-rose-300">The LLM fails to sample a highly probable
+                                    <td>The LLM fails to sample a highly probable
                                         node from its latent space (e.g., forgets to check the couch cushions for a
                                         remote).</td>
-                                    <td class="px-6 py-4"><strong>Fallback Entropy Routines:</strong> If the
+                                    <td><strong>Fallback Entropy Routines:</strong> If the
                                         \(d_{max}=5\) DFS tree is exhausted (\(h(v) < \epsilon\)), the system
                                             relinquishes LLM control and defaults to a geometric frontier-exploration
                                             algorithm (classic SLAM sweeps).</td>
                                 </tr>
-                                <tr class="bg-slate-900/50 hover:bg-slate-800/50 transition-colors">
+                                <tr>
                                     <th scope="row"
-                                        class="px-6 py-4 font-mono font-medium text-white border-r border-slate-800">
+                                       >
                                         Cyclic Policy Generation (State Amnesia)</th>
-                                    <td class="px-6 py-4 text-rose-300">The LLM outputs an infinite loop of
+                                    <td>The LLM outputs an infinite loop of
                                         redundant actions (e.g., moving between the fridge and the counter
                                         endlessly).</td>
-                                    <td class="px-6 py-4"><strong>Episodic Memory Buffer:</strong> The Control Core
+                                    <td><strong>Episodic Memory Buffer:</strong> The Control Core
                                         maintains a rigid state log of visited nodes (\(\mathcal{V}_{visited}\)).
                                         The heuristic function is mathematically masked: \(h(v) \equiv 0 \text{ }
                                         \forall v \in \mathcal{V}_{visited}\), forcing outward expansion.</td>
@@ -1490,7 +1573,7 @@
                             </tbody>
                         </table>
                     </div>
-                    <p class="text-sm text-slate-400">Table 3: Taxonomy of Generative Flaws in Embodied AI and
+                    <p class="figcap">Table 3: Taxonomy of Generative Flaws in Embodied AI and
                         Architectural Mitigations</p>
                 </div>
 
@@ -1506,7 +1589,7 @@
                 <hr>
 
                 <!-- Section 5 Anchor -->
-                <div id="section-5" class="scroll-mt-32"></div>
+                <div id="section-5" class="scroll-mt-24"></div>
                 <h2>🦾 5. The Physical Generalist – Robotics Foundation Models (RFMs) and Cross-Embodiment
                     Generalization</h2>
                 <p>
@@ -1622,65 +1705,65 @@
                 </p>
 
                 <div
-                    class="my-8 rounded-xl overflow-hidden border border-slate-800 shadow-lg bg-slate-900/50 p-6 text-center max-w-5xl mx-auto flex flex-col items-center">
-                    <div class="overflow-x-auto w-full mb-4">
+                    class="fig-block">
+                    <div class="overflow-x-auto w-full">
                         <table
-                            class="w-full text-sm text-left align-middle mb-4 border border-slate-700 rounded-lg overflow-hidden">
-                            <thead class="text-xs text-slate-300 uppercase bg-slate-800/80 border-b border-slate-700">
+                           >
+                            <thead>
                                 <tr>
-                                    <th scope="col" class="px-6 py-4 border-r border-slate-700">Parameter</th>
-                                    <th scope="col" class="px-6 py-4">Autoregressive Tokenization (e.g., RT-1, RT-2)
+                                    <th scope="col">Parameter</th>
+                                    <th scope="col">Autoregressive Tokenization (e.g., RT-1, RT-2)
                                     </th>
-                                    <th scope="col" class="px-6 py-4">Diffusion Policies (e.g., Octo, Pi, Chi)</th>
+                                    <th scope="col">Diffusion Policies (e.g., Octo, Pi, Chi)</th>
                                 </tr>
                             </thead>
-                            <tbody class="text-slate-400">
+                            <tbody>
                                 <tr
-                                    class="bg-slate-900/50 border-b border-slate-800 hover:bg-slate-800/50 transition-colors">
+                                   >
                                     <th scope="row"
-                                        class="px-6 py-4 font-mono font-medium text-white border-r border-slate-800">
+                                       >
                                         Action
                                         Space</th>
-                                    <td class="px-6 py-4">Discrete (Quantized Tokens)</td>
-                                    <td class="px-6 py-4">Continuous (Floating Point \(\mathbb{R}^n\))</td>
+                                    <td>Discrete (Quantized Tokens)</td>
+                                    <td>Continuous (Floating Point \(\mathbb{R}^n\))</td>
                                 </tr>
                                 <tr
-                                    class="bg-slate-900/50 border-b border-slate-800 hover:bg-slate-800/50 transition-colors">
+                                   >
                                     <th scope="row"
-                                        class="px-6 py-4 font-mono font-medium text-white border-r border-slate-800">
+                                       >
                                         Distribution Modeling</th>
-                                    <td class="px-6 py-4">Unimodal (Prone to mean-seeking collapse)</td>
-                                    <td class="px-6 py-4">Highly Multi-modal (Expressive distributions)</td>
+                                    <td>Unimodal (Prone to mean-seeking collapse)</td>
+                                    <td>Highly Multi-modal (Expressive distributions)</td>
                                 </tr>
                                 <tr
-                                    class="bg-slate-900/50 border-b border-slate-800 hover:bg-slate-800/50 transition-colors">
+                                   >
                                     <th scope="row"
-                                        class="px-6 py-4 font-mono font-medium text-white border-r border-slate-800">
+                                       >
                                         Temporal Consistency</th>
-                                    <td class="px-6 py-4">Low (Requires Action Chunking to prevent jitter)</td>
-                                    <td class="px-6 py-4">Extremely High (Smooth continuous trajectories)</td>
+                                    <td>Low (Requires Action Chunking to prevent jitter)</td>
+                                    <td>Extremely High (Smooth continuous trajectories)</td>
                                 </tr>
                                 <tr
-                                    class="bg-slate-900/50 border-b border-slate-800 hover:bg-slate-800/50 transition-colors">
+                                   >
                                     <th scope="row"
-                                        class="px-6 py-4 font-mono font-medium text-white border-r border-slate-800">
+                                       >
                                         Inference Latency</th>
-                                    <td class="px-6 py-4">Sequential generation (\(O(H)\) time complexity)</td>
-                                    <td class="px-6 py-4">Parallelized denoising steps (Computationally heavier but
+                                    <td>Sequential generation (\(O(H)\) time complexity)</td>
+                                    <td>Parallelized denoising steps (Computationally heavier but
                                         bounded)
                                     </td>
                                 </tr>
-                                <tr class="bg-slate-900/50 hover:bg-slate-800/50 transition-colors">
+                                <tr>
                                     <th scope="row"
-                                        class="px-6 py-4 font-mono font-medium text-white border-r border-slate-800">
+                                       >
                                         Robustness to Perturbation</th>
-                                    <td class="px-6 py-4">Brittle to dynamic human interference</td>
-                                    <td class="px-6 py-4">Gracefully replans via Langevin dynamics</td>
+                                    <td>Brittle to dynamic human interference</td>
+                                    <td>Gracefully replans via Langevin dynamics</td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
-                    <p class="text-sm text-slate-400">Table 4: Comparative Analysis of RFM Action Generation Topologies
+                    <p class="figcap">Table 4: Comparative Analysis of RFM Action Generation Topologies
                     </p>
                 </div>
 
@@ -1702,11 +1785,11 @@
                 </p>
 
                 <div
-                    class="my-8 rounded-xl overflow-hidden border border-slate-800 shadow-lg bg-slate-900/50 p-6 text-center max-w-4xl mx-auto flex flex-col items-center">
+                    class="fig-block">
                     <img src="../images/fig5.png" alt="Cross-Embodiment RFM Architecture"
-                        class="w-full h-auto object-cover rounded-lg mb-4 hover:scale-[1.02] transition-transform duration-500">
+                        class="fig-img">
 
-                    <p class="text-sm text-slate-400">Figure 5: Cross-Embodiment RFM Architecture via FiLM Conditioning
+                    <p class="figcap">Figure 5: Cross-Embodiment RFM Architecture via FiLM Conditioning
                     </p>
                 </div>
 
@@ -1734,7 +1817,7 @@
                 <hr>
 
                 <!-- Section 6 Anchor -->
-                <div id="section-6" class="scroll-mt-32"></div>
+                <div id="section-6" class="scroll-mt-24"></div>
                 <h2>Conclusion: The Realization of Embodied Intelligence – From Deterministic Automation to
                     Cyber-Physical Autonomy</h2>
                 <p>
@@ -1758,7 +1841,7 @@
                     The five parts of this series collectively map the architectural evolution required to transition a
                     machine from a <strong>syntactic tool</strong> to a <strong>semantic generalist agent</strong>.
                 </p>
-                <ol class="list-decimal pl-6 space-y-4 mb-6 text-slate-300">
+                <ol>
                     <li><strong>Part 1: The Semantic Deficit:</strong> We established that classical robotics fails in
                         high-entropy domains because it models the world purely geometrically (\(Q_{free}\) vs
                         \(Q_{obs}\)). Without semantic affordance, deterministic optimization models (like RRT*) are
@@ -1794,11 +1877,11 @@
                 </p>
 
                 <div
-                    class="my-8 rounded-xl overflow-hidden border border-slate-800 shadow-lg bg-slate-900/50 p-6 text-center max-w-4xl mx-auto flex flex-col items-center">
+                    class="fig-block">
                     <img src="../images/fig6.png" alt="The Unified Embodied AI Execution Stack"
-                        class="w-full h-auto object-cover rounded-lg mb-4 hover:scale-[1.02] transition-transform duration-500">
+                        class="fig-img">
 
-                    <p class="text-sm text-slate-400">Figure 6: The Unified Embodied AI Execution Stack</p>
+                    <p class="figcap">Figure 6: The Unified Embodied AI Execution Stack</p>
                 </div>
 
                 <hr>
@@ -1811,85 +1894,85 @@
                 </p>
 
                 <div
-                    class="my-8 rounded-xl overflow-hidden border border-slate-800 shadow-lg bg-slate-900/50 p-6 text-center max-w-5xl mx-auto flex flex-col items-center">
-                    <div class="overflow-x-auto w-full mb-4">
+                    class="fig-block">
+                    <div class="overflow-x-auto w-full">
                         <table
-                            class="w-full text-sm text-left align-middle mb-4 border border-slate-700 rounded-lg overflow-hidden">
-                            <thead class="text-xs text-slate-300 uppercase bg-slate-800/80 border-b border-slate-700">
+                           >
+                            <thead>
                                 <tr>
-                                    <th scope="col" class="px-6 py-4 border-r border-slate-700">Architectural Domain
+                                    <th scope="col">Architectural Domain
                                     </th>
-                                    <th scope="col" class="px-6 py-4">Classical Robotics (Industry 4.0)</th>
-                                    <th scope="col" class="px-6 py-4 text-emerald-300">Embodied AI (The Modern Agent)
+                                    <th scope="col">Classical Robotics (Industry 4.0)</th>
+                                    <th scope="col">Embodied AI (The Modern Agent)
                                     </th>
-                                    <th scope="col" class="px-6 py-4 text-purple-300">Primary Mathematical/Algorithmic
+                                    <th scope="col">Primary Mathematical/Algorithmic
                                         Framework</th>
                                 </tr>
                             </thead>
-                            <tbody class="text-slate-400">
+                            <tbody>
                                 <tr
-                                    class="bg-slate-900/50 border-b border-slate-800 hover:bg-slate-800/50 transition-colors">
+                                   >
                                     <th scope="row"
-                                        class="px-6 py-4 font-mono font-medium text-white border-r border-slate-800">
+                                       >
                                         State Representation</th>
-                                    <td class="px-6 py-4">Explicit Coordinates \((x,y,z)\), OctoMaps</td>
-                                    <td class="px-6 py-4 text-emerald-400">Multimodal Latent Space Embeddings, Semantic
+                                    <td>Explicit Coordinates \((x,y,z)\), OctoMaps</td>
+                                    <td>Multimodal Latent Space Embeddings, Semantic
                                         3D
                                         Scene Graphs</td>
-                                    <td class="px-6 py-4 font-mono text-xs">InfoNCE Loss, Cosine Similarity, Vision
+                                    <td class="td-mono">InfoNCE Loss, Cosine Similarity, Vision
                                         Transformers (ViT)</td>
                                 </tr>
                                 <tr
-                                    class="bg-slate-900/50 border-b border-slate-800 hover:bg-slate-800/50 transition-colors">
+                                   >
                                     <th scope="row"
-                                        class="px-6 py-4 font-mono font-medium text-white border-r border-slate-800">
+                                       >
                                         Human-Robot Interface</th>
-                                    <td class="px-6 py-4">C++/Python Scripts, Teach Pendants</td>
-                                    <td class="px-6 py-4 text-emerald-400">Open-Vocabulary Natural Language Instructions
+                                    <td>C++/Python Scripts, Teach Pendants</td>
+                                    <td>Open-Vocabulary Natural Language Instructions
                                         (NLI)</td>
-                                    <td class="px-6 py-4 font-mono text-xs">Autoregressive Next-Token Prediction,
+                                    <td class="td-mono">Autoregressive Next-Token Prediction,
                                         Chain-of-Thought (CoT)</td>
                                 </tr>
                                 <tr
-                                    class="bg-slate-900/50 border-b border-slate-800 hover:bg-slate-800/50 transition-colors">
+                                   >
                                     <th scope="row"
-                                        class="px-6 py-4 font-mono font-medium text-white border-r border-slate-800">
+                                       >
                                         Motion &amp; Task Planning</th>
-                                    <td class="px-6 py-4">Finite State Machines (FSM), RRT*, TrajOpt</td>
-                                    <td class="px-6 py-4 text-emerald-400">Dynamic Behavior Trees (DAGs), End-to-End VLA
+                                    <td>Finite State Machines (FSM), RRT*, TrajOpt</td>
+                                    <td>Dynamic Behavior Trees (DAGs), End-to-End VLA
                                         Policies</td>
-                                    <td class="px-6 py-4 font-mono text-xs">Deep Reinforcement Learning, Probabilistic
+                                    <td class="td-mono">Deep Reinforcement Learning, Probabilistic
                                         Heuristic Functions</td>
                                 </tr>
                                 <tr
-                                    class="bg-slate-900/50 border-b border-slate-800 hover:bg-slate-800/50 transition-colors">
+                                   >
                                     <th scope="row"
-                                        class="px-6 py-4 font-mono font-medium text-white border-r border-slate-800">
+                                       >
                                         Handling Uncertainty</th>
-                                    <td class="px-6 py-4">Catastrophic Failure / System Halt</td>
-                                    <td class="px-6 py-4 text-emerald-400">Active Perception, Bayesian Search,
+                                    <td>Catastrophic Failure / System Halt</td>
+                                    <td>Active Perception, Bayesian Search,
                                         Autonomous
                                         Replanning</td>
-                                    <td class="px-6 py-4 font-mono text-xs">Partially Observable Markov Decision
+                                    <td class="td-mono">Partially Observable Markov Decision
                                         Processes
                                         (POMDPs)</td>
                                 </tr>
-                                <tr class="bg-slate-900/50 hover:bg-slate-800/50 transition-colors">
+                                <tr>
                                     <th scope="row"
-                                        class="px-6 py-4 font-mono font-medium text-white border-r border-slate-800">
+                                       >
                                         Hardware Utilization</th>
-                                    <td class="px-6 py-4">Fixed Base or Segregated AMR / Arm</td>
-                                    <td class="px-6 py-4 text-emerald-400">Anthropomorphic Coupling, Whole-Body
+                                    <td>Fixed Base or Segregated AMR / Arm</td>
+                                    <td>Anthropomorphic Coupling, Whole-Body
                                         Coordination
                                     </td>
-                                    <td class="px-6 py-4 font-mono text-xs">Jacobian Pseudo-Inverse, Null-Space
+                                    <td class="td-mono">Jacobian Pseudo-Inverse, Null-Space
                                         Projection
                                         Matrix \((I - J^\dagger J)\)</td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
-                    <p class="text-sm text-slate-400">Table 5: The Evolution from Classical Robotics to Embodied AI
+                    <p class="figcap">Table 5: The Evolution from Classical Robotics to Embodied AI
                         Agents</p>
                 </div>
 
@@ -1912,69 +1995,56 @@
         </article>
     </main>
 
-    <!-- Script for Icons -->
+    <!-- Footer -->
+    <footer class="border-t border-line">
+        <div class="max-w-[42rem] mx-auto px-5 py-8">
+            <a href="../../../../index.html#blog" class="back-link">← Back to all posts</a>
+        </div>
+        <div class="max-w-6xl mx-auto px-6 pb-10 text-center">
+            <p class="text-[0.8125rem] text-muted">© 2026 Zeqi Li · 李泽其</p>
+            <p class="text-xs text-faint mt-1">Munich / Genoa · Built with plain HTML &amp; Tailwind CSS</p>
+        </div>
+    </footer>
+
     <script>
-        lucide.createIcons();
+        if (window.lucide) lucide.createIcons();
 
-        // ====== ScrollSpy for Latin Motto Decor ======
-        document.addEventListener("DOMContentLoaded", () => {
-            const sections = document.querySelectorAll('.article-content > div[id^="section-"]');
-            const mottoNodes = document.querySelectorAll('.motto-node');
+        // Theme toggle (same localStorage 'theme' logic as the homepage)
+        document.getElementById('theme-toggle').addEventListener('click', () => {
+            const dark = !document.documentElement.classList.contains('dark');
+            document.documentElement.classList.toggle('dark', dark);
+            localStorage.setItem('theme', dark ? 'dark' : 'light');
+        });
 
-            if (sections.length === 0 || mottoNodes.length === 0) return;
+        // Reading progress bar (rAF-throttled)
+        (function () {
+            const bar = document.getElementById('progress-bar');
+            let ticking = false;
+            function update() {
+                const doc = document.documentElement;
+                const max = doc.scrollHeight - window.innerHeight;
+                const p = max > 0 ? Math.min(window.scrollY / max, 1) : 0;
+                bar.style.width = (p * 100) + '%';
+                ticking = false;
+            }
+            window.addEventListener('scroll', function () {
+                if (!ticking) { requestAnimationFrame(update); ticking = true; }
+            }, { passive: true });
+            window.addEventListener('resize', update, { passive: true });
+            update();
+        })();
 
-            // Highlight the first node by default on load
-            mottoNodes[0].classList.add('active');
-
-            // Robust Scroll-based Logic instead of IntersectionObserver
-            const handleScroll = () => {
-                let activeId = null;
-
-                // Find all sections that have scrolled past a certain threshold
-                // We pick the one that is closest to top (but can be negative, meaning we scrolled past it)
-                sections.forEach(sec => {
-                    const rect = sec.getBoundingClientRect();
-                    // If the section top is above 40% of the viewport height, it's considered reading
-                    if (rect.top <= window.innerHeight * 0.4) {
-                        activeId = sec.id;
-                    }
-                });
-
-                // Update the visual classes
-                if (activeId) {
-                    mottoNodes.forEach(node => {
-                        if (node.getAttribute('data-target') === activeId) {
-                            node.classList.add('active');
-                        } else {
-                            node.classList.remove('active');
-                        }
-                    });
-                }
-            };
-
-            // Listen to scroll events on window
-            window.addEventListener('scroll', handleScroll, { passive: true });
-
-            // Trigger once initially to set the right state
-            handleScroll();
-
-            // Add click-to-scroll functionality
-            mottoNodes.forEach(node => {
-                node.addEventListener('click', () => {
-                    const targetId = node.getAttribute('data-target');
-                    if (targetId) {
-                        const targetSection = document.getElementById(targetId);
-                        if (targetSection) {
-                            targetSection.scrollIntoView({ behavior: 'smooth' });
-                        }
-                    }
-                });
-            });
+        // Hover-revealed "#" anchor links on prose headings
+        document.querySelectorAll('.article-content h2, .article-content h3:not(.cmp-title)').forEach((h, i) => {
+            if (!h.id) h.id = 'heading-' + (i + 1);
+            const a = document.createElement('a');
+            a.className = 'hanchor';
+            a.href = '#' + h.id;
+            a.setAttribute('aria-label', 'Link to this section');
+            a.textContent = '#';
+            h.appendChild(a);
         });
     </script>
-
-    <!-- MathJax -->
-    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </body>
 
 </html>
