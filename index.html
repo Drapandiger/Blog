@@ -15,6 +15,16 @@
 
     <script>
         document.documentElement.classList.add('js-enabled');
+        // 预绘制主题判定：在 CSS 渲染前定妥 data-theme，避免闪烁
+        // machine = 浅色·机器人实验场 | mind = 深色·机器认知世界
+        (function () {
+            var theme = null;
+            try { theme = localStorage.getItem('theme'); } catch (e) { }
+            if (theme !== 'machine' && theme !== 'mind') {
+                theme = (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) ? 'machine' : 'mind';
+            }
+            document.documentElement.dataset.theme = theme;
+        })();
         window.createLucideIcons = function () {
             if (window.lucide && typeof window.lucide.createIcons === 'function') {
                 window.lucide.createIcons();
@@ -35,11 +45,228 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700;900&display=swap" rel="stylesheet">
 
     <style>
+        /* ============================================================
+           双主题令牌
+           MACHINE — 浅色 · 高能机器人实验场（工业蓝图 × 钴蓝 × 安全橙）
+           MIND    — 深色 · 机器的认知世界（点云 × 青色感知 × 认知深空）
+           几何不变，解释改变：同一套结构，两种世界观。
+           ============================================================ */
+        html[data-theme="machine"] {
+            color-scheme: light;
+            --bg: #f0f1ec;
+            /* text */
+            --text-strong: #0d1321;
+            --text-1: #131c2b;
+            --text-2: #1c2634;
+            --text-body: #333f52;
+            --text-secondary: #4c5b73;
+            --text-muted: #66707f;
+            --text-faint: #8a94a4;
+            /* accent: 钴蓝(结构) + 安全橙(能量) */
+            --accent: #1e40c9;
+            --accent-strong: #1633a3;
+            --accent-text: #1b3bbd;
+            --accent-soft-text: #16339f;
+            --accent-hover-text: #0f2a8f;
+            --on-accent: #ffffff;
+            --accent-tint-hover: rgba(30, 64, 201, 0.08);
+            --accent-border-soft: rgba(30, 64, 201, 0.5);
+            --accent2: #e8590c;
+            /* surfaces */
+            --surface-chip: rgba(30, 64, 201, 0.09);
+            --surface-btn: rgba(255, 255, 255, 0.85);
+            --surface-3: #e3e5df;
+            --surface-2a: rgba(255, 255, 255, 0.5);
+            --surface-2: rgba(255, 255, 255, 0.62);
+            --surface-2b: rgba(255, 255, 255, 0.82);
+            --surface-1: #e9eae4;
+            --surface-1a: rgba(247, 247, 243, 0.65);
+            --surface-1b: rgba(247, 247, 243, 0.85);
+            --surface-nav: rgba(248, 248, 244, 0.88);
+            --surface-chip-hover: rgba(30, 64, 201, 0.16);
+            --surface-3-hover: #e6e8e2;
+            --surface-2-hover: rgba(30, 64, 201, 0.06);
+            /* borders */
+            --border-strong: rgba(13, 19, 33, 0.28);
+            --border: rgba(13, 19, 33, 0.16);
+            --border-soft: rgba(13, 19, 33, 0.12);
+            --border-faint: rgba(13, 19, 33, 0.09);
+            /* gradients */
+            --grad-title-from: #0d1321;
+            --grad-title-to: #1e40c9;
+            --grad-ring-from: #1e40c9;
+            --grad-ring-to: #e8590c;
+            /* glows & shadows */
+            --title-glow: none;
+            --glow-chip-hover: 0 2px 10px rgba(13, 19, 33, 0.18);
+            --glow-btn-hover: 0 12px 28px -10px rgba(30, 64, 201, 0.5);
+            --glow-cta-hover: 0 16px 40px -12px rgba(30, 64, 201, 0.55);
+            --avatar-glow-a: rgba(30, 64, 201, 0.3);
+            --avatar-glow-b: rgba(232, 89, 12, 0.55);
+            --shadow-md: 0 2px 6px -1px rgba(13, 19, 33, 0.12), 0 1px 3px rgba(13, 19, 33, 0.08);
+            --shadow-lg: 0 8px 18px -6px rgba(13, 19, 33, 0.16), 0 2px 6px -2px rgba(13, 19, 33, 0.1);
+            --shadow-2xl: 0 16px 36px -18px rgba(13, 19, 33, 0.3);
+            /* selection */
+            --sel-bg: #1e40c9;
+            --sel-bg-soft: rgba(30, 64, 201, 0.25);
+            --sel-text: #fff;
+            /* FX 层 */
+            --grid-fine: rgba(13, 19, 33, 0.05);
+            --grid-coarse: rgba(30, 64, 201, 0.1);
+            --grid-mark: rgba(30, 64, 201, 0.22);
+            --blob-a: rgba(37, 99, 235, 0.2);
+            --blob-b: rgba(245, 158, 11, 0.22);
+            --spot: rgba(255, 158, 64, 0.1);
+            --canvas-opacity: 0.5;
+            --cursor-dot: #e8590c;
+            --cursor-line: rgba(30, 64, 201, 0.75);
+            --progress: linear-gradient(90deg, #1e40c9, #e8590c);
+            --progress-glow: 0 1px 8px rgba(232, 89, 12, 0.5);
+            --scrollbar-track: #e3e5df;
+            --scrollbar-thumb: #9aa4b5;
+            --readout: #66707f;
+            --readout-mark: #e8590c;
+            --nav-edge: #e8590c;
+            --lang-active-glow: 0 4px 12px -4px rgba(30, 64, 201, 0.5);
+            /* 卡片 */
+            --card-bg: #fbfbf8;
+            --card-border: rgba(13, 19, 33, 0.14);
+            --card-hover-border: rgba(30, 64, 201, 0.55);
+            --card-hover-shadow: 0 26px 48px -20px rgba(30, 64, 201, 0.35), 0 6px 16px -8px rgba(232, 89, 12, 0.2);
+            /* 时间线 */
+            --tl-line: repeating-linear-gradient(to bottom, rgba(13, 19, 33, 0.3) 0 6px, transparent 6px 12px);
+            --tl-dot-bg: #fbfbf8;
+            --tl-dot-border: #1e40c9;
+            --tl-dot-hover-bg: #e8590c;
+            --tl-dot-hover-border: #1e40c9;
+            --tl-dot-hover-glow: 0 0 0 4px rgba(232, 89, 12, 0.2);
+            /* AI 框 */
+            --ai-bg: rgba(30, 64, 201, 0.06);
+            --ai-border: rgba(30, 64, 201, 0.25);
+            /* 主题开关 */
+            --tt-border: rgba(13, 19, 33, 0.25);
+            --tt-track-bg: #ffffff;
+            --tt-track-glow: inset 0 1px 3px rgba(13, 19, 33, 0.12);
+            --tt-thumb: radial-gradient(circle at 35% 32%, #ff9a52, #e8590c 70%);
+            --tt-thumb-glow: 0 1px 4px rgba(13, 19, 33, 0.35);
+            /* 液态文字 */
+            --liquid-static: linear-gradient(90deg, #16339f, #1e40c9 55%, #e8590c);
+            --liquid-flow: linear-gradient(-45deg, #1e40c9, #4f74ff, #e8590c, #ffb057, #1e40c9);
+            --liquid-glow-idle: 0 1px 2px rgba(13, 19, 33, 0.15);
+            --liquid-glow-hover: 0 4px 22px rgba(232, 89, 12, 0.4);
+        }
+
+        html[data-theme="mind"] {
+            color-scheme: dark;
+            --bg: #04080f;
+            /* text */
+            --text-strong: #eef6ff;
+            --text-1: #dce9f7;
+            --text-2: #c9daec;
+            --text-body: #a9bfd8;
+            --text-secondary: #7e96b5;
+            --text-muted: #5b7190;
+            --text-faint: #415671;
+            /* accent: 感知青(信号) + 电紫(推理) */
+            --accent: #22d3ee;
+            --accent-strong: #06b6d4;
+            --accent-text: #67e8f9;
+            --accent-soft-text: #a5f3fc;
+            --accent-hover-text: #cffafe;
+            --on-accent: #04232c;
+            --accent-tint-hover: rgba(34, 211, 238, 0.1);
+            --accent-border-soft: rgba(34, 211, 238, 0.5);
+            --accent2: #8b5cf6;
+            /* surfaces */
+            --surface-chip: rgba(34, 211, 238, 0.09);
+            --surface-btn: rgba(13, 27, 48, 0.8);
+            --surface-3: #0d1b30;
+            --surface-2a: rgba(13, 27, 48, 0.4);
+            --surface-2: rgba(13, 27, 48, 0.55);
+            --surface-2b: rgba(13, 27, 48, 0.8);
+            --surface-1: #060d1a;
+            --surface-1a: rgba(4, 10, 20, 0.55);
+            --surface-1b: rgba(4, 10, 20, 0.8);
+            --surface-nav: rgba(5, 11, 22, 0.85);
+            --surface-chip-hover: rgba(34, 211, 238, 0.16);
+            --surface-3-hover: #11223c;
+            --surface-2-hover: rgba(34, 211, 238, 0.07);
+            /* borders */
+            --border-strong: rgba(125, 235, 255, 0.3);
+            --border: rgba(125, 235, 255, 0.16);
+            --border-soft: rgba(125, 235, 255, 0.12);
+            --border-faint: rgba(125, 235, 255, 0.08);
+            /* gradients */
+            --grad-title-from: #eef6ff;
+            --grad-title-to: #22d3ee;
+            --grad-ring-from: #22d3ee;
+            --grad-ring-to: #8b5cf6;
+            /* glows & shadows */
+            --title-glow: none;
+            --glow-chip-hover: 0 0 10px rgba(125, 235, 255, 0.35);
+            --glow-btn-hover: 0 0 24px rgba(34, 211, 238, 0.35);
+            --glow-cta-hover: 0 0 34px rgba(34, 211, 238, 0.45);
+            --avatar-glow-a: rgba(34, 211, 238, 0.35);
+            --avatar-glow-b: rgba(139, 92, 246, 0.7);
+            --shadow-md: 0 4px 6px -1px rgba(0, 4, 12, 0.4), 0 2px 4px -2px rgba(0, 4, 12, 0.4);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 4, 12, 0.45), 0 4px 6px -4px rgba(0, 4, 12, 0.45);
+            --shadow-2xl: 0 25px 50px -12px rgba(0, 4, 12, 0.65);
+            /* selection */
+            --sel-bg: #22d3ee;
+            --sel-bg-soft: rgba(34, 211, 238, 0.3);
+            --sel-text: #031018;
+            /* FX 层 */
+            --blob-a: rgba(76, 60, 220, 0.32);
+            --blob-b: rgba(8, 145, 178, 0.3);
+            --spot: rgba(34, 211, 238, 0.08);
+            --canvas-opacity: 0.7;
+            --cursor-dot: #22d3ee;
+            --cursor-line: rgba(34, 211, 238, 0.7);
+            --progress: linear-gradient(90deg, #22d3ee, #8b5cf6);
+            --progress-glow: 0 0 10px rgba(34, 211, 238, 0.7);
+            --scrollbar-track: #0a1526;
+            --scrollbar-thumb: #1c3a54;
+            --readout: #5b7190;
+            --readout-mark: #22d3ee;
+            --nav-edge: #22d3ee;
+            --lang-active-glow: 0 0 10px rgba(34, 211, 238, 0.5);
+            /* 卡片 */
+            --card-bg: rgba(9, 19, 38, 0.62);
+            --card-border: rgba(125, 235, 255, 0.1);
+            --card-hover-border: rgba(34, 211, 238, 0.55);
+            --card-hover-shadow: 0 20px 44px -16px rgba(34, 211, 238, 0.22), 0 0 0 1px rgba(34, 211, 238, 0.12);
+            /* 时间线 */
+            --tl-line: linear-gradient(to bottom, rgba(34, 211, 238, 0.45), rgba(34, 211, 238, 0.06));
+            --tl-dot-bg: #081527;
+            --tl-dot-border: #22d3ee;
+            --tl-dot-hover-bg: #22d3ee;
+            --tl-dot-hover-border: #22d3ee;
+            --tl-dot-hover-glow: 0 0 15px rgba(34, 211, 238, 0.8);
+            /* AI 框 */
+            --ai-bg: rgba(4, 16, 30, 0.7);
+            --ai-border: rgba(34, 211, 238, 0.25);
+            /* 主题开关 */
+            --tt-border: rgba(125, 235, 255, 0.3);
+            --tt-track-bg: rgba(6, 14, 28, 0.9);
+            --tt-track-glow: 0 0 12px rgba(34, 211, 238, 0.15);
+            --tt-thumb: radial-gradient(circle at 35% 32%, #9ff1ff, #0891b2 75%);
+            --tt-thumb-glow: 0 0 10px rgba(34, 211, 238, 0.7);
+            /* 液态文字 */
+            --liquid-static: linear-gradient(90deg, #7debff, #22d3ee 45%, #8b5cf6);
+            --liquid-flow: linear-gradient(-45deg, #22d3ee, #38bdf8, #8b5cf6, #7debff, #22d3ee);
+            --liquid-glow-idle: 0 0 16px rgba(34, 211, 238, 0.3);
+            --liquid-glow-hover: 0 0 32px rgba(34, 211, 238, 0.55);
+        }
+
         /* --- 基础样式 --- */
+        html {
+            scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+        }
+
         body {
-            background-color: #0f172a;
-            /* 移除默认的 cursor: none，改为通过类控制，防止JS挂掉时鼠标消失 */
+            background-color: var(--bg);
             overflow-x: hidden;
+            transition: background-color 0.35s ease, color 0.35s ease;
         }
 
         /* 只有当 JS 激活该类时才隐藏光标 */
@@ -53,20 +280,21 @@
         }
 
         ::-webkit-scrollbar {
-            width: 8px;
+            width: 10px;
         }
 
         ::-webkit-scrollbar-track {
-            background: #1e293b;
+            background: var(--scrollbar-track);
         }
 
         ::-webkit-scrollbar-thumb {
-            background: #8b5cf6;
-            border-radius: 4px;
+            background: var(--scrollbar-thumb);
+            border-radius: 5px;
+            border: 2px solid var(--scrollbar-track);
         }
 
         ::-webkit-scrollbar-thumb:hover {
-            background: #a78bfa;
+            background: var(--accent);
         }
 
         /* --- 顶部进度条 --- */
@@ -76,14 +304,17 @@
             left: 0;
             width: 0%;
             height: 3px;
-            background: linear-gradient(90deg, #8b5cf6, #06b6d4);
+            background: var(--progress);
             z-index: 9999;
             transition: width 0.1s linear;
-            /* 改为 linear 配合 RAF 更顺滑 */
-            box-shadow: 0 0 10px rgba(139, 92, 246, 0.8);
+            box-shadow: var(--progress-glow);
         }
 
-        /* --- 极光背景 (Layer 0) --- */
+        /* ============================================================
+           背景 FX 层 (Layer 0)
+           MACHINE：蓝图网格 + 定位基准点 + 车间工作灯
+           MIND：认知深空雾 + LiDAR 扫描束 + 感知光晕
+           ============================================================ */
         .aurora-container {
             position: fixed;
             inset: 0;
@@ -92,23 +323,76 @@
             pointer-events: none;
         }
 
+        .aurora-container::before,
+        .aurora-container::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+        }
+
+        /* MACHINE：工程蓝图网格（细格 24px / 粗格 120px）+ 角落色域 */
+        html[data-theme="machine"] .aurora-container::before {
+            background:
+                radial-gradient(900px 480px at 85% -5%, rgba(30, 64, 201, 0.1), transparent 65%),
+                radial-gradient(700px 420px at -10% 100%, rgba(232, 89, 12, 0.08), transparent 60%),
+                linear-gradient(var(--grid-fine) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-fine) 1px, transparent 1px),
+                linear-gradient(var(--grid-coarse) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-coarse) 1px, transparent 1px);
+            background-size: auto, auto, 24px 24px, 24px 24px, 120px 120px, 120px 120px;
+        }
+
+        /* MACHINE：粗格交点上的定位基准点（registration marks） */
+        html[data-theme="machine"] .aurora-container::after {
+            background-image: radial-gradient(circle, var(--grid-mark) 1.2px, transparent 1.8px);
+            background-size: 120px 120px;
+            background-position: -60px -60px;
+        }
+
+        /* MIND：感知空间深雾 */
+        html[data-theme="mind"] .aurora-container::before {
+            background:
+                radial-gradient(1000px 700px at 70% 15%, rgba(34, 211, 238, 0.07), transparent 60%),
+                radial-gradient(900px 700px at 15% 85%, rgba(99, 102, 241, 0.09), transparent 60%),
+                radial-gradient(1400px 900px at 50% 120%, rgba(2, 132, 199, 0.08), transparent 70%);
+        }
+
+        /* MIND：缓慢旋转的 LiDAR 扫描束 */
+        html[data-theme="mind"] .aurora-container::after {
+            inset: -60%;
+            background: conic-gradient(from 0deg at 50% 50%,
+                    transparent 0deg,
+                    rgba(34, 211, 238, 0.03) 8deg,
+                    rgba(34, 211, 238, 0.07) 14deg,
+                    rgba(34, 211, 238, 0.02) 22deg,
+                    transparent 30deg,
+                    transparent 360deg);
+            animation: lidar-sweep 18s linear infinite;
+        }
+
+        @keyframes lidar-sweep {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
         .aurora-blob {
             position: absolute;
             width: 500px;
             height: 500px;
             border-radius: 50%;
-            filter: blur(80px);
-            opacity: 0.4;
+            filter: blur(90px);
+            opacity: 1;
             will-change: transform;
         }
 
         .aurora-blob.purple {
-            background-color: #7c3aed;
+            background-color: var(--blob-a);
             animation: moveBlob1 25s infinite alternate ease-in-out;
         }
 
         .aurora-blob.cyan {
-            background-color: #0891b2;
+            background-color: var(--blob-b);
             animation: moveBlob2 30s infinite alternate-reverse ease-in-out;
         }
 
@@ -132,7 +416,7 @@
             }
         }
 
-        /* --- 神经网络粒子画布 (Layer 1) --- */
+        /* --- 粒子画布 (Layer 1)：MACHINE=装配节点矩阵 / MIND=感知点云 --- */
         #neural-canvas {
             position: fixed;
             top: 0;
@@ -141,22 +425,105 @@
             height: 100%;
             z-index: 1;
             pointer-events: none;
-            opacity: 0.6;
+            opacity: var(--canvas-opacity);
         }
 
-        /* --- 鼠标聚光灯 (Layer 2) --- */
+        /* --- 鼠标聚光灯 (Layer 2)：MACHINE=检修工作灯 / MIND=传感光斑 --- */
         #spotlight-effect {
             position: fixed;
             inset: 0;
             z-index: 2;
             pointer-events: none;
-            /* 默认位置放在屏幕外，防止初始加载时左上角出现光斑 */
-            background: radial-gradient(600px circle at var(--x, -1000px) var(--y, -1000px), rgba(167, 139, 250, 0.08), transparent 80%);
+            background: radial-gradient(600px circle at var(--x, -1000px) var(--y, -1000px), var(--spot), transparent 80%);
             will-change: background;
-            /* 性能优化 */
+        }
+
+        /* ============================================================
+           系统读数（HUD chrome）：区段编号 + 标题规格线
+           MACHINE 读作实验场工位；MIND 读作感知深度层。
+           ============================================================ */
+        main {
+            counter-reset: sec -1;
+        }
+
+        main > section {
+            position: relative;
+            counter-increment: sec;
+        }
+
+        main > section::before {
+            position: absolute;
+            top: 3.5rem;
+            left: 0;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 0.68rem;
+            font-weight: 600;
+            letter-spacing: 0.3em;
+            color: var(--readout);
+            padding-left: 16px;
+            background: linear-gradient(var(--readout-mark), var(--readout-mark)) left center / 7px 7px no-repeat;
+            pointer-events: none;
+        }
+
+        html[data-theme="machine"] main > section::before {
+            content: "BAY.0" counter(sec) " // ASSEMBLY ACTIVE";
+        }
+
+        html[data-theme="mind"] main > section::before {
+            content: "DEPTH.0" counter(sec) " // SCANNING";
+        }
+
+        #home::before {
+            top: 1.75rem;
+        }
+
+        main section > h2::after {
+            content: '';
+            display: block;
+            width: 92px;
+            margin-top: 0.9rem;
+        }
+
+        html[data-theme="machine"] main section > h2::after {
+            height: 7px;
+            background: repeating-linear-gradient(-45deg, var(--accent2) 0 7px, transparent 7px 14px);
+        }
+
+        html[data-theme="mind"] main section > h2::after {
+            height: 2px;
+            background: linear-gradient(90deg, #22d3ee, rgba(34, 211, 238, 0));
+            box-shadow: 0 0 12px rgba(34, 211, 238, 0.55);
+        }
+
+        /* MIND 标题辉光：text-shadow 只沿字形发光（drop-shadow 在 Firefox 下会投影整个渐变盒） */
+        html[data-theme="mind"] main section > h2 {
+            text-shadow: 0 0 26px rgba(34, 211, 238, 0.4);
+        }
+
+        #contact > h2::after {
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* MACHINE：侧边栏铺设蓝图网格纹理 */
+        html[data-theme="machine"] aside {
+            background-image:
+                linear-gradient(rgba(30, 64, 201, 0.045) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(30, 64, 201, 0.045) 1px, transparent 1px);
+            background-size: 24px 24px;
+        }
+
+        /* MIND：侧边栏右缘感知辉光 */
+        html[data-theme="mind"] aside {
+            box-shadow: 1px 0 0 rgba(34, 211, 238, 0.12), 12px 0 40px -20px rgba(34, 211, 238, 0.15);
         }
 
         /* --- 组件样式 --- */
+        /* 实心 accent 底上的文字必须用 --on-accent（覆盖 .text-white 的令牌映射） */
+        html[data-theme] .bg-primary-500 {
+            color: var(--on-accent);
+        }
+
         /* 导航下划线 */
         .nav-link {
             position: relative;
@@ -170,7 +537,7 @@
             transform: translateX(-50%);
             width: 0;
             height: 2px;
-            background-color: #8b5cf6;
+            background-color: var(--accent);
             transition: width 0.3s ease-out;
         }
 
@@ -179,13 +546,13 @@
         }
 
         .nav-link.active {
-            color: #c4b5fd;
-            background-color: #334155;
-            border-right: 4px solid #8b5cf6;
+            color: var(--accent-text);
+            background-color: var(--accent-tint-hover);
+            border-right: 4px solid var(--nav-edge);
         }
 
         .mobile-nav-link.active {
-            color: #8b5cf6;
+            color: var(--accent);
         }
 
         /* 社交图标悬停 */
@@ -196,21 +563,28 @@
 
         .social-link:hover {
             transform: scale(1.2);
-            color: #a78bfa;
+            color: var(--accent-text);
         }
 
-        /* 毛玻璃卡片 */
+        /* ============================================================
+           卡片：
+           MACHINE — 图纸白卡 + 常驻测绘角标 + 悬停橙色能量条
+           MIND    — 深空玻璃 + 悬停目标锁定框 + 扫描光带掠过
+           ============================================================ */
         .card-interactive {
-            background-color: rgba(30, 41, 59, 0.6);
+            position: relative;
+            background-color: var(--card-bg);
             backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--card-border);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+                border-color 0.3s ease, box-shadow 0.4s ease, background-color 0.3s ease;
         }
 
         .card-interactive:hover {
             transform: translateY(-8px) scale(1.01);
-            border-color: rgba(139, 92, 246, 0.5);
-            box-shadow: 0 20px 40px -15px rgba(139, 92, 246, 0.3);
+            border-color: var(--card-hover-border);
+            box-shadow: var(--card-hover-shadow);
         }
 
         .card-interactive img {
@@ -219,6 +593,107 @@
 
         .card-interactive:hover img {
             transform: scale(1.08);
+        }
+
+        /* 四角标记（測绘角标 / 目标锁定框） */
+        .card-interactive::after {
+            content: '';
+            position: absolute;
+            inset: 10px;
+            pointer-events: none;
+            z-index: 5;
+            background:
+                linear-gradient(var(--corner-c), var(--corner-c)) left top / 14px 1.5px,
+                linear-gradient(var(--corner-c), var(--corner-c)) left top / 1.5px 14px,
+                linear-gradient(var(--corner-c), var(--corner-c)) right top / 14px 1.5px,
+                linear-gradient(var(--corner-c), var(--corner-c)) right top / 1.5px 14px,
+                linear-gradient(var(--corner-c), var(--corner-c)) left bottom / 14px 1.5px,
+                linear-gradient(var(--corner-c), var(--corner-c)) left bottom / 1.5px 14px,
+                linear-gradient(var(--corner-c), var(--corner-c)) right bottom / 14px 1.5px,
+                linear-gradient(var(--corner-c), var(--corner-c)) right bottom / 1.5px 14px;
+            background-repeat: no-repeat;
+        }
+
+        html[data-theme="machine"] .card-interactive::after {
+            --corner-c: rgba(30, 64, 201, 0.35);
+        }
+
+        html[data-theme="machine"] .card-interactive:hover::after {
+            --corner-c: var(--accent2);
+        }
+
+        html[data-theme="mind"] .card-interactive::after {
+            --corner-c: rgba(34, 211, 238, 0.9);
+            opacity: 0;
+            transform: scale(1.04);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        html[data-theme="mind"] .card-interactive:hover::after {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .card-interactive::before {
+            content: '';
+            position: absolute;
+            pointer-events: none;
+            z-index: 4;
+        }
+
+        /* MACHINE：悬停时顶部亮起“能量输送”条 */
+        html[data-theme="machine"] .card-interactive::before {
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #e8590c, #ffb057);
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.45s ease;
+        }
+
+        html[data-theme="machine"] .card-interactive:hover::before {
+            transform: scaleX(1);
+        }
+
+        /* MIND：悬停时一道扫描光带掠过 */
+        html[data-theme="mind"] .card-interactive::before {
+            top: 0;
+            bottom: 0;
+            left: 0;
+            width: 45%;
+            background: linear-gradient(100deg,
+                    transparent,
+                    rgba(125, 235, 255, 0.12) 45%,
+                    rgba(125, 235, 255, 0.26) 50%,
+                    rgba(125, 235, 255, 0.12) 55%,
+                    transparent);
+            transform: translateX(-140%) skewX(-12deg);
+            opacity: 0;
+        }
+
+        html[data-theme="mind"] .card-interactive:hover::before {
+            animation: card-scan 0.9s ease;
+        }
+
+        @keyframes card-scan {
+            from {
+                transform: translateX(-140%) skewX(-12deg);
+                opacity: 1;
+            }
+
+            to {
+                transform: translateX(340%) skewX(-12deg);
+                opacity: 0;
+            }
+        }
+
+        /* MACHINE：Under Construction 徽章 = 工地警示胶带 */
+        html[data-theme="machine"] .bg-amber-500\/90 {
+            background-color: #f6a723;
+            background-image: repeating-linear-gradient(-45deg, rgba(69, 26, 3, 0.16) 0 8px, transparent 8px 16px);
+            border: 1px solid rgba(69, 26, 3, 0.3);
         }
 
         /* 时间线 */
@@ -239,7 +714,7 @@
             top: 0.3rem;
             bottom: 0;
             width: 2px;
-            background-color: #475569;
+            background: var(--tl-line);
         }
 
         .timeline-item:last-child::before {
@@ -252,46 +727,137 @@
             top: 0.3rem;
             height: 1rem;
             width: 1rem;
-            border-radius: 50%;
-            background-color: #1e293b;
-            border: 3px solid #8b5cf6;
+            background-color: var(--tl-dot-bg);
+            border: 3px solid var(--tl-dot-border);
             transition: all 0.3s ease;
         }
 
+        /* MACHINE 用方形“接线端子”，MIND 用圆形“感知节点” */
+        html[data-theme="machine"] .timeline-dot {
+            border-radius: 3px;
+        }
+
+        html[data-theme="mind"] .timeline-dot {
+            border-radius: 50%;
+        }
+
         .timeline-item:hover .timeline-dot {
-            background-color: #8b5cf6;
-            box-shadow: 0 0 15px #8b5cf6;
+            background-color: var(--tl-dot-hover-bg);
+            border-color: var(--tl-dot-hover-border);
+            box-shadow: var(--tl-dot-hover-glow);
         }
 
         /* 语言按钮 */
         .lang-btn {
-            background-color: rgba(51, 65, 85, 0.8);
-            color: #94a3b8;
+            background-color: var(--surface-btn);
+            color: var(--text-secondary);
             padding: 0.25rem 0.75rem;
             border-radius: 6px;
             font-weight: 500;
             transition: all 0.2s ease;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--border);
         }
 
         .lang-btn:not(.active):hover {
             transform: scale(1.1);
-            color: white;
-            background-color: rgba(71, 85, 105, 0.9);
+            color: var(--text-strong);
+            background-color: var(--surface-chip-hover);
         }
 
         .lang-btn.active {
-            background-color: #8b5cf6;
-            color: #ffffff;
-            border-color: #8b5cf6;
-            box-shadow: 0 0 10px rgba(139, 92, 246, 0.4);
+            background-color: var(--accent);
+            color: var(--on-accent);
+            border-color: var(--accent);
+            box-shadow: var(--lang-active-glow);
+        }
+
+        /* ============================================================
+           主题开关：MACHINE(实验场) ⇆ MIND(认知世界)
+           ============================================================ */
+        .theme-toggle {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .theme-toggle--mobile {
+            flex-direction: row;
+        }
+
+        .theme-toggle-track {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 64px;
+            height: 30px;
+            padding: 0 7px;
+            border-radius: 999px;
+            border: 1px solid var(--tt-border);
+            background: var(--tt-track-bg);
+            box-shadow: var(--tt-track-glow);
+            transition: border-color 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .theme-toggle:hover .theme-toggle-track {
+            border-color: var(--accent);
+        }
+
+        .tt-icon {
+            width: 14px;
+            height: 14px;
+            position: relative;
+            z-index: 2;
+            transition: color 0.3s ease, filter 0.3s ease;
+        }
+
+        html[data-theme="machine"] .tt-icon-machine {
+            color: #e8590c;
+        }
+
+        html[data-theme="machine"] .tt-icon-mind {
+            color: rgba(13, 19, 33, 0.35);
+        }
+
+        html[data-theme="mind"] .tt-icon-mind {
+            color: #22d3ee;
+            filter: drop-shadow(0 0 4px rgba(34, 211, 238, 0.8));
+        }
+
+        html[data-theme="mind"] .tt-icon-machine {
+            color: rgba(125, 235, 255, 0.3);
+        }
+
+        .theme-toggle-thumb {
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: var(--tt-thumb);
+            box-shadow: var(--tt-thumb-glow);
+            transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), background 0.3s ease, box-shadow 0.3s ease;
+            z-index: 1;
+        }
+
+        .theme-toggle[aria-checked="true"] .theme-toggle-thumb {
+            transform: translateX(36px);
+        }
+
+        .theme-toggle-readout {
+            font-size: 0.6rem;
+            font-weight: 700;
+            letter-spacing: 0.32em;
+            color: var(--readout);
         }
 
         /* 打字机光标 */
         .typing-cursor::after {
             content: '|';
             animation: blink 1s step-end infinite;
-            color: #8b5cf6;
+            color: var(--accent);
             margin-left: 4px;
         }
 
@@ -309,18 +875,30 @@
 
         /* AI 结果框 */
         .ai-result-box {
-            background-color: rgba(15, 23, 42, 0.6);
-            border-left: 4px solid #8b5cf6;
+            background-color: var(--ai-bg);
+            border: 1px solid var(--ai-border);
+            border-left: 4px solid var(--accent);
             padding: 1rem;
             border-radius: 0 8px 8px 0;
             margin-bottom: 1rem;
             animation: fadeIn 0.5s ease-out;
-            border: 1px solid rgba(139, 92, 246, 0.2);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(6px);
+            }
+
+            to {
+                opacity: 1;
+                transform: none;
+            }
         }
 
         .ai-result-box h4 {
             font-weight: 700;
-            color: #c4b5fd;
+            color: var(--accent-soft-text);
             margin-bottom: 0.5rem;
             display: flex;
             align-items: center;
@@ -328,51 +906,33 @@
 
         .ai-result-box p {
             font-size: 0.9rem;
-            color: #e2e8f0;
+            color: var(--text-2);
             white-space: pre-wrap;
             line-height: 1.6;
         }
 
-        /* --- 液态流光文字特效 (Liquid Flow) --- */
+        /* --- 液态流光文字：MACHINE=钴蓝熔入炽橙 / MIND=青紫光谱流 --- */
         .liquid-text {
-            /* 1. 默认状态：符合网站配色的静态渐变 (紫色 -> 青色) */
-            background: linear-gradient(to right, #a78bfa, #22d3ee);
+            background: var(--liquid-static);
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
 
             position: relative;
             display: inline-block;
-            transition: all 0.3s ease;
-            /* 添加平滑过渡 */
-
-            /* 默认发光较弱 */
-            text-shadow: 0 0 15px rgba(139, 92, 246, 0.2);
+            transition: text-shadow 0.3s ease;
+            /* 注意：不用 drop-shadow —— Firefox 会连未裁剪的渐变盒子一起投影 */
+            text-shadow: var(--liquid-glow-idle);
         }
 
-        /* 2. 悬停状态：触发液态流光动画 */
         .liquid-text:hover {
-            background: linear-gradient(-45deg,
-                    #8b5cf6,
-                    /* Violet */
-                    #06b6d4,
-                    /* Cyan */
-                    #f472b6,
-                    /* Pink */
-                    #22d3ee,
-                    /* Light Cyan */
-                    #8b5cf6
-                    /* Loop back */
-                );
+            background: var(--liquid-flow);
             background-size: 300%;
             -webkit-background-clip: text;
             background-clip: text;
 
-            /* 只有 Hover 时播放动画 */
             animation: liquid-flow 4s linear infinite;
-
-            /* Hover 时增强发光 */
-            text-shadow: 0 0 40px rgba(139, 92, 246, 0.6);
+            text-shadow: var(--liquid-glow-hover);
         }
 
         @keyframes liquid-flow {
@@ -389,12 +949,16 @@
             }
         }
 
-        /* 自定义光标 */
+        /* ============================================================
+           自定义光标：
+           MACHINE — 工程测绘十字准星（悬停旋转 45°、橙色告警）
+           MIND    — 目标检测 bounding box（悬停放大锁定）
+           ============================================================ */
         .cursor-dot {
             position: fixed;
             width: 8px;
             height: 8px;
-            background-color: #8b5cf6;
+            background-color: var(--cursor-dot);
             border-radius: 50%;
             left: 0;
             top: 0;
@@ -402,24 +966,55 @@
             pointer-events: none;
             z-index: 9999;
             transition: transform 0.05s linear;
-            box-shadow: 0 0 10px #8b5cf6;
+            box-shadow: 0 0 10px var(--cursor-dot);
             opacity: 0;
-            /* 默认隐藏，JS激活后显示 */
+        }
+
+        html[data-theme="machine"] .cursor-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 1px;
+            box-shadow: none;
         }
 
         .cursor-outline {
             position: fixed;
             width: 40px;
             height: 40px;
-            border: 1.5px solid rgba(139, 92, 246, 0.6);
+            border: 1.5px solid var(--cursor-line);
             border-radius: 50%;
             left: 0;
             top: 0;
             transform: translate(-50%, -50%);
             pointer-events: none;
             z-index: 9998;
-            transition: transform 0.15s ease-out, width 0.2s, height 0.2s, background-color 0.2s;
+            transition: transform 0.15s ease-out, border-color 0.2s, background-color 0.2s;
             opacity: 0;
+        }
+
+        html[data-theme="machine"] .cursor-outline {
+            border-radius: 4px;
+            background:
+                linear-gradient(var(--cursor-line), var(--cursor-line)) center top / 1.5px 7px,
+                linear-gradient(var(--cursor-line), var(--cursor-line)) center bottom / 1.5px 7px,
+                linear-gradient(var(--cursor-line), var(--cursor-line)) left center / 7px 1.5px,
+                linear-gradient(var(--cursor-line), var(--cursor-line)) right center / 7px 1.5px;
+            background-repeat: no-repeat;
+        }
+
+        html[data-theme="mind"] .cursor-outline {
+            border: none;
+            border-radius: 0;
+            background:
+                linear-gradient(var(--cursor-line), var(--cursor-line)) left top / 12px 1.5px,
+                linear-gradient(var(--cursor-line), var(--cursor-line)) left top / 1.5px 12px,
+                linear-gradient(var(--cursor-line), var(--cursor-line)) right top / 12px 1.5px,
+                linear-gradient(var(--cursor-line), var(--cursor-line)) right top / 1.5px 12px,
+                linear-gradient(var(--cursor-line), var(--cursor-line)) left bottom / 12px 1.5px,
+                linear-gradient(var(--cursor-line), var(--cursor-line)) left bottom / 1.5px 12px,
+                linear-gradient(var(--cursor-line), var(--cursor-line)) right bottom / 12px 1.5px,
+                linear-gradient(var(--cursor-line), var(--cursor-line)) right bottom / 1.5px 12px;
+            background-repeat: no-repeat;
         }
 
         /* JS 添加 .active 类后显示 */
@@ -428,15 +1023,54 @@
             opacity: 1;
         }
 
-        .cursor-dot.hover {
-            transform: translate(-50%, -50%) scale(1.5);
-            background-color: #fff;
+        html[data-theme="machine"] .cursor-dot.hover {
+            transform: translate(-50%, -50%) rotate(45deg) scale(1.4);
+            background-color: #e8590c;
         }
 
-        .cursor-outline.hover {
+        html[data-theme="machine"] .cursor-outline.hover {
+            transform: translate(-50%, -50%) rotate(45deg) scale(1.3);
+            border-color: #e8590c;
+        }
+
+        html[data-theme="mind"] .cursor-dot.hover {
             transform: translate(-50%, -50%) scale(1.5);
-            border-color: #fff;
-            background-color: rgba(255, 255, 255, 0.1);
+            background-color: #fff;
+            box-shadow: 0 0 12px rgba(34, 211, 238, 0.9);
+        }
+
+        html[data-theme="mind"] .cursor-outline.hover {
+            transform: translate(-50%, -50%) scale(1.5);
+            background-color: rgba(34, 211, 238, 0.06);
+        }
+
+        /* ============================================================
+           主题切换：View Transition 圆形擦除（从开关按钮扩散）
+           ============================================================ */
+        ::view-transition-old(root),
+        ::view-transition-new(root) {
+            animation: none;
+            mix-blend-mode: normal;
+        }
+
+        /* --- 无障碍：减少动态 --- */
+        @media (prefers-reduced-motion: reduce) {
+
+            .aurora-blob,
+            html[data-theme="mind"] .aurora-container::after,
+            .liquid-text:hover,
+            .animate-bounce-slow,
+            .animate-pulse-glow,
+            .animate-tilt,
+            html[data-theme="mind"] .card-interactive:hover::before {
+                animation: none !important;
+            }
+
+            .card-interactive,
+            .card-interactive img,
+            .theme-toggle-thumb {
+                transition: none;
+            }
         }
     </style>
 </head>
@@ -513,6 +1147,25 @@
         </nav>
 
         <div class="mt-auto pt-8">
+            <!-- 主题切换器：MACHINE(浅色·实验场) / MIND(深色·认知世界) -->
+            <button class="theme-toggle mx-auto mb-6" id="theme-toggle-desktop" role="switch" aria-checked="false"
+                aria-label="Toggle theme: Machine (light) / Mind (dark)">
+                <span class="theme-toggle-track" aria-hidden="true">
+                    <svg class="tt-icon tt-icon-machine" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M12 2v3m0 14v3M2 12h3m14 0h3M4.9 4.9l2.1 2.1m10 10 2.1 2.1M4.9 19.1l2.1-2.1m10-10 2.1-2.1"></path>
+                    </svg>
+                    <span class="theme-toggle-thumb"></span>
+                    <svg class="tt-icon tt-icon-mind" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"></path>
+                        <circle cx="12" cy="12" r="1"></circle>
+                        <path d="M18.944 12.33a1 1 0 0 0 0-.66 7.5 7.5 0 0 0-13.888 0 1 1 0 0 0 0 .66 7.5 7.5 0 0 0 13.888 0"></path>
+                    </svg>
+                </span>
+                <span class="theme-toggle-readout font-mono" aria-hidden="true">MODE</span>
+            </button>
             <div class="flex justify-center space-x-2 mb-6" id="lang-switcher-desktop">
                 <button class="lang-btn active" data-lang="en">EN</button>
                 <button class="lang-btn" data-lang="zh">中</button>
@@ -563,7 +1216,24 @@
     <!-- 主内容区域 -->
     <main class="md:ml-64 p-6 md:p-12 pb-24 md:pb-12 relative z-10">
 
-        <div class="md:hidden flex justify-end space-x-2 mb-6" id="lang-switcher-mobile">
+        <div class="md:hidden flex items-center justify-end space-x-2 mb-6" id="lang-switcher-mobile">
+            <button class="theme-toggle theme-toggle--mobile" id="theme-toggle-mobile" role="switch"
+                aria-checked="false" aria-label="Toggle theme: Machine (light) / Mind (dark)">
+                <span class="theme-toggle-track" aria-hidden="true">
+                    <svg class="tt-icon tt-icon-machine" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M12 2v3m0 14v3M2 12h3m14 0h3M4.9 4.9l2.1 2.1m10 10 2.1 2.1M4.9 19.1l2.1-2.1m10-10 2.1-2.1"></path>
+                    </svg>
+                    <span class="theme-toggle-thumb"></span>
+                    <svg class="tt-icon tt-icon-mind" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"></path>
+                        <circle cx="12" cy="12" r="1"></circle>
+                        <path d="M18.944 12.33a1 1 0 0 0 0-.66 7.5 7.5 0 0 0-13.888 0 1 1 0 0 0 0 .66 7.5 7.5 0 0 0 13.888 0"></path>
+                    </svg>
+                </span>
+            </button>
             <button class="lang-btn active" data-lang="en">EN</button>
             <button class="lang-btn" data-lang="zh">中</button>
             <button class="lang-btn" data-lang="de">DE</button>
@@ -1144,6 +1814,53 @@
 
         createLucideIcons();
 
+        // ===== 主题系统：MACHINE(浅色·机器人实验场) ⇆ MIND(深色·机器认知世界) =====
+        const THEME_BG = { machine: '#f0f1ec', mind: '#04080f' };
+
+        function currentTheme() {
+            return document.documentElement.dataset.theme === 'machine' ? 'machine' : 'mind';
+        }
+
+        function applyTheme(theme) {
+            document.documentElement.dataset.theme = theme;
+            try { localStorage.setItem('theme', theme); } catch (e) { }
+            document.querySelectorAll('.theme-toggle').forEach(btn => btn.setAttribute('aria-checked', String(theme === 'mind')));
+            document.querySelectorAll('.theme-toggle-readout').forEach(el => el.textContent = theme.toUpperCase());
+            let meta = document.querySelector('meta[name="theme-color"]');
+            if (!meta) {
+                meta = document.createElement('meta');
+                meta.name = 'theme-color';
+                document.head.appendChild(meta);
+            }
+            meta.content = THEME_BG[theme];
+        }
+
+        function toggleTheme(event) {
+            const next = currentTheme() === 'machine' ? 'mind' : 'machine';
+            const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+            // 支持 View Transitions 的浏览器：从开关位置做圆形擦除，像一次“世界观切换”
+            if (document.startViewTransition && !reduceMotion) {
+                const btn = event.currentTarget;
+                const transition = document.startViewTransition(() => applyTheme(next));
+                transition.ready.then(() => {
+                    const rect = btn.getBoundingClientRect();
+                    const cx = rect.left + rect.width / 2;
+                    const cy = rect.top + rect.height / 2;
+                    const radius = Math.hypot(Math.max(cx, window.innerWidth - cx), Math.max(cy, window.innerHeight - cy));
+                    document.documentElement.animate(
+                        { clipPath: [`circle(0px at ${cx}px ${cy}px)`, `circle(${radius}px at ${cx}px ${cy}px)`] },
+                        { duration: 620, easing: 'cubic-bezier(0.22, 1, 0.36, 1)', pseudoElement: '::view-transition-new(root)' }
+                    );
+                }).catch(() => { });
+            } else {
+                applyTheme(next);
+            }
+        }
+
+        // 启动时同步按钮状态、读数与 meta theme-color（data-theme 已由 <head> 预绘制脚本定妥）
+        applyTheme(currentTheme());
+
         // --- 性能优化：RequestAnimationFrame 节流 ---
         let tickingScroll = false;
         let tickingMouse = false;
@@ -1226,32 +1943,39 @@
             type();
         }
 
-        // --- 神经网络粒子效果 (Canvas) ---
+        // --- 粒子场 (Canvas)：MACHINE=装配节点矩阵 / MIND=感知点云 ---
         function initNeuralParticles() {
             const canvas = document.getElementById('neural-canvas');
             if (!canvas) return;
             const ctx = canvas.getContext('2d');
             let width, height, particles = [];
 
-            // 新增：定义鼠标位置对象和连接半径
+            // 每个主题一套粒子语言：颜色、形状、连线含义都不同
+            const PARTICLE_FX = {
+                machine: { node: '27, 59, 189', hot: '232, 89, 12', link: '27, 59, 189', linkAlpha: 0.14, mouseColor: '232, 89, 12', square: true },
+                mind: { node: '34, 211, 238', hot: '139, 92, 246', link: '56, 189, 248', linkAlpha: 0.2, mouseColor: '34, 211, 238', square: false }
+            };
+            const fxNow = () => PARTICLE_FX[currentTheme()];
+
             let mouse = { x: null, y: null, radius: 150 };
 
-            // 新增：监听鼠标移动更新位置
             window.addEventListener('mousemove', (event) => {
                 mouse.x = event.clientX;
                 mouse.y = event.clientY;
             });
 
-            // 新增：鼠标移出窗口时清除位置
             window.addEventListener('mouseout', () => {
                 mouse.x = null;
                 mouse.y = null;
             });
 
+            const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
             function resize() {
                 width = window.innerWidth; height = window.innerHeight;
                 canvas.width = width; canvas.height = height;
                 createParticles();
+                if (reduceMotion) drawFrame(); // 减少动态时只画静态一帧
             }
 
             function createParticles() {
@@ -1266,34 +1990,59 @@
                     particles.push({
                         x: Math.random() * width, y: Math.random() * height,
                         vx: (Math.random() - 0.5) * 0.5, vy: (Math.random() - 0.5) * 0.5,
-                        size: Math.random() * 2 + 1
+                        size: Math.random() * 2 + 1,
+                        z: Math.random(),          // 深度：影响大小与透明度（点云的纵深感）
+                        hot: Math.random() < 0.12, // 少量“高亮”节点（橙色工件 / 紫色推理核）
+                        mark: Math.random() < 0.15 // 少量带标记的节点（十字基准 / 传感光环）
                     });
                 }
             }
 
-            function animateParticles() {
+            function drawFrame() {
+                const fx = fxNow();
                 ctx.clearRect(0, 0, width, height);
 
                 for (let i = 0; i < particles.length; i++) {
                     let p = particles[i];
-                    p.x += p.vx; p.y += p.vy;
+                    const depth = 0.55 + p.z * 0.45;
+                    const s = p.size * depth * 1.6;
+                    const color = p.hot ? fx.hot : fx.node;
+                    const alpha = 0.22 + p.z * 0.5;
 
-                    if (p.x < 0 || p.x > width) p.vx *= -1;
-                    if (p.y < 0 || p.y > height) p.vy *= -1;
+                    if (fx.square) {
+                        // MACHINE：方形装配节点 + 十字定位基准
+                        ctx.fillStyle = `rgba(${color}, ${alpha})`;
+                        ctx.fillRect(p.x - s / 2, p.y - s / 2, s, s);
+                        if (p.mark) {
+                            ctx.strokeStyle = `rgba(${fx.node}, 0.35)`;
+                            ctx.lineWidth = 1;
+                            ctx.beginPath();
+                            ctx.moveTo(p.x - s * 2.2, p.y); ctx.lineTo(p.x + s * 2.2, p.y);
+                            ctx.moveTo(p.x, p.y - s * 2.2); ctx.lineTo(p.x, p.y + s * 2.2);
+                            ctx.stroke();
+                        }
+                    } else {
+                        // MIND：带纵深的点云 + 传感光环
+                        ctx.beginPath();
+                        ctx.fillStyle = `rgba(${color}, ${alpha})`;
+                        ctx.arc(p.x, p.y, s * 0.7, 0, Math.PI * 2);
+                        ctx.fill();
+                        if (p.mark) {
+                            ctx.beginPath();
+                            ctx.strokeStyle = `rgba(${color}, ${0.2 + p.z * 0.2})`;
+                            ctx.lineWidth = 1;
+                            ctx.arc(p.x, p.y, s * 2.4, 0, Math.PI * 2);
+                            ctx.stroke();
+                        }
+                    }
 
-                    // 绘制粒子
-                    ctx.beginPath();
-                    ctx.fillStyle = 'rgba(139, 92, 246, 0.5)';
-                    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-                    ctx.fill();
-
-                    // 绘制粒子之间的连线
+                    // 粒子之间的连线（装配总线 / 感知网格）
                     for (let j = i + 1; j < particles.length; j++) {
                         let p2 = particles[j];
                         let dist = Math.sqrt((p.x - p2.x) ** 2 + (p.y - p2.y) ** 2);
                         if (dist < 150) {
                             ctx.beginPath();
-                            ctx.strokeStyle = `rgba(139, 92, 246, ${0.15 * (1 - dist / 150)})`; // 透明度随距离衰减
+                            ctx.strokeStyle = `rgba(${fx.link}, ${fx.linkAlpha * (1 - dist / 150)})`;
                             ctx.lineWidth = 1 - dist / 150;
                             ctx.moveTo(p.x, p.y);
                             ctx.lineTo(p2.x, p2.y);
@@ -1301,28 +2050,42 @@
                         }
                     }
 
-                    // 新增：绘制粒子与鼠标的连线
+                    // 粒子与鼠标的连线（测量线 / 传感束）
                     if (mouse.x != null) {
                         let dx = p.x - mouse.x;
                         let dy = p.y - mouse.y;
                         let distance = Math.sqrt(dx * dx + dy * dy);
                         if (distance < mouse.radius) {
                             ctx.beginPath();
-                            // 距离越近，线条越不透明
-                            ctx.strokeStyle = `rgba(139, 92, 246, ${1 - distance / mouse.radius})`;
+                            ctx.strokeStyle = `rgba(${fx.mouseColor}, ${0.8 * (1 - distance / mouse.radius)})`;
                             ctx.lineWidth = 1;
                             ctx.moveTo(p.x, p.y);
                             ctx.lineTo(mouse.x, mouse.y);
                             ctx.stroke();
+                            if (!fx.square && distance < mouse.radius * 0.55) {
+                                // MIND：近距节点绘制“目标锁定”框
+                                const b = s * 2.6;
+                                ctx.strokeStyle = `rgba(${fx.mouseColor}, ${0.9 * (1 - distance / mouse.radius)})`;
+                                ctx.strokeRect(p.x - b, p.y - b, b * 2, b * 2);
+                            }
                         }
                     }
                 }
+            }
+
+            function animateParticles() {
+                for (let p of particles) {
+                    p.x += p.vx; p.y += p.vy;
+                    if (p.x < 0 || p.x > width) p.vx *= -1;
+                    if (p.y < 0 || p.y > height) p.vy *= -1;
+                }
+                drawFrame();
                 requestAnimationFrame(animateParticles);
             }
 
             window.addEventListener('resize', resize);
             resize();
-            animateParticles();
+            if (!reduceMotion) animateParticles();
         }
 
         // --- Gemini API ---
@@ -1388,6 +2151,9 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             initNeuralParticles(); // 初始化粒子背景
+
+            // 主题切换按钮（桌面侧边栏 + 移动端顶栏）
+            document.querySelectorAll('.theme-toggle').forEach(btn => btn.addEventListener('click', toggleTheme));
 
             const sections = document.querySelectorAll('section[id]');
             const navLinksDesktop = document.querySelectorAll('#desktop-nav .nav-link');
