@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400" viewBox="0 0 600 400" role="img" aria-labelledby="title desc">
+  <title id="title">IROS 2025 placeholder</title>
+  <desc id="desc">A local placeholder for the IROS 2025 research card.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1e293b"/>
+      <stop offset="1" stop-color="#111827"/>
+    </linearGradient>
+    <linearGradient id="line" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#8b5cf6"/>
+      <stop offset="1" stop-color="#22d3ee"/>
+    </linearGradient>
+  </defs>
+  <rect width="600" height="400" fill="url(#bg)"/>
+  <circle cx="456" cy="96" r="92" fill="#8b5cf6" opacity="0.14"/>
+  <circle cx="128" cy="308" r="118" fill="#0891b2" opacity="0.16"/>
+  <path d="M112 244c72-96 135-96 188 0s116 96 188 0" fill="none" stroke="url(#line)" stroke-width="14" stroke-linecap="round"/>
+  <path d="M166 156h268" stroke="#64748b" stroke-width="2" opacity="0.45"/>
+  <path d="M166 184h208" stroke="#64748b" stroke-width="2" opacity="0.35"/>
+  <text x="300" y="112" fill="#f8fafc" font-family="Inter, system-ui, sans-serif" font-size="44" font-weight="800" text-anchor="middle">IROS 2025</text>
+  <text x="300" y="304" fill="#c4b5fd" font-family="Inter, system-ui, sans-serif" font-size="20" font-weight="600" text-anchor="middle">Research preview</text>
+</svg>

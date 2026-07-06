@@ -13,47 +13,23 @@
     <link rel="icon" type="image/png" sizes="16x16" href="favicon_io/favicon-16x16.png">
     <link rel="manifest" href="favicon_io/site.webmanifest">
 
-    <!-- 引入 Tailwind CSS (开发模式CDN) -->
-    <script src="https://cdn.tailwindcss.com"></script>
-
-    <!-- Tailwind 配置 -->
     <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        'inter': ['Inter', 'sans-serif'],
-                        'mono': ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
-                    },
-                    colors: {
-                        'primary': tailwind.colors.violet,
-                    },
-                    animation: {
-                        'fade-in-up': 'fadeInUp 0.8s ease-out forwards',
-                        'bounce-slow': 'bounce-slow 2s infinite ease-in-out',
-                        'pulse-glow': 'pulse-glow 3s infinite ease-in-out',
-                    },
-                    keyframes: {
-                        fadeInUp: {
-                            '0%': { opacity: '0', transform: 'translateY(30px)' },
-                            '100%': { opacity: '1', transform: 'translateY(0)' },
-                        },
-                        'bounce-slow': {
-                            '0%, 100%': { transform: 'translateY(0)' },
-                            '50%': { transform: 'translateY(-15px)' }
-                        },
-                        'pulse-glow': {
-                            '0%, 100%': { boxShadow: '0 0 15px rgba(167, 139, 250, 0.4)' },
-                            '50%': { boxShadow: '0 0 25px rgba(167, 139, 250, 0.8)' }
-                        }
-                    }
-                }
+        document.documentElement.classList.add('js-enabled');
+        window.createLucideIcons = function () {
+            if (window.lucide && typeof window.lucide.createIcons === 'function') {
+                window.lucide.createIcons();
+            } else {
+                document.documentElement.classList.add('lucide-unavailable');
             }
-        }
+        };
     </script>
-    <!-- 引入 Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <!-- 引入 Google Font: Inter -->
+    <link rel="stylesheet" href="assets/css/site.css">
+
+    <!-- Lucide Icons (local fixed version) -->
+    <script src="assets/vendor/lucide-0.468.0.min.js"
+        onerror="document.documentElement.classList.add('lucide-unavailable')"></script>
+
+    <!-- Google Font: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700;900&display=swap" rel="stylesheet">
@@ -357,18 +333,6 @@
             line-height: 1.6;
         }
 
-        /* 滚动动画 */
-        .scroll-animate {
-            opacity: 0;
-            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
-            transform: translateY(30px);
-        }
-
-        .scroll-animate.is-visible {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
         /* --- 液态流光文字特效 (Liquid Flow) --- */
         .liquid-text {
             /* 1. 默认状态：符合网站配色的静态渐变 (紫色 -> 青色) */
@@ -557,15 +521,15 @@
 
             <div class="flex justify-center space-x-6">
                 <!-- 普通悬停效果 -->
-                <a href="https://github.com/Drapandiger" target="_blank"
+                <a href="https://github.com/Drapandiger" target="_blank" rel="noopener noreferrer"
                     class="social-link text-slate-500 hover:text-primary-400" title="GitHub" aria-label="GitHub">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
                 </a>
-                <a href="https://www.linkedin.com/in/zeqi-li-tum" target="_blank"
+                <a href="https://www.linkedin.com/in/zeqi-li-tum" target="_blank" rel="noopener noreferrer"
                     class="social-link text-slate-500 hover:text-primary-400" title="LinkedIn" aria-label="LinkedIn">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg>
                 </a>
-                <a href="https://scholar.google.com/citations?hl=en&user=IiApesIAAAAJ" target="_blank"
+                <a href="https://scholar.google.com/citations?hl=en&user=IiApesIAAAAJ" target="_blank" rel="noopener noreferrer"
                     class="social-link text-slate-500 hover:text-primary-400" title="Google Scholar"
                     aria-label="Google Scholar"><i data-lucide="graduation-cap" class="w-6 h-6"></i></a>
                 <a href="mailto:drapandiger@gmail.com" class="social-link text-slate-500 hover:text-primary-400"
@@ -616,7 +580,7 @@
                 </h1>
                 <p class="text-xl md:text-2xl text-slate-300 max-w-3xl mb-8 leading-relaxed">
                     <span class="typing-text" data-i18n-key="hero.typing_prefix">I am a </span>
-                    <span id="typewriter" class="text-primary-400 font-bold typing-cursor font-mono"></span>
+                    <span id="typewriter" class="text-primary-400 font-bold typing-cursor font-mono">Robotics & AI Researcher</span>
                 </p>
                 <div class="flex flex-wrap gap-3 mb-8">
                     <span
@@ -637,7 +601,7 @@
                             Sim</span></span>
                 </div>
                 <div class="flex gap-4">
-                    <a href="CV.pdf" target="_blank"
+                    <a href="CV.pdf" target="_blank" rel="noopener noreferrer"
                         class="bg-slate-700/80 backdrop-blur border border-slate-600 text-white font-semibold px-6 py-3 rounded-lg shadow-lg hover:bg-primary-600 hover:border-primary-500 transition-all duration-300 flex items-center hover:shadow-[0_0_20px_theme(colors.primary.500)] group">
                         <i data-lucide="file-text" class="w-5 h-5 mr-2 group-hover:animate-bounce"></i> <span
                             data-i18n-key="hero.button.cv">View My CV</span>
@@ -673,7 +637,7 @@
                         class="absolute top-4 right-4 bg-amber-500/90 text-amber-950 text-xs font-bold px-3 py-1 rounded-full shadow-lg z-20 backdrop-blur-sm font-mono tracking-wider flex items-center">
                         <i data-lucide="construction" class="w-3 h-3 mr-1"></i> Under Construction
                     </div>
-                    <img src="https://placehold.co/600x400/1e293b/8b5cf6?text=IROS+2025&font=inter" alt="研究项目封面"
+                    <img src="assets/placeholders/iros-2025.svg" alt="研究项目封面"
                         class="w-full h-48 object-cover">
                     <div class="p-6">
                         <p class="text-sm text-primary-400 mb-1 font-mono" data-i18n-key="research.item1.meta">IROS 2025
@@ -690,13 +654,13 @@
                             <p class="ai-result-text"></p>
                         </div>
                         <div class="flex flex-wrap gap-3">
-                            <a href="https://arxiv.org/abs/2509.19261" target="_blank"
+                            <a href="https://arxiv.org/abs/2509.19261" target="_blank" rel="noopener noreferrer"
                                 class="text-sm bg-slate-700 text-slate-300 px-3 py-1 rounded-full hover:bg-slate-600 hover:shadow-[0_0_8px_theme(colors.slate.400)] hover:text-white transition-all"><i
                                     data-lucide="book" class="w-4 h-4 inline-block mr-1"></i> arXiv</a>
-                            <a href="https://arxiv.org/pdf/2509.19261" target="_blank"
+                            <a href="https://arxiv.org/pdf/2509.19261" target="_blank" rel="noopener noreferrer"
                                 class="text-sm bg-slate-700 text-slate-300 px-3 py-1 rounded-full hover:bg-slate-600 hover:shadow-[0_0_8px_theme(colors.slate.400)] hover:text-white transition-all"><i
                                     data-lucide="file-text" class="w-4 h-4 inline-block mr-1"></i> PDF</a>
-                            <a href="https://www.youtube.com/watch?v=3DhbUsv4eDo" target="_blank"
+                            <a href="https://www.youtube.com/watch?v=3DhbUsv4eDo" target="_blank" rel="noopener noreferrer"
                                 class="text-sm bg-slate-700 text-slate-300 px-3 py-1 rounded-full hover:bg-slate-600 hover:shadow-[0_0_8px_theme(colors.slate.400)] hover:text-white transition-all"><i
                                     data-lucide="video" class="w-4 h-4 inline-block mr-1"></i> <span
                                     data-i18n-key="common.video">Video</span></a>
@@ -718,7 +682,7 @@
                         class="absolute top-4 right-4 bg-amber-500/90 text-amber-950 text-xs font-bold px-3 py-1 rounded-full shadow-lg z-20 backdrop-blur-sm font-mono tracking-wider flex items-center">
                         <i data-lucide="construction" class="w-3 h-3 mr-1"></i> Under Construction
                     </div>
-                    <img src="https://placehold.co/600x400/1e293b/8b5cf6?text=CBS+2025&font=inter" alt="研究项目封面"
+                    <img src="assets/placeholders/cbs-2025.svg" alt="研究项目封面"
                         class="w-full h-48 object-cover">
                     <div class="p-6">
                         <p class="text-sm text-primary-400 mb-1 font-mono" data-i18n-key="research.item2.meta">CBS 2025
@@ -734,16 +698,16 @@
                             <p class="ai-result-text"></p>
                         </div>
                         <div class="flex flex-wrap gap-3">
-                            <a href="https://drapandiger.github.io/GODHS/" target="_blank"
+                            <a href="https://drapandiger.github.io/GODHS/" target="_blank" rel="noopener noreferrer"
                                 class="text-sm bg-slate-700 text-slate-300 px-3 py-1 rounded-full hover:bg-slate-600 hover:shadow-[0_0_8px_theme(colors.slate.400)] hover:text-white transition-all"><i
                                     data-lucide="globe" class="w-4 h-4 inline-block mr-1"></i> Page</a>
-                            <a href="https://arxiv.org/abs/2508.20899" target="_blank"
+                            <a href="https://arxiv.org/abs/2508.20899" target="_blank" rel="noopener noreferrer"
                                 class="text-sm bg-slate-700 text-slate-300 px-3 py-1 rounded-full hover:bg-slate-600 hover:shadow-[0_0_8px_theme(colors.slate.400)] hover:text-white transition-all"><i
                                     data-lucide="book" class="w-4 h-4 inline-block mr-1"></i> arXiv</a>
-                            <a href="https://arxiv.org/pdf/2508.20899" target="_blank"
+                            <a href="https://arxiv.org/pdf/2508.20899" target="_blank" rel="noopener noreferrer"
                                 class="text-sm bg-slate-700 text-slate-300 px-3 py-1 rounded-full hover:bg-slate-600 hover:shadow-[0_0_8px_theme(colors.slate.400)] hover:text-white transition-all"><i
                                     data-lucide="file-text" class="w-4 h-4 inline-block mr-1"></i> PDF</a>
-                            <a href="https://www.youtube.com/watch?v=iU6U3HwSC9U" target="_blank"
+                            <a href="https://www.youtube.com/watch?v=iU6U3HwSC9U" target="_blank" rel="noopener noreferrer"
                                 class="text-sm bg-slate-700 text-slate-300 px-3 py-1 rounded-full hover:bg-slate-600 hover:shadow-[0_0_8px_theme(colors.slate.400)] hover:text-white transition-all"><i
                                     data-lucide="video" class="w-4 h-4 inline-block mr-1"></i> <span
                                     data-i18n-key="common.video">Video</span></a>
@@ -757,7 +721,7 @@
                     </div>
                 </div>
             </div>
-            <a href="#" class="inline-block text-primary-400 font-medium mt-8 group scroll-animate"
+            <a href="#research" class="inline-block text-primary-400 font-medium mt-8 group scroll-animate"
                 style="transition-delay: 300ms;">
                 <span data-i18n-key="research.seeall">See All Research</span>
                 <i data-lucide="arrow-right"
@@ -942,7 +906,7 @@
                     </a>
                     <a href="assets/blog/bo/page/blog-bo.html" class="block rounded-xl shadow-2xl overflow-hidden card-interactive relative"
                         style="transition-delay: 200ms;">
-                        <img src="assets/blog/bo/images/falsi_cover.png" onerror="this.src='https://placehold.co/600x300/1e293b/8b5cf6?text=Image+Missing&font=inter'"
+                        <img src="assets/blog/bo/images/falsi_cover.png" onerror="this.onerror=null;this.src='assets/placeholders/image-missing.svg'"
                             alt="博客封面" class="w-full h-40 object-cover">
                         <div
                             class="absolute top-4 right-4 bg-amber-500/90 text-amber-950 text-xs font-bold px-3 py-1 rounded-full shadow-lg z-20 backdrop-blur-sm font-mono tracking-wider flex items-center">
@@ -1011,14 +975,14 @@
                             </div>
                         </div>
                     </a>
-                    <a href="#" class="block rounded-xl shadow-2xl overflow-hidden card-interactive relative"
+                    <div class="block rounded-xl shadow-2xl overflow-hidden card-interactive relative"
                         style="transition-delay: 300ms;">
                         <!-- Construction Badge -->
                         <div
                             class="absolute top-4 right-4 bg-amber-500/90 text-amber-950 text-xs font-bold px-3 py-1 rounded-full shadow-lg z-20 backdrop-blur-sm font-mono tracking-wider flex items-center">
                             <i data-lucide="construction" class="w-3 h-3 mr-1"></i> Under Construction
                         </div>
-                        <img src="https://placehold.co/600x300/1e293b/8b5cf6?text=Blog+Coming+Soon&font=inter"
+                        <img src="assets/placeholders/blog-coming-soon.svg"
                             alt="博客封面" class="w-full h-40 object-cover">
                         <div class="p-6">
                             <p class="text-sm text-slate-500 mb-2 font-mono">Date TBA</p>
@@ -1033,7 +997,7 @@
                                     class="text-xs bg-slate-700 text-primary-300 px-2 py-1 rounded"
                                     data-i18n-key="blog.item3.tag2">RL</span></div>
                         </div>
-                    </a>
+                    </div>
                 </div>
             </div>
         </section>
@@ -1178,7 +1142,7 @@
             }
         };
 
-        lucide.createIcons();
+        createLucideIcons();
 
         // --- 性能优化：RequestAnimationFrame 节流 ---
         let tickingScroll = false;
@@ -1418,7 +1382,7 @@
             } finally {
                 button.disabled = false;
                 buttonText.textContent = originalButtonText;
-                lucide.createIcons();
+                createLucideIcons();
             }
         }
 

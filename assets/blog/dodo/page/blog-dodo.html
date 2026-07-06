@@ -7,32 +7,26 @@
     <title>Building DODO: Bridging Simulation and Reality in Bird-like Bipedal Robotics | Zeqi Li</title>
 
     <!-- Favicon -->
-    <link rel="apple-touch-icon" sizes="180x180" href="favicon_io/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="favicon_io/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="favicon_io/favicon-16x16.png">
-    <link rel="manifest" href="favicon_io/site.webmanifest">
+    <link rel="apple-touch-icon" sizes="180x180" href="../../../../favicon_io/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../../../../favicon_io/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../../../../favicon_io/favicon-16x16.png">
+    <link rel="manifest" href="../../../../favicon_io/site.webmanifest">
 
-    <!-- 引入 Tailwind CSS (开发模式CDN) -->
-    <script src="https://cdn.tailwindcss.com"></script>
-
-    <!-- Tailwind 配置 -->
     <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        'inter': ['Inter', 'sans-serif'],
-                        'mono': ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
-                    },
-                    colors: {
-                        'primary': tailwind.colors.violet,
-                    },
-                }
+        document.documentElement.classList.add('js-enabled');
+        window.createLucideIcons = function () {
+            if (window.lucide && typeof window.lucide.createIcons === 'function') {
+                window.lucide.createIcons();
+            } else {
+                document.documentElement.classList.add('lucide-unavailable');
             }
-        }
+        };
     </script>
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="../../../../assets/css/site.css">
+
+    <!-- Lucide Icons (local fixed version) -->
+    <script src="../../../../assets/vendor/lucide-0.468.0.min.js"
+        onerror="document.documentElement.classList.add('lucide-unavailable')"></script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -480,7 +474,7 @@
     </footer>
 
     <script>
-        lucide.createIcons();
+        createLucideIcons();
 
         // ====== DODO Terminal Animation Core ======
         document.addEventListener("DOMContentLoaded", () => {

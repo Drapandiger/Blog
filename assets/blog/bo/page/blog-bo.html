@@ -7,33 +7,26 @@
     <title>Falsifying Reachset Conformance in Cyber-Physical Systems using Bayesian Optimization | Zeqi Li</title>
 
     <!-- Favicon -->
-    <link rel="apple-touch-icon" sizes="180x180" href="favicon_io/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="favicon_io/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="favicon_io/favicon-16x16.png">
-    <link rel="manifest" href="favicon_io/site.webmanifest">
+    <link rel="apple-touch-icon" sizes="180x180" href="../../../../favicon_io/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../../../../favicon_io/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../../../../favicon_io/favicon-16x16.png">
+    <link rel="manifest" href="../../../../favicon_io/site.webmanifest">
 
-    <!-- 引入 Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-
-    <!-- Tailwind 配置 -->
     <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        'inter': ['Inter', 'sans-serif'],
-                        'mono': ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
-                    },
-                    colors: {
-                        'primary': tailwind.colors.violet,
-                    },
-                }
+        document.documentElement.classList.add('js-enabled');
+        window.createLucideIcons = function () {
+            if (window.lucide && typeof window.lucide.createIcons === 'function') {
+                window.lucide.createIcons();
+            } else {
+                document.documentElement.classList.add('lucide-unavailable');
             }
-        }
+        };
     </script>
+    <link rel="stylesheet" href="../../../../assets/css/site.css">
 
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Lucide Icons (local fixed version) -->
+    <script src="../../../../assets/vendor/lucide-0.468.0.min.js"
+        onerror="document.documentElement.classList.add('lucide-unavailable')"></script>
 
     <!-- MathJax 渲染公式 -->
     <script>
@@ -48,7 +41,6 @@
             }
         };
     </script>
-    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 
     <style>
@@ -338,7 +330,7 @@ Require: Input domain X; Initial dataset D_0
                 </div>
 
                 <div class="my-8 rounded-xl overflow-hidden border border-slate-800 shadow-lg bg-slate-900/50 p-6 max-w-4xl mx-auto flex flex-col items-center">
-                    <img src="../images/2_Bounding.png" alt="Bounding Sets" class="max-h-96 w-auto rounded-lg object-contain" onerror="this.style.display='none'">
+                    <img src="../images/figure-placeholder.svg" alt="Bounding Sets" class="max-h-96 w-auto rounded-lg object-contain">
                     <p class="text-sm text-slate-500 mt-4 text-center italic">Image: Bounding high-order reachable sets using Zonotopes, aligned to vehicle-fixed coordinates.</p>
                 </div>
 
@@ -400,7 +392,7 @@ Require: Input domain X; Initial dataset D_0
                 </ol>
 
                 <div class="my-8 rounded-xl overflow-hidden border border-slate-800 shadow-lg bg-slate-900/50 p-6 max-w-4xl mx-auto flex flex-col items-center">
-                    <img src="../images/3_testcasecurve.png" alt="Test case curves" class="max-h-96 w-auto rounded-lg object-contain" onerror="this.style.display='none'">
+                    <img src="../images/figure-placeholder.svg" alt="Test case curves" class="max-h-96 w-auto rounded-lg object-contain">
                     <p class="text-sm text-slate-500 mt-4 text-center italic">Image: Sinusoid, Bézier, and Sigmoid steering angle and velocity behaviors over time.</p>
                 </div>
 
@@ -421,7 +413,7 @@ Require: Input domain X; Initial dataset D_0
                 </ul>
 
                 <div class="my-8 rounded-xl overflow-hidden border border-slate-800 shadow-lg bg-slate-900/50 p-6 max-w-4xl mx-auto flex flex-col items-center">
-                    <img src="../images/4_distance.png" alt="Robustness Distance" class="max-h-96 w-auto rounded-lg object-contain" onerror="this.style.display='none'">
+                    <img src="../images/figure-placeholder.svg" alt="Robustness Distance" class="max-h-96 w-auto rounded-lg object-contain">
                     <p class="text-sm text-slate-500 mt-4 text-center italic">Image: Calculation of distance between a trajectory point and the boundary, accounting for measurement error epsilon.</p>
                 </div>
 
@@ -477,7 +469,7 @@ Require: Input domain X; Initial dataset D_0
                 <p>Using the <strong>UCB</strong> acquisition function with a 50-iteration limit, BO efficiently navigated the search space. By the 25th iteration, BO discovered a set of parameters <code>[7.99, 4.00, 3.99, 5.99]</code> that drove the robustness value to <strong class="text-rose-400">$-0.2587$</strong>. We successfully falsified the model!</p>
 
                 <div class="my-8 rounded-xl overflow-hidden border border-slate-800 shadow-lg bg-slate-900/50 p-6 max-w-4xl mx-auto flex flex-col items-center">
-                    <img src="../images/5_falsi.png" alt="Trajectory falsification" class="max-h-96 w-auto rounded-lg object-contain" onerror="this.style.display='none'">
+                    <img src="../images/figure-placeholder.svg" alt="Trajectory falsification" class="max-h-96 w-auto rounded-lg object-contain">
                     <p class="text-sm text-slate-500 mt-4 text-center italic">Image: Above - Trajectory safely inside the reachset. Below - The exact falsification moment where the complex trajectory breaks out of the Zonotope reachable set.</p>
                 </div>
 
@@ -490,14 +482,14 @@ Require: Input domain X; Initial dataset D_0
                 </ul>
 
                 <div class="my-8 rounded-xl overflow-hidden border border-slate-800 shadow-lg bg-slate-900/50 p-6 max-w-4xl mx-auto flex flex-col items-center">
-                    <img src="../images/8_EI.png" alt="Acquisition Functions" class="max-h-96 w-auto rounded-lg object-contain" onerror="this.style.display='none'">
+                    <img src="../images/figure-placeholder.svg" alt="Acquisition Functions" class="max-h-96 w-auto rounded-lg object-contain">
                     <p class="text-sm text-slate-500 mt-4 text-center italic">Image: Searched robustness of EI (left) showing massive fluctuation, and PI (right) flatlining in a local minimum.</p>
                 </div>
 
                 <p>Furthermore, swapping the Sinusoid curve for <strong>Bézier</strong> and <strong>Sigmoid</strong> curves yielded similarly successful falsifications within 50 iterations, proving the flexibility of the parameterization.</p>
 
                 <div class="my-8 rounded-xl overflow-hidden border border-slate-800 shadow-lg bg-slate-900/50 p-6 max-w-4xl mx-auto flex flex-col items-center">
-                    <img src="../images/9_beziertest.png" alt="Curve Conformance" class="max-h-96 w-auto rounded-lg object-contain" onerror="this.style.display='none'">
+                    <img src="../images/figure-placeholder.svg" alt="Curve Conformance" class="max-h-96 w-auto rounded-lg object-contain">
                     <p class="text-sm text-slate-500 mt-4 text-center italic">Image: Conformance relationship falsification using Bézier and Sigmoid test case curves.</p>
                 </div>
 
@@ -507,14 +499,14 @@ Require: Input domain X; Initial dataset D_0
                 <p>The abstract representation tracks planar motion and hitch angle $\alpha$. The complex counterpart is a Simulink 3DOF Vehicle Dynamics Blockset model that accounts for aerodynamic drag $F_{\mathrm{aero}}$, rolling resistance $F_{\mathrm{roll}}$, and requires a closed-loop forward feedback controller to align torque $T$ inputs with the abstract model's acceleration.</p>
 
                 <div class="my-8 rounded-xl overflow-hidden border border-slate-800 shadow-lg bg-slate-900/50 p-6 max-w-4xl mx-auto flex flex-col items-center">
-                    <img src="../images/11_axis.png" alt="Two-axle tractor towing a two-axle trailer" class="max-h-96 w-auto rounded-lg object-contain" onerror="this.style.display='none'">
+                    <img src="../images/figure-placeholder.svg" alt="Two-axle tractor towing a two-axle trailer" class="max-h-96 w-auto rounded-lg object-contain">
                     <p class="text-sm text-slate-500 mt-4 text-center italic">Image: Simulink dynamic model architecture for a two-axle tractor towing a trailer.</p>
                 </div>
 
                 <p>After 50 iterations, BO evaluated the individual conformance of the Tractor, Hitch, and Trailer. The algorithm successfully identified a test case where the trajectory of the <strong>Hitch</strong> narrowly exceeded its reachable set, proving the method's robust generalizability to multi-body dynamical systems.</p>
 
                 <div class="my-8 rounded-xl overflow-hidden border border-slate-800 shadow-lg bg-slate-900/50 p-6 max-w-4xl mx-auto flex flex-col items-center">
-                    <img src="../images/12_gene.png" alt="Semi-trailer Conformance" class="max-h-96 w-auto rounded-lg object-contain" onerror="this.style.display='none'">
+                    <img src="../images/figure-placeholder.svg" alt="Semi-trailer Conformance" class="max-h-96 w-auto rounded-lg object-contain">
                     <p class="text-sm text-slate-500 mt-4 text-center italic">Image: Conformance relationship of Trailer center, Hitch center, and Tractor center.</p>
                 </div>
 
@@ -592,10 +584,10 @@ Require: Input domain X; Initial dataset D_0
 
                 <ol>
                     <li><strong>Flat Robustness Landscapes:</strong> If the abstract model’s non-determinism bounds ($\mathcal{W}$) are overly conservative (too large), the trajectory maintains a constant distance to the nearest set edge. This creates a flat optimization landscape (constant robustness), starving the Gaussian Process of gradients and preventing it from escaping local minima.
-                        <div class="mt-4 mb-6"><img src="../images/13_notgoodshape.png" alt="Flat Landscape" class="max-h-64 object-contain rounded-lg border border-slate-800" onerror="this.style.display='none'"></div>
+                        <div class="mt-4 mb-6"><img src="../images/figure-placeholder.svg" alt="Flat Landscape" class="max-h-64 object-contain rounded-lg border border-slate-800"></div>
                     </li>
                     <li><strong>Poor Abstract Model Design:</strong> If the abstract model fundamentally fails to capture the complex dynamics, trajectories will wildly deviate. Falsification becomes trivial, but the resulting test cases are useless for edge-case debugging.
-                        <div class="mt-4 mb-6"><img src="../images/14_notgoodmodel.png" alt="Poor Abstract Model" class="max-h-64 object-contain rounded-lg border border-slate-800" onerror="this.style.display='none'"></div>
+                        <div class="mt-4 mb-6"><img src="../images/figure-placeholder.svg" alt="Poor Abstract Model" class="max-h-64 object-contain rounded-lg border border-slate-800"></div>
                     </li>
                     <li><strong>Hardware & Time Constraints:</strong> BO's GP updates scale poorly ($O(N^3)$) with dataset size. Limiting iterations prevents finding the global optimum if the space is highly non-linear.</li>
                 </ol>
@@ -618,7 +610,7 @@ Require: Input domain X; Initial dataset D_0
     <!-- Footer Script -->
     <script>
         // Initialize Lucide icons
-        lucide.createIcons();
+        createLucideIcons();
     </script>
 </body>
 </html>

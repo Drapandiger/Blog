@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="540" viewBox="0 0 960 540" role="img" aria-labelledby="title desc">
+  <title id="title">Figure asset pending</title>
+  <desc id="desc">Local placeholder for a Bayesian optimization article figure that has not been added to the repository yet.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0f172a"/>
+      <stop offset="1" stop-color="#1e293b"/>
+    </linearGradient>
+    <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse">
+      <path d="M32 0H0V32" fill="none" stroke="#334155" stroke-opacity="0.45" stroke-width="1"/>
+    </pattern>
+  </defs>
+  <rect width="960" height="540" fill="url(#bg)"/>
+  <rect width="960" height="540" fill="url(#grid)" opacity="0.45"/>
+  <path d="M150 360c120-130 230-154 338-72 88 67 173 43 322-112" fill="none" stroke="#8b5cf6" stroke-width="16" stroke-linecap="round" opacity="0.85"/>
+  <path d="M150 382c120-120 232-132 338-50 86 67 180 36 322-80" fill="none" stroke="#22d3ee" stroke-width="8" stroke-linecap="round" stroke-dasharray="18 22" opacity="0.8"/>
+  <circle cx="718" cy="224" r="34" fill="none" stroke="#fb7185" stroke-width="8"/>
+  <path d="M718 178v-32M718 270v32M672 224h-32M764 224h32" stroke="#fb7185" stroke-width="8" stroke-linecap="round"/>
+  <text x="480" y="140" fill="#f8fafc" font-family="Inter, system-ui, sans-serif" font-size="48" font-weight="800" text-anchor="middle">Figure Asset Pending</text>
+  <text x="480" y="190" fill="#cbd5e1" font-family="Inter, system-ui, sans-serif" font-size="22" font-weight="500" text-anchor="middle">Add the original BO result image to replace this local placeholder.</text>
+  <text x="480" y="442" fill="#a78bfa" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="18" font-weight="700" text-anchor="middle">Reachset conformance / Bayesian optimization</text>
+</svg>
