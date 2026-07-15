@@ -46,6 +46,12 @@
     <script src="assets/vendor/lucide-0.468.0.min.js"
         onerror="document.documentElement.classList.add('lucide-unavailable')"></script>
 
+    <!-- Three.js environment (local fixed version for offline/static hosting) -->
+    <script src="assets/vendor/three-r160.min.js" defer
+        onerror="document.documentElement.classList.add('webgl-unavailable')"></script>
+    <script src="assets/js/home-three-scene.js" defer
+        onerror="document.documentElement.classList.add('webgl-unavailable')"></script>
+
     <!-- Google Font: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -149,7 +155,7 @@
             }
         }
 
-        /* --- 神经网络粒子画布 (Layer 1) --- */
+        /* --- Three.js 双主题环境画布 (Layer 1) --- */
         #neural-canvas {
             position: fixed;
             top: 0;
@@ -471,8 +477,8 @@
     <!-- 鼠标聚光灯 -->
     <div id="spotlight-effect"></div>
 
-    <!-- 神经网络粒子背景 (Canvas) -->
-    <canvas id="neural-canvas"></canvas>
+    <!-- Three.js 双主题环境：浅色机器人实验室 / 深色神经网络星空 -->
+    <canvas id="neural-canvas" aria-hidden="true"></canvas>
 
     <!-- 极光背景 (Aurora) -->
     <div class="aurora-container">
@@ -609,21 +615,16 @@
         <section id="home" class="min-h-screen flex items-center scroll-mt-16 relative">
             <div class="scroll-animate w-full hero-layout">
                 <div class="hero-copy">
-                <div class="hero-kicker" aria-hidden="true">
-                    <span class="hero-kicker-dot"></span>
-                    <span class="hero-kicker-light">ROBOTICS LAB / ACTIVE</span>
-                    <span class="hero-kicker-dark">NEURAL SPACE / ONLINE</span>
-                </div>
-                <!-- 标题 -->
-                <h1 class="text-4xl md:text-6xl font-extrabold text-white mb-4">
-                    <span data-i18n-key="hero.greeting">Hello, I'm</span>
-                    <!-- 修改为液态流光效果 (Liquid Flow Effect) -->
-                    <span class="liquid-text font-mono pb-2" data-i18n-key="hero.name">Zeqi Li</span>
-                </h1>
-                <p class="text-xl md:text-2xl text-slate-300 max-w-3xl mb-8 leading-relaxed">
-                    <span class="typing-text" data-i18n-key="hero.typing_prefix">I am a </span>
-                    <span id="typewriter" class="text-primary-400 font-bold typing-cursor font-mono">Robotics & AI Researcher</span>
-                </p>
+                    <!-- 标题 -->
+                    <h1 class="text-4xl md:text-6xl font-extrabold text-white mb-4">
+                        <span data-i18n-key="hero.greeting">Hello, I'm</span>
+                        <!-- 修改为液态流光效果 (Liquid Flow Effect) -->
+                        <span class="liquid-text font-mono pb-2" data-i18n-key="hero.name">Zeqi Li</span>
+                    </h1>
+                    <p class="text-xl md:text-2xl text-slate-300 max-w-3xl mb-8 leading-relaxed">
+                        <span class="typing-text" data-i18n-key="hero.typing_prefix">I am a </span>
+                        <span id="typewriter" class="text-primary-400 font-bold typing-cursor font-mono">Robotics & AI Researcher</span>
+                    </p>
                 <div class="flex flex-wrap gap-3 mb-8">
                     <span
                         class="bg-slate-800/50 backdrop-blur-md border border-slate-700 text-primary-300 text-sm font-medium px-4 py-2 rounded-full shadow-md flex items-center transition-all hover:bg-primary-900/30 hover:border-primary-500/50 hover:text-primary-200 hover:scale-105 cursor-none"><i
@@ -1340,222 +1341,7 @@
             type();
         }
 
-        // --- 双模式环境画布：实验室坐标网络 / 深空神经网络 ---
-        function initNeuralParticles() {
-            const canvas = document.getElementById('neural-canvas');
-            if (!canvas) return;
-            const ctx = canvas.getContext('2d');
-            if (!ctx) return;
-
-            const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-            const finePointerQuery = window.matchMedia('(pointer: fine)');
-            const mouse = { x: null, y: null, radius: 180 };
-            let width = 0;
-            let height = 0;
-            let dpr = 1;
-            let particles = [];
-            let animationFrame = null;
-            let resizeFrame = null;
-
-            const isDarkTheme = () => document.documentElement.dataset.theme === 'dark';
-
-            function createParticles() {
-                const dark = isDarkTheme();
-                const isMobile = width < 768;
-                const areaCount = Math.floor((width * height) / 32000);
-                const minParticles = isMobile ? 16 : 32;
-                const maxParticles = isMobile ? 24 : 60;
-                const count = Math.min(maxParticles, Math.max(minParticles, areaCount));
-
-                particles = Array.from({ length: count }, (_, index) => {
-                    const speed = dark ? 0.22 : 0.12;
-                    return {
-                        x: Math.random() * width,
-                        y: Math.random() * height,
-                        vx: (Math.random() - 0.5) * speed,
-                        vy: (Math.random() - 0.5) * speed,
-                        size: Math.random() * (dark ? 1.8 : 1.3) + 0.8,
-                        phase: Math.random() * Math.PI * 2,
-                        pulse: 0.7 + Math.random() * 1.3,
-                        hub: index % (dark ? 9 : 7) === 0
-                    };
-                });
-            }
-
-            function resize() {
-                width = window.innerWidth;
-                height = window.innerHeight;
-                dpr = Math.min(window.devicePixelRatio || 1, 2);
-                canvas.width = Math.round(width * dpr);
-                canvas.height = Math.round(height * dpr);
-                canvas.style.width = `${width}px`;
-                canvas.style.height = `${height}px`;
-                ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-                createParticles();
-                drawScene(performance.now(), false);
-            }
-
-            function updateParticle(particle) {
-                particle.x += particle.vx;
-                particle.y += particle.vy;
-                if (particle.x < -10 || particle.x > width + 10) particle.vx *= -1;
-                if (particle.y < -10 || particle.y > height + 10) particle.vy *= -1;
-            }
-
-            function drawConnection(a, b, opacity, dark) {
-                ctx.beginPath();
-                ctx.moveTo(a.x, a.y);
-                if (dark) {
-                    ctx.lineTo(b.x, b.y);
-                } else {
-                    const elbowX = a.x + (b.x - a.x) * 0.52;
-                    ctx.lineTo(elbowX, a.y);
-                    ctx.lineTo(elbowX, b.y);
-                    ctx.lineTo(b.x, b.y);
-                }
-                ctx.strokeStyle = dark
-                    ? `rgba(139, 125, 255, ${opacity})`
-                    : `rgba(0, 124, 114, ${opacity})`;
-                ctx.lineWidth = dark ? 0.8 : 0.65;
-                ctx.stroke();
-            }
-
-            function drawNode(particle, index, time, dark) {
-                const pulse = 0.72 + Math.sin(time * 0.001 * particle.pulse + particle.phase) * 0.28;
-                const radius = particle.size * (particle.hub ? 1.8 : 1) * (dark ? pulse : 1);
-                ctx.save();
-
-                if (dark) {
-                    const cyanNode = index % 4 === 0;
-                    ctx.fillStyle = cyanNode
-                        ? `rgba(80, 226, 255, ${0.5 + pulse * 0.35})`
-                        : `rgba(179, 143, 255, ${0.45 + pulse * 0.4})`;
-                    if (particle.hub) {
-                        ctx.shadowColor = cyanNode ? '#50e2ff' : '#a78bfa';
-                        ctx.shadowBlur = 12;
-                    }
-                    ctx.beginPath();
-                    ctx.arc(particle.x, particle.y, radius, 0, Math.PI * 2);
-                    ctx.fill();
-                    if (particle.hub) {
-                        ctx.strokeStyle = 'rgba(214, 227, 255, 0.32)';
-                        ctx.lineWidth = 0.7;
-                        ctx.beginPath();
-                        ctx.arc(particle.x, particle.y, radius + 5, 0, Math.PI * 2);
-                        ctx.stroke();
-                    }
-                } else {
-                    ctx.translate(particle.x, particle.y);
-                    ctx.rotate(particle.hub ? Math.PI / 4 : 0);
-                    ctx.fillStyle = particle.hub ? 'rgba(229, 106, 31, 0.72)' : 'rgba(0, 124, 114, 0.58)';
-                    ctx.fillRect(-radius, -radius, radius * 2, radius * 2);
-                    if (particle.hub) {
-                        ctx.strokeStyle = 'rgba(0, 124, 114, 0.38)';
-                        ctx.lineWidth = 0.8;
-                        ctx.strokeRect(-radius - 5, -radius - 5, (radius + 5) * 2, (radius + 5) * 2);
-                    }
-                }
-                ctx.restore();
-            }
-
-            function drawScene(time, shouldMove) {
-                const dark = isDarkTheme();
-                const linkDistance = dark ? 158 : 184;
-                const linkDistanceSquared = linkDistance * linkDistance;
-                ctx.clearRect(0, 0, width, height);
-
-                particles.forEach((particle, index) => {
-                    if (shouldMove) updateParticle(particle);
-
-                    for (let j = index + 1; j < particles.length; j++) {
-                        const other = particles[j];
-                        const dx = particle.x - other.x;
-                        const dy = particle.y - other.y;
-                        const distanceSquared = dx * dx + dy * dy;
-                        if (distanceSquared < linkDistanceSquared) {
-                            const proximity = 1 - Math.sqrt(distanceSquared) / linkDistance;
-                            drawConnection(particle, other, proximity * (dark ? 0.18 : 0.12), dark);
-                        }
-                    }
-
-                    if (finePointerQuery.matches && mouse.x !== null && !reducedMotionQuery.matches) {
-                        const dx = particle.x - mouse.x;
-                        const dy = particle.y - mouse.y;
-                        const distanceSquared = dx * dx + dy * dy;
-                        if (distanceSquared < mouse.radius * mouse.radius) {
-                            const proximity = 1 - Math.sqrt(distanceSquared) / mouse.radius;
-                            drawConnection(
-                                particle,
-                                mouse,
-                                proximity * (dark ? 0.55 : 0.32),
-                                dark
-                            );
-                        }
-                    }
-
-                    drawNode(particle, index, time, dark);
-                });
-            }
-
-            function animate(time) {
-                drawScene(time, true);
-                animationFrame = window.requestAnimationFrame(animate);
-            }
-
-            function stopAnimation() {
-                if (animationFrame !== null) {
-                    window.cancelAnimationFrame(animationFrame);
-                    animationFrame = null;
-                }
-            }
-
-            function startAnimation() {
-                stopAnimation();
-                if (reducedMotionQuery.matches || document.hidden) {
-                    drawScene(performance.now(), false);
-                    return;
-                }
-                animationFrame = window.requestAnimationFrame(animate);
-            }
-
-            window.addEventListener('mousemove', event => {
-                mouse.x = event.clientX;
-                mouse.y = event.clientY;
-            }, { passive: true });
-            window.addEventListener('mouseout', event => {
-                if (!event.relatedTarget) {
-                    mouse.x = null;
-                    mouse.y = null;
-                }
-            });
-            window.addEventListener('blur', () => {
-                mouse.x = null;
-                mouse.y = null;
-            });
-            window.addEventListener('resize', () => {
-                if (resizeFrame !== null) window.cancelAnimationFrame(resizeFrame);
-                resizeFrame = window.requestAnimationFrame(() => {
-                    resizeFrame = null;
-                    resize();
-                });
-            }, { passive: true });
-            window.addEventListener('themechange', () => {
-                createParticles();
-                drawScene(performance.now(), false);
-            });
-            document.addEventListener('visibilitychange', startAnimation);
-
-            const handleMotionPreference = () => startAnimation();
-            if (typeof reducedMotionQuery.addEventListener === 'function') {
-                reducedMotionQuery.addEventListener('change', handleMotionPreference);
-            } else if (typeof reducedMotionQuery.addListener === 'function') {
-                reducedMotionQuery.addListener(handleMotionPreference);
-            }
-
-            resize();
-            startAnimation();
-        }
-
+        // Three.js 双主题环境已移至 assets/js/home-three-scene.js。
         // --- Gemini API ---
         let currentLang = 'zh';
         const langMap = { 'zh': 'Chinese', 'en': 'English', 'de': 'German' };
@@ -1619,7 +1405,16 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             initThemeControls();
-            initNeuralParticles(); // 初始化粒子背景
+            // Three.js 独立初始化，失败时保留 CSS 实验室/星空降级背景。
+            if (typeof window.initThreeBackground === 'function') {
+                try {
+                    window.initThreeBackground();
+                } catch (error) {
+                    document.documentElement.classList.add('webgl-unavailable');
+                }
+            } else {
+                document.documentElement.classList.add('webgl-unavailable');
+            }
 
             const sections = document.querySelectorAll('section[id]');
             const navLinksDesktop = document.querySelectorAll('#desktop-nav .nav-link');
