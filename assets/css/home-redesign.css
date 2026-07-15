@@ -1518,11 +1518,11 @@ body.home-page #neural-canvas {
 }
 
 html.webgl-ready[data-theme="light"] body.home-page #neural-canvas {
-    opacity: 0.88;
+    opacity: 0.97;
 }
 
 html.webgl-ready[data-theme="dark"] body.home-page #neural-canvas {
-    opacity: 0.92;
+    opacity: 0.96;
 }
 
 html.webgl-ready[data-theme="light"] body.home-page .aurora-container::before {
@@ -1561,10 +1561,10 @@ html.webgl-reduced-motion body.home-page #neural-canvas {
     }
 
     html.webgl-ready[data-theme="light"] body.home-page #neural-canvas {
-        opacity: 0.48;
+        opacity: 0.62;
     }
 
     html.webgl-ready[data-theme="dark"] body.home-page #neural-canvas {
-        opacity: 0.56;
+        opacity: 0.72;
     }
 }
