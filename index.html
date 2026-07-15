@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" id="theme-color" content="#f4f9f7">
     <!-- 标题将由JS动态设置 -->
     <title data-i18n-key="page.title">Your Name | Robotics & AI Researcher</title>
 
@@ -15,6 +16,22 @@
 
     <script>
         document.documentElement.classList.add('js-enabled');
+        (() => {
+            let savedTheme = null;
+            try {
+                savedTheme = localStorage.getItem('preferredTheme');
+            } catch (error) {
+                // Storage can be unavailable in privacy-focused browsing modes.
+            }
+            const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            const initialTheme = savedTheme === 'light' || savedTheme === 'dark' ? savedTheme : systemTheme;
+            document.documentElement.dataset.theme = initialTheme;
+            document.documentElement.style.colorScheme = initialTheme;
+            const initialThemeColor = document.getElementById('theme-color');
+            if (initialThemeColor) {
+                initialThemeColor.setAttribute('content', initialTheme === 'dark' ? '#050713' : '#f4f9f7');
+            }
+        })();
         window.createLucideIcons = function () {
             if (window.lucide && typeof window.lucide.createIcons === 'function') {
                 window.lucide.createIcons();
@@ -439,9 +456,10 @@
             background-color: rgba(255, 255, 255, 0.1);
         }
     </style>
+    <link rel="stylesheet" href="assets/css/home-redesign.css">
 </head>
 
-<body class="text-slate-300 font-inter relative overflow-x-hidden selection:bg-primary-500 selection:text-white">
+<body class="home-page text-slate-300 font-inter relative overflow-x-hidden selection:bg-primary-500 selection:text-white">
 
     <!-- 顶部阅读进度条 -->
     <div id="scroll-progress"></div>
@@ -513,6 +531,15 @@
         </nav>
 
         <div class="mt-auto pt-8">
+            <button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false"
+                aria-label="Switch to dark theme" title="Switch to dark theme">
+                <span class="theme-toggle-track" aria-hidden="true">
+                    <i data-lucide="sun" class="theme-toggle-icon theme-toggle-icon-sun"></i>
+                    <i data-lucide="moon-star" class="theme-toggle-icon theme-toggle-icon-moon"></i>
+                    <span class="theme-toggle-thumb"></span>
+                </span>
+                <span class="theme-toggle-label">LAB MODE</span>
+            </button>
             <div class="flex justify-center space-x-2 mb-6" id="lang-switcher-desktop">
                 <button class="lang-btn active" data-lang="en">EN</button>
                 <button class="lang-btn" data-lang="zh">中</button>
@@ -563,7 +590,16 @@
     <!-- 主内容区域 -->
     <main class="md:ml-64 p-6 md:p-12 pb-24 md:pb-12 relative z-10">
 
-        <div class="md:hidden flex justify-end space-x-2 mb-6" id="lang-switcher-mobile">
+        <div class="md:hidden flex justify-end space-x-2 mb-6 mobile-controls" id="lang-switcher-mobile">
+            <button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false"
+                aria-label="Switch to dark theme" title="Switch to dark theme">
+                <span class="theme-toggle-track" aria-hidden="true">
+                    <i data-lucide="sun" class="theme-toggle-icon theme-toggle-icon-sun"></i>
+                    <i data-lucide="moon-star" class="theme-toggle-icon theme-toggle-icon-moon"></i>
+                    <span class="theme-toggle-thumb"></span>
+                </span>
+                <span class="theme-toggle-label">LAB MODE</span>
+            </button>
             <button class="lang-btn active" data-lang="en">EN</button>
             <button class="lang-btn" data-lang="zh">中</button>
             <button class="lang-btn" data-lang="de">DE</button>
@@ -571,7 +607,13 @@
 
         <!-- 区域1: 英雄/主页 -->
         <section id="home" class="min-h-screen flex items-center scroll-mt-16 relative">
-            <div class="scroll-animate w-full">
+            <div class="scroll-animate w-full hero-layout">
+                <div class="hero-copy">
+                <div class="hero-kicker" aria-hidden="true">
+                    <span class="hero-kicker-dot"></span>
+                    <span class="hero-kicker-light">ROBOTICS LAB / ACTIVE</span>
+                    <span class="hero-kicker-dark">NEURAL SPACE / ONLINE</span>
+                </div>
                 <!-- 标题 -->
                 <h1 class="text-4xl md:text-6xl font-extrabold text-white mb-4">
                     <span data-i18n-key="hero.greeting">Hello, I'm</span>
@@ -612,8 +654,11 @@
                             data-i18n-key="hero.button.contact">Contact Me</span>
                     </a>
                 </div>
+                </div>
+
             </div>
             <a href="#research"
+                aria-label="Scroll to featured research"
                 class="absolute bottom-10 left-1/2 -translate-x-1/2 text-slate-500 hover:text-primary-400 transition-colors animate-bounce-slow">
                 <i data-lucide="chevron-down" class="w-8 h-8"></i>
             </a>
@@ -1144,6 +1189,75 @@
 
         createLucideIcons();
 
+        // --- 双主题控制：Robotics Lab / Cosmic Synapse ---
+        function initThemeControls() {
+            const root = document.documentElement;
+            const themeButtons = document.querySelectorAll('[data-theme-toggle]');
+            const themeColor = document.getElementById('theme-color');
+            const systemThemeQuery = window.matchMedia('(prefers-color-scheme: dark)');
+
+            const hasSavedTheme = () => {
+                try {
+                    const saved = localStorage.getItem('preferredTheme');
+                    return saved === 'light' || saved === 'dark';
+                } catch (error) {
+                    return false;
+                }
+            };
+
+            const applyTheme = (theme, persist = false) => {
+                const nextTheme = theme === 'dark' ? 'dark' : 'light';
+                const isDark = nextTheme === 'dark';
+                root.dataset.theme = nextTheme;
+                root.style.colorScheme = nextTheme;
+
+                if (themeColor) {
+                    themeColor.setAttribute('content', isDark ? '#050713' : '#f4f9f7');
+                }
+
+                themeButtons.forEach(button => {
+                    button.setAttribute('aria-pressed', String(isDark));
+                    button.setAttribute('aria-label', isDark ? 'Switch to light laboratory theme' : 'Switch to dark cosmic theme');
+                    button.setAttribute('title', isDark ? 'Switch to light laboratory theme' : 'Switch to dark cosmic theme');
+                    const label = button.querySelector('.theme-toggle-label');
+                    if (label) label.textContent = isDark ? 'COSMOS MODE' : 'LAB MODE';
+                });
+
+                if (persist) {
+                    try {
+                        localStorage.setItem('preferredTheme', nextTheme);
+                    } catch (error) {
+                        // The visual theme still works when storage is unavailable.
+                    }
+                }
+
+                window.dispatchEvent(new CustomEvent('themechange', { detail: { theme: nextTheme } }));
+            };
+
+            applyTheme(root.dataset.theme || (systemThemeQuery.matches ? 'dark' : 'light'));
+
+            themeButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    applyTheme(root.dataset.theme === 'dark' ? 'light' : 'dark', true);
+                });
+            });
+
+            const syncSystemTheme = event => {
+                if (!hasSavedTheme()) applyTheme(event.matches ? 'dark' : 'light');
+            };
+            if (typeof systemThemeQuery.addEventListener === 'function') {
+                systemThemeQuery.addEventListener('change', syncSystemTheme);
+            } else if (typeof systemThemeQuery.addListener === 'function') {
+                systemThemeQuery.addListener(syncSystemTheme);
+            }
+
+            window.addEventListener('storage', event => {
+                if (event.key === 'preferredTheme' && (event.newValue === 'light' || event.newValue === 'dark')) {
+                    applyTheme(event.newValue);
+                }
+            });
+        }
+
         // --- 性能优化：RequestAnimationFrame 节流 ---
         let tickingScroll = false;
         let tickingMouse = false;
@@ -1226,103 +1340,220 @@
             type();
         }
 
-        // --- 神经网络粒子效果 (Canvas) ---
+        // --- 双模式环境画布：实验室坐标网络 / 深空神经网络 ---
         function initNeuralParticles() {
             const canvas = document.getElementById('neural-canvas');
             if (!canvas) return;
             const ctx = canvas.getContext('2d');
-            let width, height, particles = [];
+            if (!ctx) return;
 
-            // 新增：定义鼠标位置对象和连接半径
-            let mouse = { x: null, y: null, radius: 150 };
+            const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+            const finePointerQuery = window.matchMedia('(pointer: fine)');
+            const mouse = { x: null, y: null, radius: 180 };
+            let width = 0;
+            let height = 0;
+            let dpr = 1;
+            let particles = [];
+            let animationFrame = null;
+            let resizeFrame = null;
 
-            // 新增：监听鼠标移动更新位置
-            window.addEventListener('mousemove', (event) => {
+            const isDarkTheme = () => document.documentElement.dataset.theme === 'dark';
+
+            function createParticles() {
+                const dark = isDarkTheme();
+                const isMobile = width < 768;
+                const areaCount = Math.floor((width * height) / 32000);
+                const minParticles = isMobile ? 16 : 32;
+                const maxParticles = isMobile ? 24 : 60;
+                const count = Math.min(maxParticles, Math.max(minParticles, areaCount));
+
+                particles = Array.from({ length: count }, (_, index) => {
+                    const speed = dark ? 0.22 : 0.12;
+                    return {
+                        x: Math.random() * width,
+                        y: Math.random() * height,
+                        vx: (Math.random() - 0.5) * speed,
+                        vy: (Math.random() - 0.5) * speed,
+                        size: Math.random() * (dark ? 1.8 : 1.3) + 0.8,
+                        phase: Math.random() * Math.PI * 2,
+                        pulse: 0.7 + Math.random() * 1.3,
+                        hub: index % (dark ? 9 : 7) === 0
+                    };
+                });
+            }
+
+            function resize() {
+                width = window.innerWidth;
+                height = window.innerHeight;
+                dpr = Math.min(window.devicePixelRatio || 1, 2);
+                canvas.width = Math.round(width * dpr);
+                canvas.height = Math.round(height * dpr);
+                canvas.style.width = `${width}px`;
+                canvas.style.height = `${height}px`;
+                ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+                createParticles();
+                drawScene(performance.now(), false);
+            }
+
+            function updateParticle(particle) {
+                particle.x += particle.vx;
+                particle.y += particle.vy;
+                if (particle.x < -10 || particle.x > width + 10) particle.vx *= -1;
+                if (particle.y < -10 || particle.y > height + 10) particle.vy *= -1;
+            }
+
+            function drawConnection(a, b, opacity, dark) {
+                ctx.beginPath();
+                ctx.moveTo(a.x, a.y);
+                if (dark) {
+                    ctx.lineTo(b.x, b.y);
+                } else {
+                    const elbowX = a.x + (b.x - a.x) * 0.52;
+                    ctx.lineTo(elbowX, a.y);
+                    ctx.lineTo(elbowX, b.y);
+                    ctx.lineTo(b.x, b.y);
+                }
+                ctx.strokeStyle = dark
+                    ? `rgba(139, 125, 255, ${opacity})`
+                    : `rgba(0, 124, 114, ${opacity})`;
+                ctx.lineWidth = dark ? 0.8 : 0.65;
+                ctx.stroke();
+            }
+
+            function drawNode(particle, index, time, dark) {
+                const pulse = 0.72 + Math.sin(time * 0.001 * particle.pulse + particle.phase) * 0.28;
+                const radius = particle.size * (particle.hub ? 1.8 : 1) * (dark ? pulse : 1);
+                ctx.save();
+
+                if (dark) {
+                    const cyanNode = index % 4 === 0;
+                    ctx.fillStyle = cyanNode
+                        ? `rgba(80, 226, 255, ${0.5 + pulse * 0.35})`
+                        : `rgba(179, 143, 255, ${0.45 + pulse * 0.4})`;
+                    if (particle.hub) {
+                        ctx.shadowColor = cyanNode ? '#50e2ff' : '#a78bfa';
+                        ctx.shadowBlur = 12;
+                    }
+                    ctx.beginPath();
+                    ctx.arc(particle.x, particle.y, radius, 0, Math.PI * 2);
+                    ctx.fill();
+                    if (particle.hub) {
+                        ctx.strokeStyle = 'rgba(214, 227, 255, 0.32)';
+                        ctx.lineWidth = 0.7;
+                        ctx.beginPath();
+                        ctx.arc(particle.x, particle.y, radius + 5, 0, Math.PI * 2);
+                        ctx.stroke();
+                    }
+                } else {
+                    ctx.translate(particle.x, particle.y);
+                    ctx.rotate(particle.hub ? Math.PI / 4 : 0);
+                    ctx.fillStyle = particle.hub ? 'rgba(229, 106, 31, 0.72)' : 'rgba(0, 124, 114, 0.58)';
+                    ctx.fillRect(-radius, -radius, radius * 2, radius * 2);
+                    if (particle.hub) {
+                        ctx.strokeStyle = 'rgba(0, 124, 114, 0.38)';
+                        ctx.lineWidth = 0.8;
+                        ctx.strokeRect(-radius - 5, -radius - 5, (radius + 5) * 2, (radius + 5) * 2);
+                    }
+                }
+                ctx.restore();
+            }
+
+            function drawScene(time, shouldMove) {
+                const dark = isDarkTheme();
+                const linkDistance = dark ? 158 : 184;
+                const linkDistanceSquared = linkDistance * linkDistance;
+                ctx.clearRect(0, 0, width, height);
+
+                particles.forEach((particle, index) => {
+                    if (shouldMove) updateParticle(particle);
+
+                    for (let j = index + 1; j < particles.length; j++) {
+                        const other = particles[j];
+                        const dx = particle.x - other.x;
+                        const dy = particle.y - other.y;
+                        const distanceSquared = dx * dx + dy * dy;
+                        if (distanceSquared < linkDistanceSquared) {
+                            const proximity = 1 - Math.sqrt(distanceSquared) / linkDistance;
+                            drawConnection(particle, other, proximity * (dark ? 0.18 : 0.12), dark);
+                        }
+                    }
+
+                    if (finePointerQuery.matches && mouse.x !== null && !reducedMotionQuery.matches) {
+                        const dx = particle.x - mouse.x;
+                        const dy = particle.y - mouse.y;
+                        const distanceSquared = dx * dx + dy * dy;
+                        if (distanceSquared < mouse.radius * mouse.radius) {
+                            const proximity = 1 - Math.sqrt(distanceSquared) / mouse.radius;
+                            drawConnection(
+                                particle,
+                                mouse,
+                                proximity * (dark ? 0.55 : 0.32),
+                                dark
+                            );
+                        }
+                    }
+
+                    drawNode(particle, index, time, dark);
+                });
+            }
+
+            function animate(time) {
+                drawScene(time, true);
+                animationFrame = window.requestAnimationFrame(animate);
+            }
+
+            function stopAnimation() {
+                if (animationFrame !== null) {
+                    window.cancelAnimationFrame(animationFrame);
+                    animationFrame = null;
+                }
+            }
+
+            function startAnimation() {
+                stopAnimation();
+                if (reducedMotionQuery.matches || document.hidden) {
+                    drawScene(performance.now(), false);
+                    return;
+                }
+                animationFrame = window.requestAnimationFrame(animate);
+            }
+
+            window.addEventListener('mousemove', event => {
                 mouse.x = event.clientX;
                 mouse.y = event.clientY;
+            }, { passive: true });
+            window.addEventListener('mouseout', event => {
+                if (!event.relatedTarget) {
+                    mouse.x = null;
+                    mouse.y = null;
+                }
             });
-
-            // 新增：鼠标移出窗口时清除位置
-            window.addEventListener('mouseout', () => {
+            window.addEventListener('blur', () => {
                 mouse.x = null;
                 mouse.y = null;
             });
-
-            function resize() {
-                width = window.innerWidth; height = window.innerHeight;
-                canvas.width = width; canvas.height = height;
+            window.addEventListener('resize', () => {
+                if (resizeFrame !== null) window.cancelAnimationFrame(resizeFrame);
+                resizeFrame = window.requestAnimationFrame(() => {
+                    resizeFrame = null;
+                    resize();
+                });
+            }, { passive: true });
+            window.addEventListener('themechange', () => {
                 createParticles();
+                drawScene(performance.now(), false);
+            });
+            document.addEventListener('visibilitychange', startAnimation);
+
+            const handleMotionPreference = () => startAnimation();
+            if (typeof reducedMotionQuery.addEventListener === 'function') {
+                reducedMotionQuery.addEventListener('change', handleMotionPreference);
+            } else if (typeof reducedMotionQuery.addListener === 'function') {
+                reducedMotionQuery.addListener(handleMotionPreference);
             }
 
-            function createParticles() {
-                particles = [];
-                // 移动端优化：减少粒子数量
-                const isMobile = width < 768;
-                const divider = isMobile ? 40 : 15;
-                const maxParticles = isMobile ? 30 : 60;
-
-                const numParticles = Math.min(width / divider, maxParticles);
-                for (let i = 0; i < numParticles; i++) {
-                    particles.push({
-                        x: Math.random() * width, y: Math.random() * height,
-                        vx: (Math.random() - 0.5) * 0.5, vy: (Math.random() - 0.5) * 0.5,
-                        size: Math.random() * 2 + 1
-                    });
-                }
-            }
-
-            function animateParticles() {
-                ctx.clearRect(0, 0, width, height);
-
-                for (let i = 0; i < particles.length; i++) {
-                    let p = particles[i];
-                    p.x += p.vx; p.y += p.vy;
-
-                    if (p.x < 0 || p.x > width) p.vx *= -1;
-                    if (p.y < 0 || p.y > height) p.vy *= -1;
-
-                    // 绘制粒子
-                    ctx.beginPath();
-                    ctx.fillStyle = 'rgba(139, 92, 246, 0.5)';
-                    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-                    ctx.fill();
-
-                    // 绘制粒子之间的连线
-                    for (let j = i + 1; j < particles.length; j++) {
-                        let p2 = particles[j];
-                        let dist = Math.sqrt((p.x - p2.x) ** 2 + (p.y - p2.y) ** 2);
-                        if (dist < 150) {
-                            ctx.beginPath();
-                            ctx.strokeStyle = `rgba(139, 92, 246, ${0.15 * (1 - dist / 150)})`; // 透明度随距离衰减
-                            ctx.lineWidth = 1 - dist / 150;
-                            ctx.moveTo(p.x, p.y);
-                            ctx.lineTo(p2.x, p2.y);
-                            ctx.stroke();
-                        }
-                    }
-
-                    // 新增：绘制粒子与鼠标的连线
-                    if (mouse.x != null) {
-                        let dx = p.x - mouse.x;
-                        let dy = p.y - mouse.y;
-                        let distance = Math.sqrt(dx * dx + dy * dy);
-                        if (distance < mouse.radius) {
-                            ctx.beginPath();
-                            // 距离越近，线条越不透明
-                            ctx.strokeStyle = `rgba(139, 92, 246, ${1 - distance / mouse.radius})`;
-                            ctx.lineWidth = 1;
-                            ctx.moveTo(p.x, p.y);
-                            ctx.lineTo(mouse.x, mouse.y);
-                            ctx.stroke();
-                        }
-                    }
-                }
-                requestAnimationFrame(animateParticles);
-            }
-
-            window.addEventListener('resize', resize);
             resize();
-            animateParticles();
+            startAnimation();
         }
 
         // --- Gemini API ---
@@ -1387,6 +1618,7 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
+            initThemeControls();
             initNeuralParticles(); // 初始化粒子背景
 
             const sections = document.querySelectorAll('section[id]');

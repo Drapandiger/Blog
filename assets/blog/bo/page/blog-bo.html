@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#f4f9f7">
     <title>Falsifying Reachset Conformance in Cyber-Physical Systems using Bayesian Optimization | Zeqi Li</title>
 
     <!-- Favicon -->
@@ -14,6 +15,17 @@
 
     <script>
         document.documentElement.classList.add('js-enabled');
+        (() => {
+            let savedTheme = null;
+            try { savedTheme = localStorage.getItem('preferredTheme'); } catch (error) { /* Optional storage. */ }
+            const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            const theme = savedTheme === 'light' || savedTheme === 'dark' ? savedTheme : systemTheme;
+            document.documentElement.dataset.theme = theme;
+            document.documentElement.style.colorScheme = theme;
+            document.querySelector('meta[name="theme-color"]').setAttribute(
+                'content', theme === 'dark' ? '#050713' : '#f4f9f7'
+            );
+        })();
         window.createLucideIcons = function () {
             if (window.lucide && typeof window.lucide.createIcons === 'function') {
                 window.lucide.createIcons();
@@ -153,9 +165,11 @@
             padding: 0.5em 0;
         }
     </style>
+    <link rel="stylesheet" href="../../../../assets/css/blog-theme.css">
+    <script defer src="../../../../assets/js/blog-theme.js"></script>
 </head>
 
-<body class="antialiased selection:bg-primary-500/30">
+<body class="blog-page antialiased selection:bg-primary-500/30">
     <!-- Navbar -->
     <nav
         class="fixed w-full z-50 bg-slate-900/80 backdrop-blur-md border-b border-slate-800 transition-all duration-300">
@@ -171,6 +185,16 @@
             </div>
         </div>
     </nav>
+
+    <button type="button" class="blog-theme-toggle" data-theme-toggle aria-pressed="false"
+        aria-label="Switch to dark cosmic theme" title="Switch to dark cosmic theme">
+        <span class="theme-toggle-track" aria-hidden="true">
+            <i data-lucide="sun" class="theme-toggle-icon theme-toggle-icon-sun"></i>
+            <i data-lucide="moon-star" class="theme-toggle-icon theme-toggle-icon-moon"></i>
+            <span class="theme-toggle-thumb"></span>
+        </span>
+        <span class="theme-toggle-label">LAB MODE</span>
+    </button>
 
     <!-- Main Content -->
     <main class="pt-32 pb-24">
