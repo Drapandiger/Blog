@@ -1257,6 +1257,20 @@
                     applyTheme(event.newValue);
                 }
             });
+
+            // 从 bfcache 返回时补一次同步，避免在其他页面切过主题后回来显示旧主题。
+            window.addEventListener('pageshow', event => {
+                if (!event.persisted) return;
+                let saved = null;
+                try {
+                    saved = localStorage.getItem('preferredTheme');
+                } catch (error) {
+                    return;
+                }
+                if ((saved === 'light' || saved === 'dark') && saved !== root.dataset.theme) {
+                    applyTheme(saved);
+                }
+            });
         }
 
         // --- 性能优化：RequestAnimationFrame 节流 ---

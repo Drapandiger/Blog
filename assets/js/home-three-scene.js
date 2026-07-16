@@ -74,8 +74,10 @@
         const html = document.documentElement;
         const random = seededRandom(23051996);
         const finePointerQuery = window.matchMedia('(pointer: fine)');
-        const initialMobile = window.innerWidth < 768;
-        const lowPowerDevice = initialMobile ||
+        /* Same predicate as the CSS breakpoint (max-width: 767px). */
+        const mobileQuery = window.matchMedia('(max-width: 767px)');
+        const initialMobile = mobileQuery.matches;
+        const lowPowerDevice = initialMobile || !finePointerQuery.matches ||
             (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4);
 
         let renderer;
@@ -243,6 +245,9 @@
             'varying vec2 vUv;',
             NOISE_GLSL,
             'void main() {',
+            '    vec2 centered = vUv - 0.5;',
+            '    float falloff = smoothstep(0.5, 0.1, length(centered * vec2(1.0, 1.4)));',
+            '    if (falloff * uOpacity < 0.003) discard;',
             '    vec2 uv = (vUv - 0.5) * uScale + uSeed;',
             '    float t = uTime * 0.016;',
             '    vec2 q = vec2(fbm(uv + t), fbm(uv - t * 0.7 + 4.7));',
@@ -250,8 +255,6 @@
             '    float body = smoothstep(0.38, 0.92, n);',
             '    vec3 color = mix(uColorA, uColorB, smoothstep(0.3, 0.78, n));',
             '    color = mix(color, uColorC, smoothstep(0.68, 0.97, fbm(uv * 1.7 - q)));',
-            '    vec2 centered = vUv - 0.5;',
-            '    float falloff = smoothstep(0.5, 0.1, length(centered * vec2(1.0, 1.4)));',
             '    float alpha = body * falloff * uOpacity;',
             '    if (alpha < 0.003) discard;',
             '    gl_FragColor = vec4(color * (0.3 + 0.9 * body), alpha);',
@@ -590,7 +593,7 @@
 
         let environmentTarget = null;
         function buildEnvironment() {
-            if (!THREE.PMREMGenerator) return;
+            if (environmentTarget || !THREE.PMREMGenerator) return;
             const envScene = new THREE.Scene();
             const gradientMaterial = new THREE.ShaderMaterial({
                 side: THREE.BackSide,
@@ -622,13 +625,15 @@
             });
             const sky = new THREE.Mesh(new THREE.SphereGeometry(50, 32, 16), gradientMaterial);
             envScene.add(sky);
+            let generator = null;
             try {
-                const generator = new THREE.PMREMGenerator(renderer);
+                generator = new THREE.PMREMGenerator(renderer);
                 environmentTarget = generator.fromScene(envScene, 0.04);
                 scene.environment = environmentTarget.texture;
-                generator.dispose();
             } catch (error) {
                 environmentTarget = null;
+            } finally {
+                if (generator) generator.dispose();
             }
             sky.geometry.dispose();
             gradientMaterial.dispose();
@@ -677,11 +682,13 @@
             return registerMaterial(labMaterials, material, 1, true);
         }
 
+        /* Shadow casting is opt-in: only silhouettes large enough to read at
+         * the shadow-map resolution are worth a depth-pass draw call. */
         function solidMesh(parent, geometry, material, position, rotation, castShadow) {
             const mesh = new THREE.Mesh(geometry, material);
             if (position) mesh.position.set(position[0], position[1], position[2]);
             if (rotation) mesh.rotation.set(rotation[0], rotation[1], rotation[2]);
-            mesh.castShadow = castShadow !== false;
+            mesh.castShadow = castShadow === true;
             parent.add(mesh);
             return mesh;
         }
@@ -778,14 +785,16 @@
             /* Workbench with a live monitor. */
             const bench = new THREE.Group();
             bench.position.set(-0.55, 0, -2.1);
-            const benchTop = solidMesh(bench, new THREE.BoxGeometry(2.75, 0.1, 0.95), shellWhite, [0, 1.04, 0]);
+            const benchTop = solidMesh(bench, new THREE.BoxGeometry(2.75, 0.1, 0.95), shellWhite,
+                [0, 1.04, 0], null, true);
             benchTop.receiveShadow = true;
             solidMesh(bench, new THREE.BoxGeometry(2.55, 0.05, 0.8), graphite, [0, 0.96, 0]);
             [[-1.2, -0.32], [1.2, -0.32], [-1.2, 0.32], [1.2, 0.32]].forEach(entry => {
                 solidMesh(bench, new THREE.CylinderGeometry(0.045, 0.05, 0.96, 12), graphite,
-                    [entry[0], 0.48, entry[1]]);
+                    [entry[0], 0.48, entry[1]], null, true);
             });
-            solidMesh(bench, new THREE.BoxGeometry(0.98, 0.62, 0.05), graphite, [-0.55, 1.62, -0.12], [-0.06, 0.12, 0]);
+            solidMesh(bench, new THREE.BoxGeometry(0.98, 0.62, 0.05), graphite,
+                [-0.55, 1.62, -0.12], [-0.06, 0.12, 0], true);
             const screenMaterial = makeShaderMaterial(labMaterials, {
                 vertexShader: nebulaVertexShader,
                 fragmentShader: screenFragmentShader,
@@ -906,17 +915,20 @@
             /* Industrial 6-axis arm running a pick-and-place loop. */
             const arm = new THREE.Group();
             arm.position.set(0.3, 0, 0.15);
-            solidMesh(arm, new THREE.CylinderGeometry(0.6, 0.68, 0.14, 28), graphite, [0, 0.07, 0]);
+            solidMesh(arm, new THREE.CylinderGeometry(0.6, 0.68, 0.14, 28), graphite,
+                [0, 0.07, 0], null, true);
             const ledRing = solidMesh(arm, new THREE.TorusGeometry(0.55, 0.02, 8, 40), ledCyan,
                 [0, 0.15, 0], [Math.PI / 2, 0, 0], false);
             labRefs.armLedRing = ledRing;
-            solidMesh(arm, new THREE.CylinderGeometry(0.34, 0.46, 0.5, 24), shellWhite, [0, 0.4, 0]);
+            solidMesh(arm, new THREE.CylinderGeometry(0.34, 0.46, 0.5, 24), shellWhite,
+                [0, 0.4, 0], null, true);
 
             const armYaw = new THREE.Group();
             armYaw.position.set(0, 0.66, 0);
             arm.add(armYaw);
             labRefs.armYaw = armYaw;
-            solidMesh(armYaw, new THREE.CylinderGeometry(0.3, 0.34, 0.26, 24), tealMetal, [0, 0.1, 0]);
+            solidMesh(armYaw, new THREE.CylinderGeometry(0.3, 0.34, 0.26, 24), tealMetal,
+                [0, 0.1, 0], null, true);
             solidMesh(armYaw, new THREE.BoxGeometry(0.1, 0.32, 0.3), graphite, [-0.18, 0.34, 0]);
             solidMesh(armYaw, new THREE.BoxGeometry(0.1, 0.32, 0.3), graphite, [0.18, 0.34, 0]);
 
@@ -925,7 +937,8 @@
             armYaw.add(shoulder);
             labRefs.shoulder = shoulder;
             solidMesh(shoulder, new THREE.SphereGeometry(0.2, 24, 16), graphite, [0, 0, 0]);
-            solidMesh(shoulder, new THREE.CapsuleGeometry(0.13, 0.92, 6, 18), shellWhite, [0, 0.56, 0]);
+            solidMesh(shoulder, new THREE.CapsuleGeometry(0.13, 0.92, 6, 18), shellWhite,
+                [0, 0.56, 0], null, true);
             solidMesh(shoulder, new THREE.BoxGeometry(0.08, 0.7, 0.06), tealMetal, [0.13, 0.52, 0]);
 
             const elbow = new THREE.Group();
@@ -933,7 +946,8 @@
             shoulder.add(elbow);
             labRefs.elbow = elbow;
             solidMesh(elbow, new THREE.SphereGeometry(0.16, 24, 16), tealMetal, [0, 0, 0]);
-            solidMesh(elbow, new THREE.CapsuleGeometry(0.1, 0.7, 6, 18), shellWhite, [0, 0.44, 0]);
+            solidMesh(elbow, new THREE.CapsuleGeometry(0.1, 0.7, 6, 18), shellWhite,
+                [0, 0.44, 0], null, true);
             labRefs.statusLights.push(
                 solidMesh(elbow, new THREE.SphereGeometry(0.032, 10, 8), amber, [0.11, 0.2, 0], null, false)
             );
@@ -971,8 +985,10 @@
             /* Autonomous mobile robot patrolling an elliptical route. */
             const amr = new THREE.Group();
             labRefs.amr = amr;
-            solidMesh(amr, new THREE.BoxGeometry(1.05, 0.2, 0.66), graphite, [0, 0.24, 0]);
-            solidMesh(amr, new THREE.BoxGeometry(0.95, 0.14, 0.58), shellWhite, [0, 0.41, 0]);
+            solidMesh(amr, new THREE.BoxGeometry(1.05, 0.2, 0.66), graphite,
+                [0, 0.24, 0], null, true);
+            solidMesh(amr, new THREE.BoxGeometry(0.95, 0.14, 0.58), shellWhite,
+                [0, 0.41, 0], null, true);
             solidMesh(amr, new THREE.BoxGeometry(0.2, 0.06, 0.5), amber, [0.46, 0.32, 0]);
             solidMesh(amr, new THREE.BoxGeometry(0.2, 0.06, 0.5), amber, [-0.46, 0.32, 0]);
             const wheelTire = new THREE.TorusGeometry(0.13, 0.05, 10, 20);
@@ -981,7 +997,7 @@
             [[-0.34, -0.36], [0.34, -0.36], [-0.34, 0.36], [0.34, 0.36]].forEach(entry => {
                 const wheel = new THREE.Group();
                 wheel.position.set(entry[0], 0.17, entry[1]);
-                solidMesh(wheel, wheelTire, rubber, [0, 0, 0]);
+                solidMesh(wheel, wheelTire, rubber, [0, 0, 0], null, true);
                 solidMesh(wheel, hubGeometry, tealMetal, [0, 0, 0], [Math.PI / 2, 0, 0]);
                 for (let spoke = 0; spoke < 3; spoke += 1) {
                     solidMesh(wheel, spokeGeometry, shellMint, [0, 0, 0],
@@ -1023,7 +1039,7 @@
             quadruped.add(body);
             labRefs.quadrupedBody = body;
             solidMesh(body, new THREE.CapsuleGeometry(0.24, 0.66, 6, 18), shellWhite,
-                [0, 0, 0], [0, 0, Math.PI / 2]);
+                [0, 0, 0], [0, 0, Math.PI / 2], true);
             solidMesh(body, new THREE.BoxGeometry(0.42, 0.12, 0.3), tealMetal, [-0.08, 0.24, 0]);
             solidMesh(body, new THREE.CylinderGeometry(0.008, 0.008, 0.4, 6), graphite, [-0.42, 0.42, 0]);
             labRefs.statusLights.push(
@@ -1033,7 +1049,8 @@
             head.position.set(0.5, 0.08, 0);
             body.add(head);
             labRefs.quadrupedHead = head;
-            solidMesh(head, new THREE.BoxGeometry(0.28, 0.22, 0.26), shellMint, [0.05, 0, 0]);
+            solidMesh(head, new THREE.BoxGeometry(0.28, 0.22, 0.26), shellMint,
+                [0.05, 0, 0], null, true);
             solidMesh(head, new THREE.BoxGeometry(0.05, 0.11, 0.24), ledCyan, [0.2, 0.01, 0], null, false);
             const legAnchors = [
                 [0.38, 0.17, 0], [0.38, -0.17, Math.PI],
@@ -1043,12 +1060,14 @@
                 const hip = new THREE.Group();
                 hip.position.set(anchor[0], 0.84, anchor[1]);
                 solidMesh(hip, new THREE.SphereGeometry(0.08, 14, 10), tealMetal, [0, 0, 0]);
-                solidMesh(hip, new THREE.CapsuleGeometry(0.062, 0.3, 4, 12), shellWhite, [0, -0.19, 0]);
+                solidMesh(hip, new THREE.CapsuleGeometry(0.062, 0.3, 4, 12), shellWhite,
+                    [0, -0.19, 0], null, true);
                 const knee = new THREE.Group();
                 knee.position.set(0, -0.38, 0);
                 hip.add(knee);
                 solidMesh(knee, new THREE.SphereGeometry(0.058, 12, 8), graphite, [0, 0, 0]);
-                solidMesh(knee, new THREE.CapsuleGeometry(0.045, 0.3, 4, 12), shellMint, [0, -0.19, 0]);
+                solidMesh(knee, new THREE.CapsuleGeometry(0.045, 0.3, 4, 12), shellMint,
+                    [0, -0.19, 0], null, true);
                 solidMesh(knee, new THREE.SphereGeometry(0.05, 10, 8), rubber, [0, -0.4, 0]);
                 hip.rotation.z = 0.1;
                 knee.rotation.z = -0.16;
@@ -1474,9 +1493,30 @@
             }
         }
 
-        buildEnvironment();
-        buildLaboratory();
-        buildSpace();
+        /* Each theme's scene is built lazily: the active one synchronously,
+         * the hidden one on idle so first paint stays cheap. */
+        let labBuilt = false;
+        let spaceBuilt = false;
+        let disposed = false;
+
+        function ensureLab() {
+            if (labBuilt) return;
+            labBuilt = true;
+            buildEnvironment();
+            buildLaboratory();
+        }
+
+        function ensureSpace() {
+            if (spaceBuilt) return;
+            spaceBuilt = true;
+            buildSpace();
+        }
+
+        if (html.dataset.theme === 'dark') {
+            ensureSpace();
+        } else {
+            ensureLab();
+        }
 
         /* ------------------------------------------------------------------
          * Layout, theme crossfade, pointer interaction
@@ -1494,9 +1534,16 @@
         let pointerActive = false;
 
         function applyLayout() {
-            viewportWidth = Math.max(1, window.innerWidth);
-            viewportHeight = Math.max(1, window.innerHeight);
-            mobileLayout = viewportWidth < 768;
+            /* Size from the canvas's CSS box (100vw x 100vh) rather than the
+             * window so mobile URL-bar show/hide doesn't stretch the scene. */
+            const rect = canvas.getBoundingClientRect();
+            viewportWidth = Math.max(1, Math.round(rect.width) || window.innerWidth);
+            viewportHeight = Math.max(1, Math.round(rect.height) || window.innerHeight);
+            mobileLayout = mobileQuery.matches;
+            if (mobileLayout || !finePointerQuery.matches) {
+                pointerActive = false;
+                pointerTarget.set(0, 0);
+            }
 
             camera.aspect = viewportWidth / viewportHeight;
             camera.fov = mobileLayout ? 43 : 34;
@@ -1538,7 +1585,11 @@
                 }
                 material.visible = weight > 0.008;
                 if (material.userData.keepDepthWrite) {
-                    material.depthWrite = weight > 0.985;
+                    /* Fully opaque materials go back to the opaque pass so the
+                     * depth pre-sort can reject hidden fragments. */
+                    const solid = weight > 0.985;
+                    material.depthWrite = solid;
+                    material.transparent = !solid;
                 }
             });
         }
@@ -1560,6 +1611,11 @@
         }
 
         function setTheme(theme, immediate) {
+            if (theme === 'dark') {
+                ensureSpace();
+            } else {
+                ensureLab();
+            }
             targetThemeMix = theme === 'dark' ? 1 : 0;
             if (immediate) themeMix = targetThemeMix;
             applyThemeWeights();
@@ -1604,6 +1660,7 @@
          * ------------------------------------------------------------------ */
 
         function updateLaboratory(time) {
+            if (!labBuilt) return;
             evaluateArmPose(time);
             const wobble = Math.sin(time * 2.3) * 0.008;
             if (labRefs.armYaw) labRefs.armYaw.rotation.y = armPose.yaw;
@@ -1684,6 +1741,7 @@
         }
 
         function updateSpace(time, deltaSeconds) {
+            if (!spaceBuilt) return;
             spaceRefs.starLayers.forEach((layer, index) => {
                 layer.rotation.y = time * (index === 0 ? 0.0016 : -0.0034);
                 layer.rotation.x = Math.sin(time * 0.02 + index) * 0.014;
@@ -1713,8 +1771,12 @@
             });
         }
 
+        let sceneTime = 0;
         function renderFrame(now, deltaSeconds) {
-            const time = now * 0.001;
+            /* Accumulated & wrapped clock keeps shader sin()/fract() precise
+             * however long the tab stays open. */
+            sceneTime = (sceneTime + Math.max(deltaSeconds, 0)) % 3600;
+            const time = sceneTime;
             uTime.value = time;
             if (Math.abs(themeMix - targetThemeMix) > 0.001) {
                 const smoothing = 1 - Math.exp(-Math.max(deltaSeconds, 1 / 60) * 5.4);
@@ -1747,7 +1809,11 @@
             const deltaSeconds = lastPresentedAt
                 ? Math.min((now - lastPresentedAt) / 1000, 0.08)
                 : 1 / 45;
-            lastPresentedAt = now;
+            /* Carry the phase remainder so the cadence averages the target
+             * rate instead of snapping to every other display refresh. */
+            lastPresentedAt = lastPresentedAt
+                ? now - ((now - lastPresentedAt) % frameInterval)
+                : now;
             renderFrame(now, deltaSeconds);
         }
 
@@ -1782,8 +1848,17 @@
             if (resizeFrame !== null) window.cancelAnimationFrame(resizeFrame);
             resizeFrame = window.requestAnimationFrame(() => {
                 resizeFrame = null;
+                const rect = canvas.getBoundingClientRect();
+                const nextWidth = Math.max(1, Math.round(rect.width) || window.innerWidth);
+                const nextHeight = Math.max(1, Math.round(rect.height) || window.innerHeight);
+                if (nextWidth === viewportWidth && nextHeight === viewportHeight &&
+                    mobileQuery.matches === mobileLayout) {
+                    return;
+                }
                 applyLayout();
-                renderFrame(performance.now(), 1 / 60);
+                const now = performance.now();
+                renderFrame(now, 1 / 60);
+                lastPresentedAt = now;
             });
         }
 
@@ -1804,6 +1879,9 @@
 
         function handleMotionPreferenceChange(event) {
             html.classList.toggle('webgl-reduced-motion', event.matches);
+            /* CSS hides the canvas while motion is reduced, so hand the
+             * backdrop back to the static fallback layers. */
+            html.classList.toggle('webgl-ready', !event.matches);
             if (event.matches) {
                 stopAnimation();
             } else {
@@ -1821,12 +1899,23 @@
             canvas.removeAttribute('hidden');
             html.classList.remove('webgl-unavailable');
             html.classList.add('webgl-ready');
+            /* Render-target contents die with the old context; regenerate the
+             * PMREM environment or the lab loses its image-based lighting. */
+            if (labBuilt) {
+                if (environmentTarget) {
+                    environmentTarget.dispose();
+                    environmentTarget = null;
+                    scene.environment = null;
+                }
+                buildEnvironment();
+            }
             applyLayout();
             renderFrame(performance.now(), 1 / 60);
             startAnimation();
         }
 
         function disposeScene() {
+            disposed = true;
             stopAnimation();
             if (resizeFrame !== null) {
                 window.cancelAnimationFrame(resizeFrame);
@@ -1835,6 +1924,7 @@
             const geometries = new Set();
             const materials = new Set();
             scene.traverse(object => {
+                if (object.isLight && object.shadow) object.shadow.dispose();
                 if (object.geometry) geometries.add(object.geometry);
                 if (object.material) {
                     const objectMaterials = Array.isArray(object.material)
@@ -1886,6 +1976,37 @@
         html.classList.remove('webgl-unavailable', 'webgl-reduced-motion');
         html.classList.add('webgl-ready');
         startAnimation();
+
+        /* Build the hidden theme and compile both shader sets off the
+         * critical path, so the first theme toggle doesn't stutter. */
+        function prewarmPrograms() {
+            if (disposed || typeof renderer.compile !== 'function') return;
+            const labVisible = labGroup.visible;
+            const spaceVisible = spaceGroup.visible;
+            labGroup.visible = true;
+            spaceGroup.visible = true;
+            applyMaterialWeight(labMaterials, 1);
+            applyMaterialWeight(spaceMaterials, 1);
+            try {
+                renderer.compile(scene, camera);
+            } catch (error) {
+                /* Compilation is a warm-up only; rendering compiles lazily. */
+            }
+            labGroup.visible = labVisible;
+            spaceGroup.visible = spaceVisible;
+            applyThemeWeights();
+        }
+
+        const scheduleIdle = typeof window.requestIdleCallback === 'function'
+            ? callback => window.requestIdleCallback(callback, { timeout: 2500 })
+            : callback => window.setTimeout(callback, 400);
+        scheduleIdle(() => {
+            if (disposed) return;
+            ensureLab();
+            ensureSpace();
+            applyThemeWeights();
+            prewarmPrograms();
+        });
 
         activeController = {
             dispose: disposeScene,
