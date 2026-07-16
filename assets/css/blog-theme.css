@@ -116,6 +116,18 @@ body.blog-page *::selection {
     background: var(--blog-primary-strong);
 }
 
+/* Ambient canvas layer (blog-ambient.js). Sits above the body's static
+ * gradient fallback and below all content thanks to the body's isolated
+ * stacking context. */
+body.blog-page #blog-ambient-canvas {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: -1;
+    pointer-events: none;
+}
+
 body.blog-page > nav,
 body.blog-page > main,
 body.blog-page > footer,
