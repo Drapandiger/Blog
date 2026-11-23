@@ -5,8 +5,55 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" id="theme-color" content="#f4f9f7">
-    <!-- 标题将由JS动态设置 -->
-    <title data-i18n-key="page.title">Your Name | Robotics & AI Researcher</title>
+    <!-- 默认英文标题；切换语言时由 JS 更新 -->
+    <title data-i18n-key="page.title">Zeqi Li | Robotics & AI Researcher</title>
+    <meta name="description"
+        content="Zeqi Li (李泽其) — robotics & AI researcher (M.Sc. TUM, research assistant at IIT). Embodied AI, foundation models for robot reasoning and planning, object search with mobile manipulators, and bimanual manipulation.">
+    <meta name="author" content="Zeqi Li">
+    <link rel="canonical" href="https://drapandiger.github.io/Blog/">
+
+    <!-- Social previews (Open Graph / Twitter) -->
+    <meta property="og:type" content="profile">
+    <meta property="og:site_name" content="Zeqi Li">
+    <meta property="og:title" content="Zeqi Li | Robotics & AI Researcher">
+    <meta property="og:description"
+        content="Embodied AI, foundation models for robot reasoning and planning, object search with mobile manipulators, and bimanual manipulation. Publications, projects and notes.">
+    <meta property="og:url" content="https://drapandiger.github.io/Blog/">
+    <meta property="og:image" content="https://drapandiger.github.io/Blog/assets/home/og-profile.jpg">
+    <meta property="og:image:width" content="600">
+    <meta property="og:image:height" content="600">
+    <meta property="og:image:alt" content="Portrait of Zeqi Li">
+    <meta property="profile:first_name" content="Zeqi">
+    <meta property="profile:last_name" content="Li">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Zeqi Li | Robotics & AI Researcher">
+    <meta name="twitter:description"
+        content="Embodied AI, foundation models for robot reasoning and planning, mobile manipulation and bimanual manipulation.">
+    <meta name="twitter:image" content="https://drapandiger.github.io/Blog/assets/home/og-profile.jpg">
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Person",
+        "name": "Zeqi Li",
+        "alternateName": "李泽其",
+        "url": "https://drapandiger.github.io/Blog/",
+        "image": "https://drapandiger.github.io/Blog/assets/home/og-profile.jpg",
+        "jobTitle": "Robotics & AI Researcher",
+        "affiliation": { "@type": "ResearchOrganization", "name": "Italian Institute of Technology (IIT)" },
+        "alumniOf": [
+            { "@type": "CollegeOrUniversity", "name": "Technical University of Munich" },
+            { "@type": "CollegeOrUniversity", "name": "University of Siegen" },
+            { "@type": "CollegeOrUniversity", "name": "Qingdao University of Science and Technology" }
+        ],
+        "knowsAbout": ["Embodied AI", "Robotics", "Large language models", "Mobile manipulation", "Bimanual manipulation", "Head pose estimation"],
+        "sameAs": [
+            "https://github.com/Drapandiger",
+            "https://www.linkedin.com/in/zeqi-li-tum",
+            "https://scholar.google.com/citations?hl=en&user=IiApesIAAAAJ"
+        ]
+    }
+    </script>
 
     <!-- Favicon -->
     <link rel="apple-touch-icon" sizes="180x180" href="favicon_io/apple-touch-icon.png">
@@ -32,30 +79,25 @@
                 initialThemeColor.setAttribute('content', initialTheme === 'dark' ? '#050713' : '#f4f9f7');
             }
         })();
+        // 图标脚本是 defer 加载的：未就绪时先记下请求，脚本加载后自动补渲染。
         window.createLucideIcons = function () {
             if (window.lucide && typeof window.lucide.createIcons === 'function') {
                 window.lucide.createIcons();
             } else {
-                document.documentElement.classList.add('lucide-unavailable');
+                window.__lucidePending = true;
             }
         };
     </script>
     <link rel="stylesheet" href="assets/css/site.css">
 
-    <!-- Lucide Icons (local fixed version) -->
-    <script src="assets/vendor/lucide-0.468.0.min.js"
+    <!-- Lucide Icons：仅打包本站用到的图标（tools/build-lucide-subset.mjs 生成），不阻塞渲染 -->
+    <script src="assets/js/lucide-subset.js" defer
         onerror="document.documentElement.classList.add('lucide-unavailable')"></script>
 
-    <!-- Three.js environment (local fixed version for offline/static hosting) -->
-    <script src="assets/vendor/three-r160.min.js" defer
-        onerror="document.documentElement.classList.add('webgl-unavailable')"></script>
-    <script src="assets/js/home-three-scene.js" defer
-        onerror="document.documentElement.classList.add('webgl-unavailable')"></script>
+    <!-- Three.js 环境（three-r160 + home-three-scene.js）在页面 load 之后按需动态加载，见底部 startThreeBackground() -->
 
-    <!-- Google Font: Inter -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <!-- Inter：自托管（@font-face 在 site.css），预加载拉丁子集，不再阻塞于第三方字体 CSS -->
+    <link rel="preload" href="assets/fonts/inter/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
 
     <style>
         /* --- 基础样式 --- */
@@ -494,10 +536,10 @@
                 <div
                     class="absolute -inset-1 bg-gradient-to-r from-primary-600 to-cyan-600 rounded-full blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-tilt">
                 </div>
-                <img src="assets/home/profile.png" alt="个人头像"
+                <img src="assets/home/profile.webp" alt="Portrait of Zeqi Li" width="96" height="96" decoding="async"
                     class="relative w-24 h-24 rounded-full mx-auto mb-4 border-2 border-slate-700 object-cover animate-pulse-glow">
             </div>
-            <h1 class="text-2xl font-bold text-white mt-4" data-i18n-key="profile.name">李泽其</h1>
+            <h1 class="text-2xl font-bold text-white mt-4" data-i18n-key="profile.name">Zeqi Li</h1>
             <p class="text-sm text-primary-400" data-i18n-key="profile.title">Robotics & AI Researcher</p>
         </div>
 
@@ -538,7 +580,7 @@
 
         <div class="mt-auto pt-8">
             <button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false"
-                aria-label="Switch to dark theme" title="Switch to dark theme">
+                aria-label="LAB MODE: switch to dark cosmic theme" title="Switch to dark theme">
                 <span class="theme-toggle-track" aria-hidden="true">
                     <i data-lucide="sun" class="theme-toggle-icon theme-toggle-icon-sun"></i>
                     <i data-lucide="moon-star" class="theme-toggle-icon theme-toggle-icon-moon"></i>
@@ -598,7 +640,7 @@
 
         <div class="md:hidden flex justify-end space-x-2 mb-6 mobile-controls" id="lang-switcher-mobile">
             <button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false"
-                aria-label="Switch to dark theme" title="Switch to dark theme">
+                aria-label="LAB MODE: switch to dark cosmic theme" title="Switch to dark theme">
                 <span class="theme-toggle-track" aria-hidden="true">
                     <i data-lucide="sun" class="theme-toggle-icon theme-toggle-icon-sun"></i>
                     <i data-lucide="moon-star" class="theme-toggle-icon theme-toggle-icon-moon"></i>
@@ -613,7 +655,8 @@
 
         <!-- 区域1: 英雄/主页 -->
         <section id="home" class="min-h-screen flex items-center scroll-mt-16 relative">
-            <div class="scroll-animate w-full hero-layout">
+            <!-- 首屏内容不走滚动淡入（opacity:0 会推迟首屏绘制/LCP），只做位移入场 -->
+            <div class="hero-enter w-full hero-layout">
                 <div class="hero-copy">
                     <!-- 标题 -->
                     <h1 class="text-4xl md:text-6xl font-extrabold text-white mb-4">
@@ -621,7 +664,7 @@
                         <!-- 修改为液态流光效果 (Liquid Flow Effect) -->
                         <span class="liquid-text font-mono pb-2" data-i18n-key="hero.name">Zeqi Li</span>
                     </h1>
-                    <p class="text-xl md:text-2xl text-slate-300 max-w-3xl mb-8 leading-relaxed">
+                    <p class="hero-typing text-xl md:text-2xl text-slate-300 max-w-3xl mb-8 leading-relaxed">
                         <span class="typing-text" data-i18n-key="hero.typing_prefix">I am a </span>
                         <span id="typewriter" class="text-primary-400 font-bold typing-cursor font-mono">Robotics & AI Researcher</span>
                     </p>
@@ -665,7 +708,7 @@
             </a>
         </section>
 
-        <!-- 区域2: 精选研究 -->
+        <!-- 区域2: 精选研究（按 CV 顺序：CBS 共同一作 → IROS → 综述） -->
         <section id="research" class="py-24 scroll-mt-16">
             <!-- 回归静态高对比渐变标题 -->
             <h2 class="text-3xl md:text-4xl font-black text-white mb-12 scroll-animate 
@@ -674,105 +717,189 @@
                 <i data-lucide="microscope" class="w-8 h-8 inline-block mr-2 text-primary-400"></i> <span
                     data-i18n-key="research.title">Featured Research</span>
             </h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <!-- 研究卡片 1 -->
-                <div class="rounded-xl shadow-2xl overflow-hidden card-interactive scroll-animate relative"
-                    style="transition-delay: 100ms;">
-                    <!-- Construction Badge -->
-                    <div
-                        class="absolute top-4 right-4 bg-amber-500/90 text-amber-950 text-xs font-bold px-3 py-1 rounded-full shadow-lg z-20 backdrop-blur-sm font-mono tracking-wider flex items-center">
-                        <i data-lucide="construction" class="w-3 h-3 mr-1"></i> Under Construction
-                    </div>
-                    <img src="assets/placeholders/iros-2025.svg" alt="研究项目封面"
-                        class="w-full h-48 object-cover">
-                    <div class="p-6">
-                        <p class="text-sm text-primary-400 mb-1 font-mono" data-i18n-key="research.item1.meta">IROS 2025
-                        </p>
-                        <h3 class="text-xl font-bold text-slate-500 mb-3" data-i18n-key="research.item1.title">
-                            Imitation-Guided Bimanual Planning for Stable Manipulation under Changing External Forces
-                        </h3>
-                        <p class="text-slate-600 mb-4 text-sm" data-i18n-key="research.item1.desc">An Imitation-Guided
-                            Bimanual Planning Framework integrating efficient grasp transition strategies and motion
-                            performance optimization for dynamic environments.
-                        </p>
-                        <div class="ai-result-box hidden" data-ai-result="item1">
-                            <h4 data-i18n-key="common.ai_result_title">✨ AI Analysis Result</h4>
-                            <p class="ai-result-text"></p>
+            <div class="pub-list">
+                <!-- 论文 1：IEEE CBS 2025（共同第一作者） -->
+                <article class="pub-card card-interactive scroll-animate" style="transition-delay: 100ms;">
+                    <figure class="pub-media">
+                        <img src="assets/research/godhs-fig1.webp" width="929" height="540" loading="lazy" decoding="async"
+                            alt="GODHS overview: a flat is searched level by level — scene, room, carrier, feature, target — from the kitchen down to an orange inside the fridge">
+                    </figure>
+                    <div class="pub-body">
+                        <div class="pub-meta">
+                            <span class="pub-venue">IEEE CBS 2025</span>
+                            <span class="pub-tag" data-i18n-key="research.type.conference">Conference</span>
+                            <span class="pub-tag pub-tag-highlight"><i data-lucide="award" class="w-3 h-3"></i><span
+                                    data-i18n-key="research.badge.cofirst">Co-first author</span></span>
                         </div>
-                        <div class="flex flex-wrap gap-3">
-                            <a href="https://arxiv.org/abs/2509.19261" target="_blank" rel="noopener noreferrer"
-                                class="text-sm bg-slate-700 text-slate-300 px-3 py-1 rounded-full hover:bg-slate-600 hover:shadow-[0_0_8px_theme(colors.slate.400)] hover:text-white transition-all"><i
-                                    data-lucide="book" class="w-4 h-4 inline-block mr-1"></i> arXiv</a>
-                            <a href="https://arxiv.org/pdf/2509.19261" target="_blank" rel="noopener noreferrer"
-                                class="text-sm bg-slate-700 text-slate-300 px-3 py-1 rounded-full hover:bg-slate-600 hover:shadow-[0_0_8px_theme(colors.slate.400)] hover:text-white transition-all"><i
-                                    data-lucide="file-text" class="w-4 h-4 inline-block mr-1"></i> PDF</a>
-                            <a href="https://www.youtube.com/watch?v=3DhbUsv4eDo" target="_blank" rel="noopener noreferrer"
-                                class="text-sm bg-slate-700 text-slate-300 px-3 py-1 rounded-full hover:bg-slate-600 hover:shadow-[0_0_8px_theme(colors.slate.400)] hover:text-white transition-all"><i
-                                    data-lucide="video" class="w-4 h-4 inline-block mr-1"></i> <span
-                                    data-i18n-key="common.video">Video</span></a>
-                            <button
-                                class="text-sm bg-slate-700 text-slate-300 px-3 py-1 rounded-full hover:bg-slate-600 hover:shadow-[0_0_8px_theme(colors.slate.400)] hover:text-white transition-all flex items-center"
-                                onclick="handleAiExplain(event, 'item1')" data-ai-button="item1"><i
-                                    data-lucide="sparkles" class="w-4 h-4 inline-block mr-1"></i><span
-                                    class="ai-button-text" data-i18n-key="common.ai_explain">AI
-                                    Explain</span></button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 研究卡片 2 -->
-                <div class="rounded-xl shadow-2xl overflow-hidden card-interactive scroll-animate relative"
-                    style="transition-delay: 200ms;">
-                    <!-- Construction Badge -->
-                    <div
-                        class="absolute top-4 right-4 bg-amber-500/90 text-amber-950 text-xs font-bold px-3 py-1 rounded-full shadow-lg z-20 backdrop-blur-sm font-mono tracking-wider flex items-center">
-                        <i data-lucide="construction" class="w-3 h-3 mr-1"></i> Under Construction
-                    </div>
-                    <img src="assets/placeholders/cbs-2025.svg" alt="研究项目封面"
-                        class="w-full h-48 object-cover">
-                    <div class="p-6">
-                        <p class="text-sm text-primary-400 mb-1 font-mono" data-i18n-key="research.item2.meta">CBS 2025
-                        </p>
-                        <h3 class="text-xl font-bold text-slate-500 mb-3" data-i18n-key="research.item2.title">
-                            Language-Enhanced Mobile Manipulation for Efficient Object Search in Indoor Environments
-                        </h3>
-                        <p class="text-slate-600 mb-4 text-sm" data-i18n-key="research.item2.desc">A Language-Enhanced
-                            Hierarchical Navigation Framework (GODHS) that integrates semantic perception and spatial
-                            reasoning for efficient, heuristic-guided object search in unstructured environments.</p>
+                        <h3 class="pub-title" data-i18n-key="research.item2.title">Language-Enhanced Mobile Manipulation
+                            for Efficient Object Search in Indoor Environments</h3>
+                        <p class="pub-authors">Liding Zhang<sup>*</sup>, <strong>Zeqi Li<sup>*</sup></strong>, Kuanqi
+                            Cai<sup>*</sup>, Qian Huang, Zhenshan Bing, Alois Knoll</p>
+                        <p class="pub-desc" data-i18n-key="research.item2.desc">GODHS lets a large language model
+                            reason about where an object is likely to be and searches level by level — scene, room,
+                            carrier, feature, item — while a polar-angle heuristic planner moves the mobile manipulator
+                            efficiently. In Isaac Sim it finds targets faster than non-semantic search.</p>
                         <div class="ai-result-box hidden" data-ai-result="item2">
                             <h4 data-i18n-key="common.ai_result_title">✨ AI Analysis Result</h4>
                             <p class="ai-result-text"></p>
                         </div>
-                        <div class="flex flex-wrap gap-3">
+                        <pre class="pub-bibtex" id="bibtex-item2" hidden>@inproceedings{zhang2025language,
+  title     = {Language-Enhanced Mobile Manipulation for Efficient Object Search in Indoor Environments},
+  author    = {Zhang, Liding and Li, Zeqi and Cai, Kuanqi and Huang, Qian and Bing, Zhenshan and Knoll, Alois},
+  booktitle = {2025 IEEE International Conference on Cyborg and Bionic Systems (CBS)},
+  pages     = {425--430},
+  year      = {2025},
+  doi       = {10.1109/CBS65871.2025.11267741}
+}</pre>
+                        <div class="flex flex-wrap gap-3 pub-links">
                             <a href="https://drapandiger.github.io/GODHS/" target="_blank" rel="noopener noreferrer"
-                                class="text-sm bg-slate-700 text-slate-300 px-3 py-1 rounded-full hover:bg-slate-600 hover:shadow-[0_0_8px_theme(colors.slate.400)] hover:text-white transition-all"><i
-                                    data-lucide="globe" class="w-4 h-4 inline-block mr-1"></i> Page</a>
+                                class="text-sm bg-slate-700 text-slate-300 px-3 py-1 rounded-full hover:bg-slate-600 hover:text-white transition-all"><i
+                                    data-lucide="globe" class="w-4 h-4 inline-block mr-1"></i> <span
+                                    data-i18n-key="common.project_page">Project Page</span></a>
                             <a href="https://arxiv.org/abs/2508.20899" target="_blank" rel="noopener noreferrer"
-                                class="text-sm bg-slate-700 text-slate-300 px-3 py-1 rounded-full hover:bg-slate-600 hover:shadow-[0_0_8px_theme(colors.slate.400)] hover:text-white transition-all"><i
+                                class="text-sm bg-slate-700 text-slate-300 px-3 py-1 rounded-full hover:bg-slate-600 hover:text-white transition-all"><i
                                     data-lucide="book" class="w-4 h-4 inline-block mr-1"></i> arXiv</a>
                             <a href="https://arxiv.org/pdf/2508.20899" target="_blank" rel="noopener noreferrer"
-                                class="text-sm bg-slate-700 text-slate-300 px-3 py-1 rounded-full hover:bg-slate-600 hover:shadow-[0_0_8px_theme(colors.slate.400)] hover:text-white transition-all"><i
+                                class="text-sm bg-slate-700 text-slate-300 px-3 py-1 rounded-full hover:bg-slate-600 hover:text-white transition-all"><i
                                     data-lucide="file-text" class="w-4 h-4 inline-block mr-1"></i> PDF</a>
+                            <a href="https://doi.org/10.1109/CBS65871.2025.11267741" target="_blank" rel="noopener noreferrer"
+                                class="text-sm bg-slate-700 text-slate-300 px-3 py-1 rounded-full hover:bg-slate-600 hover:text-white transition-all"><i
+                                    data-lucide="external-link" class="w-4 h-4 inline-block mr-1"></i> IEEE Xplore</a>
                             <a href="https://www.youtube.com/watch?v=iU6U3HwSC9U" target="_blank" rel="noopener noreferrer"
-                                class="text-sm bg-slate-700 text-slate-300 px-3 py-1 rounded-full hover:bg-slate-600 hover:shadow-[0_0_8px_theme(colors.slate.400)] hover:text-white transition-all"><i
+                                class="text-sm bg-slate-700 text-slate-300 px-3 py-1 rounded-full hover:bg-slate-600 hover:text-white transition-all"><i
                                     data-lucide="video" class="w-4 h-4 inline-block mr-1"></i> <span
                                     data-i18n-key="common.video">Video</span></a>
-                            <button
-                                class="text-sm bg-slate-700 text-slate-300 px-3 py-1 rounded-full hover:bg-slate-600 hover:shadow-[0_0_8px_theme(colors.slate.400)] hover:text-white transition-all flex items-center"
+                            <button type="button" aria-expanded="false" aria-controls="bibtex-item2" data-bibtex-toggle="item2"
+                                class="text-sm bg-slate-700 text-slate-300 px-3 py-1 rounded-full hover:bg-slate-600 hover:text-white transition-all flex items-center"><i
+                                    data-lucide="quote" class="w-4 h-4 inline-block mr-1"></i><span class="bibtex-label"
+                                    data-i18n-key="common.bibtex">BibTeX</span></button>
+                            <button type="button"
+                                class="text-sm bg-slate-700 text-slate-300 px-3 py-1 rounded-full hover:bg-slate-600 hover:text-white transition-all flex items-center"
                                 onclick="handleAiExplain(event, 'item2')" data-ai-button="item2"><i
                                     data-lucide="sparkles" class="w-4 h-4 inline-block mr-1"></i><span
-                                    class="ai-button-text" data-i18n-key="common.ai_explain">AI
-                                    Explain</span></button>
+                                    class="ai-button-text" data-i18n-key="common.ai_explain">AI Explain</span></button>
                         </div>
                     </div>
-                </div>
+                </article>
+
+                <!-- 论文 2：IEEE/RSJ IROS 2025 -->
+                <article class="pub-card card-interactive scroll-animate" style="transition-delay: 150ms;">
+                    <figure class="pub-media">
+                        <img src="assets/research/bimanual-planning-fig1.webp" width="1400" height="800" loading="lazy" decoding="async"
+                            alt="Overview of the imitation-guided bimanual planning framework: stable grasp generation from a motion performance map, graph-based transition sequencing, grasp-manifold intersection sampling and a dual-stage imitation plus QP motion architecture, shown on two Franka arms holding a board">
+                    </figure>
+                    <div class="pub-body">
+                        <div class="pub-meta">
+                            <span class="pub-venue">IEEE/RSJ IROS 2025</span>
+                            <span class="pub-tag" data-i18n-key="research.type.conference">Conference</span>
+                        </div>
+                        <h3 class="pub-title" data-i18n-key="research.item1.title">Imitation-Guided Bimanual Planning
+                            for Stable Manipulation under Changing External Forces</h3>
+                        <p class="pub-authors">Kuanqi Cai<sup>*</sup>, Chunfeng Wang<sup>*</sup>, <strong>Zeqi
+                                Li</strong>, Haowen Yao, Weinan Chen, Luis Figueredo, Aude Billard, Arash Ajoudani</p>
+                        <p class="pub-desc" data-i18n-key="research.item1.desc">A bimanual planner that switches
+                            smoothly between one- and two-arm grasps by sampling stable intersections of grasp
+                            manifolds, and pairs an imitation-learned global path with a QP local planner — keeping
+                            force-intensive tasks such as cutting and drilling stable, feasible and collision-free.</p>
+                        <div class="ai-result-box hidden" data-ai-result="item1">
+                            <h4 data-i18n-key="common.ai_result_title">✨ AI Analysis Result</h4>
+                            <p class="ai-result-text"></p>
+                        </div>
+                        <pre class="pub-bibtex" id="bibtex-item1" hidden>@inproceedings{cai2025imitation,
+  title     = {Imitation-Guided Bimanual Planning for Stable Manipulation under Changing External Forces},
+  author    = {Cai, Kuanqi and Wang, Chunfeng and Li, Zeqi and Yao, Haowen and Chen, Weinan and Figueredo, Luis and Billard, Aude and Ajoudani, Arash},
+  booktitle = {2025 IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS)},
+  pages     = {15932--15939},
+  year      = {2025},
+  doi       = {10.1109/IROS60139.2025.11246712}
+}</pre>
+                        <div class="flex flex-wrap gap-3 pub-links">
+                            <a href="https://arxiv.org/abs/2509.19261" target="_blank" rel="noopener noreferrer"
+                                class="text-sm bg-slate-700 text-slate-300 px-3 py-1 rounded-full hover:bg-slate-600 hover:text-white transition-all"><i
+                                    data-lucide="book" class="w-4 h-4 inline-block mr-1"></i> arXiv</a>
+                            <a href="https://arxiv.org/pdf/2509.19261" target="_blank" rel="noopener noreferrer"
+                                class="text-sm bg-slate-700 text-slate-300 px-3 py-1 rounded-full hover:bg-slate-600 hover:text-white transition-all"><i
+                                    data-lucide="file-text" class="w-4 h-4 inline-block mr-1"></i> PDF</a>
+                            <a href="https://doi.org/10.1109/IROS60139.2025.11246712" target="_blank" rel="noopener noreferrer"
+                                class="text-sm bg-slate-700 text-slate-300 px-3 py-1 rounded-full hover:bg-slate-600 hover:text-white transition-all"><i
+                                    data-lucide="external-link" class="w-4 h-4 inline-block mr-1"></i> IEEE Xplore</a>
+                            <a href="https://www.youtube.com/watch?v=3DhbUsv4eDo" target="_blank" rel="noopener noreferrer"
+                                class="text-sm bg-slate-700 text-slate-300 px-3 py-1 rounded-full hover:bg-slate-600 hover:text-white transition-all"><i
+                                    data-lucide="video" class="w-4 h-4 inline-block mr-1"></i> <span
+                                    data-i18n-key="common.video">Video</span></a>
+                            <button type="button" aria-expanded="false" aria-controls="bibtex-item1" data-bibtex-toggle="item1"
+                                class="text-sm bg-slate-700 text-slate-300 px-3 py-1 rounded-full hover:bg-slate-600 hover:text-white transition-all flex items-center"><i
+                                    data-lucide="quote" class="w-4 h-4 inline-block mr-1"></i><span class="bibtex-label"
+                                    data-i18n-key="common.bibtex">BibTeX</span></button>
+                            <button type="button"
+                                class="text-sm bg-slate-700 text-slate-300 px-3 py-1 rounded-full hover:bg-slate-600 hover:text-white transition-all flex items-center"
+                                onclick="handleAiExplain(event, 'item1')" data-ai-button="item1"><i
+                                    data-lucide="sparkles" class="w-4 h-4 inline-block mr-1"></i><span
+                                    class="ai-button-text" data-i18n-key="common.ai_explain">AI Explain</span></button>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- 论文 3：Biomimetic Intelligence and Robotics 2026（综述） -->
+                <article class="pub-card card-interactive scroll-animate" style="transition-delay: 200ms;">
+                    <figure class="pub-media">
+                        <img src="assets/research/head-pose-survey-p2i.svg" width="1400" height="800" loading="lazy" decoding="async"
+                            alt="Schematic of the survey's Pose-to-Interaction (P2I) framework: head yaw, pitch and roll feed a perception layer, a semantics layer (attention, gesture, internal state) and an interaction layer for HCI and HRI, closed in a feedback loop">
+                    </figure>
+                    <div class="pub-body">
+                        <div class="pub-meta">
+                            <span class="pub-venue">Biomimetic Intelligence and Robotics · 2026</span>
+                            <span class="pub-tag" data-i18n-key="research.type.survey">Journal · Survey</span>
+                            <span class="pub-tag pub-tag-highlight"><i data-lucide="lock-open" class="w-3 h-3"></i><span
+                                    data-i18n-key="research.badge.oa">Open Access</span></span>
+                        </div>
+                        <h3 class="pub-title" data-i18n-key="research.item3.title">From Geometry to Intention: A Survey
+                            of Head Pose Estimation for HCI and HRI Systems</h3>
+                        <p class="pub-authors">Qiyi Tong, Kuanqi Cai, <strong>Zeqi Li</strong>, Olivia Nocentini, Marta
+                            Lagomarsino, Marta Lorenzini, Chaoqun Wang, Arash Ajoudani</p>
+                        <p class="pub-desc" data-i18n-key="research.item3.desc">Reframes head pose as an interaction
+                            signal rather than a standalone geometric target. The Pose-to-Interaction (P2I) framework
+                            organises the field into perception, semantics and interaction, exposing the gap between
+                            benchmark angular accuracy and real-world interaction quality.</p>
+                        <div class="ai-result-box hidden" data-ai-result="item3">
+                            <h4 data-i18n-key="common.ai_result_title">✨ AI Analysis Result</h4>
+                            <p class="ai-result-text"></p>
+                        </div>
+                        <pre class="pub-bibtex" id="bibtex-item3" hidden>@article{tong2026geometry,
+  title   = {From geometry to intention: A survey of Head Pose Estimation for HCI and HRI systems},
+  author  = {Tong, Qiyi and Cai, Kuanqi and Li, Zeqi and Nocentini, Olivia and Lagomarsino, Marta and Lorenzini, Marta and Wang, Chaoqun and Ajoudani, Arash},
+  journal = {Biomimetic Intelligence and Robotics},
+  pages   = {100360},
+  year    = {2026},
+  doi     = {10.1016/j.birob.2026.100360}
+}</pre>
+                        <div class="flex flex-wrap gap-3 pub-links">
+                            <a href="https://doi.org/10.1016/j.birob.2026.100360" target="_blank" rel="noopener noreferrer"
+                                class="text-sm bg-slate-700 text-slate-300 px-3 py-1 rounded-full hover:bg-slate-600 hover:text-white transition-all"><i
+                                    data-lucide="file-text" class="w-4 h-4 inline-block mr-1"></i> <span
+                                    data-i18n-key="common.paper">Paper</span></a>
+                            <button type="button" aria-expanded="false" aria-controls="bibtex-item3" data-bibtex-toggle="item3"
+                                class="text-sm bg-slate-700 text-slate-300 px-3 py-1 rounded-full hover:bg-slate-600 hover:text-white transition-all flex items-center"><i
+                                    data-lucide="quote" class="w-4 h-4 inline-block mr-1"></i><span class="bibtex-label"
+                                    data-i18n-key="common.bibtex">BibTeX</span></button>
+                            <button type="button"
+                                class="text-sm bg-slate-700 text-slate-300 px-3 py-1 rounded-full hover:bg-slate-600 hover:text-white transition-all flex items-center"
+                                onclick="handleAiExplain(event, 'item3')" data-ai-button="item3"><i
+                                    data-lucide="sparkles" class="w-4 h-4 inline-block mr-1"></i><span
+                                    class="ai-button-text" data-i18n-key="common.ai_explain">AI Explain</span></button>
+                        </div>
+                    </div>
+                </article>
             </div>
-            <a href="#research" class="inline-block text-primary-400 font-medium mt-8 group scroll-animate"
-                style="transition-delay: 300ms;">
-                <span data-i18n-key="research.seeall">See All Research</span>
-                <i data-lucide="arrow-right"
-                    class="w-4 h-4 inline-block ml-1 group-hover:translate-x-1 transition-transform"></i>
-            </a>
+            <div class="research-footer scroll-animate" style="transition-delay: 250ms;">
+                <p class="pub-footnote"><sup>*</sup> <span data-i18n-key="research.equal">Equal contribution</span></p>
+                <a href="https://scholar.google.com/citations?hl=en&user=IiApesIAAAAJ" target="_blank" rel="noopener noreferrer"
+                    class="research-more inline-block text-primary-400 font-medium group">
+                    <span data-i18n-key="research.seeall">All publications on Google Scholar</span>
+                    <i data-lucide="arrow-up-right"
+                        class="w-4 h-4 inline-block ml-1 group-hover:translate-x-1 transition-transform"></i>
+                </a>
+            </div>
         </section>
 
         <!-- 区域3: 学术历程 -->
@@ -867,7 +994,7 @@
                         <div class="timeline-item scroll-animate" style="transition-delay: 600ms;">
                             <div class="timeline-dot"></div>
                             <p class="text-sm text-primary-400 mb-1 font-medium" data-i18n-key="journey.item2.date">May
-                                2024 - Sep 2025</p>
+                                2024 - Feb 2025</p>
                             <h3 class="text-xl font-bold text-white mb-2" data-i18n-key="journey.item2.degree">Research
                                 Intern</h3>
                             <p class="text-lg text-slate-300 mb-2" data-i18n-key="journey.item2.school">KI.Fabrik,
@@ -924,13 +1051,14 @@
             <div class="mb-16 scroll-animate">
                 <div class="flex items-center mb-6">
                     <i data-lucide="wrench" class="w-6 h-6 text-primary-400 mr-3"></i>
-                    <h3 class="text-2xl font-bold text-white">Project Practice</h3>
+                    <h3 class="text-2xl font-bold text-white" data-i18n-key="blog.cat.practice">Project Practice</h3>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <a href="assets/blog/dodo/page/blog-dodo.html"
                         class="block rounded-xl shadow-2xl overflow-hidden card-interactive"
                         style="transition-delay: 100ms;">
-                        <img src="assets/blog/dodo/images/dodocover.png" alt="博客封面" class="w-full h-40 object-cover">
+                        <img src="assets/blog/dodo/images/dodocover-card.webp" width="800" height="447" loading="lazy" decoding="async"
+                            alt="Illustrated cover: the dodo's journey from extinction to a bionic walking robot" class="w-full h-40 object-cover">
                         <div class="p-6">
                             <p class="text-sm text-slate-400 mb-2 font-mono" data-i18n-key="blog.item1.date">July 28,
                                 2024
@@ -953,18 +1081,20 @@
                     <a href="assets/blog/bo/page/blog-bo.html" class="block rounded-xl shadow-2xl overflow-hidden card-interactive relative"
                         style="transition-delay: 200ms;">
                         <img src="assets/blog/bo/images/falsi_cover.png" onerror="this.onerror=null;this.src='assets/placeholders/image-missing.svg'"
-                            alt="博客封面" class="w-full h-40 object-cover">
+                            loading="lazy" decoding="async" alt="Cover image for the post on falsifying reachset conformance with Bayesian optimization"
+                            class="w-full h-40 object-cover">
                         <div
                             class="absolute top-4 right-4 bg-amber-500/90 text-amber-950 text-xs font-bold px-3 py-1 rounded-full shadow-lg z-20 backdrop-blur-sm font-mono tracking-wider flex items-center">
-                            <i data-lucide="construction" class="w-3 h-3 mr-1"></i> Under Construction
+                            <i data-lucide="construction" class="w-3 h-3 mr-1"></i> <span
+                                data-i18n-key="common.under_construction">Under Construction</span>
                         </div>
                         <div class="p-6">
                             <p class="text-sm text-slate-400 mb-2 font-mono" data-i18n-key="blog.bo.date">Mar 7, 2024</p>
                             <h3 class="text-lg font-bold text-white mb-3" data-i18n-key="blog.bo.title">Falsifying Reachset Conformance using Bayesian Optimization</h3>
                             <p class="text-slate-400 text-sm mb-4" data-i18n-key="blog.bo.desc">Exploring a Robustness-Guided Search utilizing Bayesian Optimization to falsify Reachset Conformance between an abstract kinematic model and a complex dynamic vehicle model.</p>
                             <div class="flex flex-wrap gap-2">
-                                <span class="text-xs bg-slate-700 text-primary-300 px-2 py-1 rounded">BayesianOpt</span>
-                                <span class="text-xs bg-slate-700 text-primary-300 px-2 py-1 rounded">Reachability</span>
+                                <span class="text-xs bg-slate-700 text-primary-300 px-2 py-1 rounded" data-i18n-key="blog.bo.tag1">BayesianOpt</span>
+                                <span class="text-xs bg-slate-700 text-primary-300 px-2 py-1 rounded" data-i18n-key="blog.bo.tag2">Reachability</span>
                             </div>
                         </div>
                     </a>
@@ -975,13 +1105,14 @@
             <div class="mb-8 scroll-animate">
                 <div class="flex items-center mb-6">
                     <i data-lucide="telescope" class="w-6 h-6 text-primary-400 mr-3"></i>
-                    <h3 class="text-2xl font-bold text-white">Frontier Exploration</h3>
+                    <h3 class="text-2xl font-bold text-white" data-i18n-key="blog.cat.frontier">Frontier Exploration</h3>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <a href="assets/blog/cbf/page/blog-cbf.html"
                         class="block rounded-xl shadow-2xl overflow-hidden card-interactive scroll-animate"
                         style="transition-delay: 200ms;">
-                        <img src="assets/blog/cbf/images/cbfcover.png" alt="博客封面" class="w-full h-40 object-cover">
+                        <img src="assets/blog/cbf/images/cbfcover-card.webp" width="800" height="412" loading="lazy" decoding="async"
+                            alt="Infographic overview of control barrier functions and their applications" class="w-full h-40 object-cover">
                         <div class="p-6">
                             <p class="text-sm text-slate-400 mb-2 font-mono" data-i18n-key="blog.cbf.date">Feb 14, 2024
                             </p>
@@ -1001,7 +1132,8 @@
                     <a href="assets/blog/embodied-ai/page/blog-embodied-ai.html"
                         class="block rounded-xl shadow-2xl overflow-hidden card-interactive relative"
                         style="transition-delay: 300ms;">
-                        <img src="assets/blog/embodied-ai/images/coverimg.png" alt="博客封面"
+                        <img src="assets/blog/embodied-ai/images/coverimg-card.webp" width="800" height="373" loading="lazy" decoding="async"
+                            alt="Illustration of robots evolving from programmed single-task tools to agents driven by large models"
                             class="w-full h-40 object-cover">
                         <div class="p-6">
                             <p class="text-sm text-slate-400 mb-2 font-mono" data-i18n-key="blog.embodied.date">Dec 31,
@@ -1021,29 +1153,6 @@
                             </div>
                         </div>
                     </a>
-                    <div class="block rounded-xl shadow-2xl overflow-hidden card-interactive relative"
-                        style="transition-delay: 300ms;">
-                        <!-- Construction Badge -->
-                        <div
-                            class="absolute top-4 right-4 bg-amber-500/90 text-amber-950 text-xs font-bold px-3 py-1 rounded-full shadow-lg z-20 backdrop-blur-sm font-mono tracking-wider flex items-center">
-                            <i data-lucide="construction" class="w-3 h-3 mr-1"></i> Under Construction
-                        </div>
-                        <img src="assets/placeholders/blog-coming-soon.svg"
-                            alt="博客封面" class="w-full h-40 object-cover">
-                        <div class="p-6">
-                            <p class="text-sm text-slate-500 mb-2 font-mono">Date TBA</p>
-                            <h3 class="text-lg font-bold text-slate-500 mb-3">Blog Post Title Coming Soon</h3>
-                            <p class="text-slate-600 text-sm mb-4">Lorem ipsum dolor sit amet, consectetur adipiscing
-                                elit.
-                                Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim
-                                veniam.
-                            </p>
-                            <div class="flex flex-wrap gap-2"><span
-                                    class="text-xs bg-slate-700 text-primary-300 px-2 py-1 rounded">Sim-to-Real</span><span
-                                    class="text-xs bg-slate-700 text-primary-300 px-2 py-1 rounded"
-                                    data-i18n-key="blog.item3.tag2">RL</span></div>
-                        </div>
-                    </div>
                 </div>
             </div>
         </section>
@@ -1057,8 +1166,8 @@
             </h2>
             <p class="text-lg text-slate-300 max-w-2xl mx-auto text-center mb-10 scroll-animate"
                 style="transition-delay: 100ms;" data-i18n-key="contact.desc">
-                I am currently seeking Ph.D. opportunities for Fall 2026 entry. If my research interests align with
-                yours, please feel free to contact me via email.
+                I am currently seeking Ph.D. opportunities. If my research interests align with yours, please feel
+                free to contact me via email.
             </p>
             <div class="flex justify-center scroll-animate" style="transition-delay: 200ms;">
                 <a href="mailto:drapandiger@gmail.com" class="bg-primary-500 text-white font-semibold px-8 py-4 rounded-lg shadow-lg 
@@ -1081,27 +1190,27 @@
     <script>
         // --- 翻译数据 ---
         const translations = {
-            'zh': {
-                'page.title': '李泽其 | Robotics & AI Researcher', 'profile.name': '李泽其', 'profile.title': 'Robotics & AI Researcher',
+            'zh': {                'page.title': '李泽其 | Robotics & AI Researcher', 'profile.name': '李泽其', 'profile.title': 'Robotics & AI Researcher',
                 'nav.home': '主页', 'nav.research': '精选研究', 'nav.journey': '学术历程', 'nav.blog': '所思所想', 'nav.contact': '联系我',
                 'nav.home.mobile': '主页', 'nav.research.mobile': '研究', 'nav.journey.mobile': '历程', 'nav.blog.mobile': '博客', 'nav.contact.mobile': '联系',
                 'hero.greeting': '你好，我是', 'hero.name': '李泽其', 'hero.typing_prefix': '我是一名 ',
                 'hero.typing_words': '机器人研究者,AI 爱好者,自动系统开发者',
-                'hero.intro1': '一名 机器人与人工智能 研究者，硕士毕业于 [你的学校]。', 'hero.field': '机器人与人工智能', 'hero.school': '[你的学校]',
-                'hero.intro2': '目前正在积极寻求 [自主系统] 领域的博士（Ph.D.）机会。', 'hero.goal': '[自主系统]',
-                'keywords.robotics': '机器人学', 'keywords.rl': '强化学习',
                 'hero.button.cv': '查看我的CV', 'hero.button.contact': '联系我',
-                'common.code': '代码', 'common.video': '视频', 'common.ai_explain': '智能解析', 'common.ai_loading': '解析中...', 'common.ai_result_title': '✨ AI 解析结果', 'common.ai_error': '解析失败，请重试。',
+                'common.video': '视频', 'common.ai_explain': '智能解析', 'common.ai_loading': '解析中...', 'common.ai_result_title': '✨ AI 解析结果', 'common.ai_error': '解析失败，请重试。',
                 'research.title': '精选研究',
-                'research.item1.meta': 'IROS 2025', 'research.item1.title': '面向变化外力的稳定操作：模仿引导的双臂规划', 'research.item1.desc': '提出了一种模仿引导的双臂规划框架，整合了高效的抓取转换策略和运动性能优化，以增强动态环境下的稳定性和灵巧性。',
-                'research.item2.meta': 'IEEE/CBS @ 2025', 'research.item2.title': '面向室内高效物体搜索的语言增强移动操作', 'research.item2.desc': '提出了一种语言增强的层次化导航框架 (GODHS)，结合语义感知和空间推理，实现在非结构化环境中目标导向的启发式动态搜索。',
-                'research.seeall': '查看所有研究',
+                'research.item1.title': '面向变化外力的稳定操作：模仿引导的双臂规划', 'research.item1.desc': '提出一种模仿引导的双臂规划器：通过在抓取流形的稳定交集上采样，实现单臂与双臂抓取之间的平滑切换；并将模仿学习生成的全局路径与 QP 局部规划器结合，使切割、钻孔等受力密集型任务保持稳定、可行且无碰撞。',
+                'research.item2.title': '面向室内高效物体搜索的语言增强移动操作', 'research.item2.desc': 'GODHS 让大语言模型推理物体最可能所在的位置，按“场景—房间—载体—特征—物品”逐层搜索，并用极角排序启发式规划器高效驱动移动操作机器人。在 Isaac Sim 中，其搜索效率优于非语义的传统搜索策略。',
+                'research.seeall': '在 Google Scholar 查看全部论文',
+                'research.item3.title': '从几何到意图：面向 HCI 与 HRI 系统的头部姿态估计综述', 'research.item3.desc': '将头部姿态重新定义为一种交互信号，而不仅是孤立的几何估计目标。文中提出的 Pose-to-Interaction (P2I) 框架把该领域划分为感知、语义与交互三层，揭示了基准角度精度与真实交互质量之间的差距。',
+                'research.type.conference': '会议论文', 'research.type.survey': '期刊 · 综述', 'research.badge.cofirst': '共同第一作者', 'research.badge.oa': '开放获取', 'research.equal': '同等贡献',
+                'common.project_page': '项目主页', 'common.paper': '论文', 'common.bibtex': 'BibTeX', 'common.copied': '已复制！', 'common.under_construction': '施工中',
+                'blog.cat.practice': '项目实践', 'blog.cat.frontier': '前沿探索', 'blog.bo.tag1': '贝叶斯优化', 'blog.bo.tag2': '可达性分析',
                 'journey.title': '学术历程',
                 'journey.category.education': '教育经历', 'journey.category.research': '科研经历', 'journey.category.work': '工作经历',
                 'journey.item0.date': '2025年5月 - 至今', 'journey.item0.degree': '远程研究助理', 'journey.item0.school': '意大利技术研究院 (IIT), 热那亚, 意大利',
                 'journey.item05.date': '2025年1月 - 2025年4月', 'journey.item05.degree': '研究协作者', 'journey.item05.school': '意大利技术研究院 (IIT), 热那亚, 意大利',
                 'journey.item1.date': '2022年10月 - 2025年2月', 'journey.item1.degree': '理学硕士, 机器人、认知与智能', 'journey.item1.school': '慕尼黑工业大学, 慕尼黑, 德国', 'journey.item1.desc': 'GPA: 3.6 / 4.0 (极佳) | 论文成绩: 4.0 / 4.0 (极佳)。',
-                'journey.item2.date': '2024年5月 - 2025年9月', 'journey.item2.degree': '研究实习生', 'journey.item2.school': 'KI.Fabrik, 慕尼黑, 德国', 'journey.item2.desc': '',
+                'journey.item2.date': '2024年5月 - 2025年2月', 'journey.item2.degree': '研究实习生', 'journey.item2.school': 'KI.Fabrik, 慕尼黑, 德国', 
                 'journey.item25.date': '2022年4月 - 2022年9月', 'journey.item25.degree': '学术助理', 'journey.item25.school': '锡根大学, 锡根, 德国',
                 'journey.item3.date': '2020年10月 - 2022年3月', 'journey.item3.degree': '理学学士, 电气工程 (第二阶段)', 'journey.item3.school': '锡根大学, 锡根, 德国', 'journey.item3.desc': 'GPA: 3.5 / 4.0 (极佳) | 论文成绩: 3.7 / 4.0 (极佳)。',
                 'journey.item35.date': '2021年9月 - 2021年12月', 'journey.item35.degree': '学生助理', 'journey.item35.school': '锡根大学, 锡根, 德国',
@@ -1110,33 +1219,31 @@
                 'blog.item1.date': '2024年7月28日', 'blog.item1.title': '构建 DODO：连接鸟形双足机器人的仿真与现实', 'blog.item1.desc': '从零开始开发双足机器人：连接硬件、调试电机，并将 MATLAB/Simulink 与实时 TwinCAT 3 桥接。', 'blog.item1.tag1': '双足行走', 'blog.item1.tag2': 'Simulink', 'blog.item1.tag3': 'TwinCAT',
                 'blog.cbf.date': '2024年2月14日', 'blog.cbf.title': '提升复杂系统的安全性：控制障碍函数的作用', 'blog.cbf.desc': '探讨控制障碍函数 (CBF) 如何在信息物理系统和强化学习中平衡安全性与可行性。', 'blog.cbf.tag1': '控制理论', 'blog.cbf.tag2': 'CBF',
                 'blog.embodied.date': '2024年12月31日', 'blog.embodied.title': '从工具到智能体：大模型驱动下的具身智能与复合机器人', 'blog.embodied.desc': '探讨机器人技术从纯粹的执行工具向大模型驱动下的具身智能体的演进，以及复合机器人的核心作用。', 'blog.embodied.tag1': '大模型', 'blog.embodied.tag2': '具身智能', 'blog.embodied.tag3': '复合机器人',
-                'blog.item2.date': '2025年10月28日', 'blog.item2.title': 'ROS 2 vs. ROS 1: 为什么迁移是必要的', 'blog.item2.desc': 'ROS 1 即将停止支持。探讨 ROS 2 的新特性 (DDS, 实时性) 及其对现代机器人系统的重要性。', 'blog.item2.tag2': '中间件',
-                'blog.item3.date': '2025年9月15日', 'blog.item3.title': 'Sim-to-Real 鸿沟：挑战与机遇', 'blog.item3.desc': '在模拟中训练的模型在部署到真实硬件时总会遇到问题。梳理领域随机化和系统辨识的最新方法。', 'blog.item3.tag2': 'RL',
                 'blog.bo.date': '2024年3月7日', 'blog.bo.title': '使用贝叶斯优化证伪物理信息系统中的可达集一致性', 'blog.bo.desc': '探索使用贝叶斯优化的鲁棒性引导搜索，以证伪抽象运动学模型与复杂动态边界模型之间的可达集一致性。',
-                'contact.title': '与我联系', 'contact.desc': '我目前正在寻找2026年秋季入学的博士项目机会。如果我的研究兴趣与您契合，欢迎随时通过邮件与我联系。',
+                'contact.title': '与我联系', 'contact.desc': '我目前正在寻找博士项目机会。如果我的研究兴趣与您契合，欢迎随时通过邮件与我联系。',
                 'footer.copyright': '© 2026 李泽其. All rights reserved.', 'footer.builtWith': '使用 Tailwind CSS & Lucide Icons 构建'
             },
-            'en': {
-                'page.title': 'Zeqi Li | Robotics & AI Researcher', 'profile.name': 'Zeqi Li', 'profile.title': 'Robotics & AI Researcher',
+            'en': {                'page.title': 'Zeqi Li | Robotics & AI Researcher', 'profile.name': 'Zeqi Li', 'profile.title': 'Robotics & AI Researcher',
                 'nav.home': 'Home', 'nav.research': 'Research', 'nav.journey': 'Journey', 'nav.blog': 'Blog', 'nav.contact': 'Contact',
                 'nav.home.mobile': 'Home', 'nav.research.mobile': 'Research', 'nav.journey.mobile': 'Journey', 'nav.blog.mobile': 'Blog', 'nav.contact.mobile': 'Contact',
                 'hero.greeting': "Hello, I'm", 'hero.name': 'Zeqi Li', 'hero.typing_prefix': 'I am a ',
                 'hero.typing_words': 'Robotics Researcher,AI Enthusiast,Autonomous Systems Developer',
-                'hero.intro1': 'A Robotics & AI researcher, graduated with M.Sc. from [Your University].', 'hero.field': 'Robotics & AI', 'hero.school': '[Your University]',
-                'hero.intro2': 'Currently seeking Ph.D. opportunities in [Autonomous Systems] for Fall 2026.', 'hero.goal': '[Autonomous Systems]',
-                'keywords.robotics': 'Robotics', 'keywords.rl': 'Reinforcement Learning',
                 'hero.button.cv': 'View My CV', 'hero.button.contact': 'Contact Me',
-                'common.code': 'Code', 'common.video': 'Video', 'common.ai_explain': 'AI Explain', 'common.ai_loading': 'Analyzing...', 'common.ai_result_title': '✨ AI Analysis Result', 'common.ai_error': 'Failed to analyze. Please try again.',
+                'common.video': 'Video', 'common.ai_explain': 'AI Explain', 'common.ai_loading': 'Analyzing...', 'common.ai_result_title': '✨ AI Analysis Result', 'common.ai_error': 'Failed to analyze. Please try again.',
                 'research.title': 'Featured Research',
-                'research.item1.meta': 'IROS 2025', 'research.item1.title': 'Imitation-Guided Bimanual Planning for Stable Manipulation under Changing External Forces', 'research.item1.desc': 'An Imitation-Guided Bimanual Planning Framework integrating efficient grasp transition strategies and motion performance optimization for dynamic environments.',
-                'research.item2.meta': 'IEEE/CBS @ 2025', 'research.item2.title': 'Language-Enhanced Mobile Manipulation for Efficient Object Search in Indoor Environments', 'research.item2.desc': 'A Language-Enhanced Hierarchical Navigation Framework (GODHS) that integrates semantic perception and spatial reasoning for efficient, heuristic-guided object search in unstructured environments.',
-                'research.seeall': 'See All Research',
+                'research.item1.title': 'Imitation-Guided Bimanual Planning for Stable Manipulation under Changing External Forces', 'research.item1.desc': 'A bimanual planner that switches smoothly between one- and two-arm grasps by sampling stable intersections of grasp manifolds, and pairs an imitation-learned global path with a QP local planner — keeping force-intensive tasks such as cutting and drilling stable, feasible and collision-free.',
+                'research.item2.title': 'Language-Enhanced Mobile Manipulation for Efficient Object Search in Indoor Environments', 'research.item2.desc': 'GODHS lets a large language model reason about where an object is likely to be and searches level by level — scene, room, carrier, feature, item — while a polar-angle heuristic planner moves the mobile manipulator efficiently. In Isaac Sim it finds targets faster than non-semantic search.',
+                'research.seeall': 'All publications on Google Scholar',
+                'research.item3.title': 'From Geometry to Intention: A Survey of Head Pose Estimation for HCI and HRI Systems', 'research.item3.desc': 'Reframes head pose as an interaction signal rather than a standalone geometric target. The Pose-to-Interaction (P2I) framework organises the field into perception, semantics and interaction, exposing the gap between benchmark angular accuracy and real-world interaction quality.',
+                'research.type.conference': 'Conference', 'research.type.survey': 'Journal · Survey', 'research.badge.cofirst': 'Co-first author', 'research.badge.oa': 'Open Access', 'research.equal': 'Equal contribution',
+                'common.project_page': 'Project Page', 'common.paper': 'Paper', 'common.bibtex': 'BibTeX', 'common.copied': 'Copied!', 'common.under_construction': 'Under Construction',
+                'blog.cat.practice': 'Project Practice', 'blog.cat.frontier': 'Frontier Exploration', 'blog.bo.tag1': 'BayesianOpt', 'blog.bo.tag2': 'Reachability',
                 'journey.title': 'Academic Journey',
                 'journey.category.education': 'Education Experience', 'journey.category.research': 'Research Experience', 'journey.category.work': 'Work Experience',
                 'journey.item0.date': 'May 2025 - Current', 'journey.item0.degree': 'Remote Research Assistant', 'journey.item0.school': 'Italian Institute of Technology (IIT), Genoa, Italy',
                 'journey.item05.date': 'Jan 2025 - Apr 2025', 'journey.item05.degree': 'Research Collaborator', 'journey.item05.school': 'Italian Institute of Technology (IIT), Genoa, Italy',
                 'journey.item1.date': 'Oct 2022 - Feb 2025', 'journey.item1.degree': 'M.Sc. in Robotics, Cognition, Intelligence', 'journey.item1.school': 'Technical University of Munich, Munich, Germany', 'journey.item1.desc': 'GPA: 3.6 / 4.0 (very good) | Thesis Grade: 4.0 / 4.0 (very good).',
-                'journey.item2.date': 'May 2024 - Sep 2025', 'journey.item2.degree': 'Research Intern', 'journey.item2.school': 'KI.Fabrik, Munich, Germany', 'journey.item2.desc': '',
+                'journey.item2.date': 'May 2024 - Feb 2025', 'journey.item2.degree': 'Research Intern', 'journey.item2.school': 'KI.Fabrik, Munich, Germany', 
                 'journey.item25.date': 'Apr 2022 - Sep 2022', 'journey.item25.degree': 'Academic Assistant', 'journey.item25.school': 'University of Siegen, Siegen, Germany',
                 'journey.item3.date': 'Oct 2020 - Mar 2022', 'journey.item3.degree': 'B.Sc. in Electrical Engineering (Phase II)', 'journey.item3.school': 'University of Siegen, Siegen, Germany', 'journey.item3.desc': 'GPA: 3.5 / 4.0 (very good) | Thesis Grade: 3.7 / 4.0 (very good).',
                 'journey.item35.date': 'Sep 2021 - Dec 2021', 'journey.item35.degree': 'Student Assistant', 'journey.item35.school': 'University of Siegen, Siegen, Germany',
@@ -1145,33 +1252,31 @@
                 'blog.item1.date': 'July 28, 2024', 'blog.item1.title': 'Building DODO: Bridging Simulation and Reality in Bird-like Bipedal Robotics', 'blog.item1.desc': 'Developing a bipedal robot from scratch: wiring hardware, tuning motors, and bridging MATLAB/Simulink with real-time TwinCAT 3.', 'blog.item1.tag1': 'BipedalLocomotion', 'blog.item1.tag2': 'Simulink', 'blog.item1.tag3': 'TwinCAT',
                 'blog.cbf.date': 'Feb 14, 2024', 'blog.cbf.title': 'Advancing Safety in Complex Systems: The Role of Control Barrier Functions', 'blog.cbf.desc': 'Exploring how Control Barrier Functions (CBFs) balance safety and feasibility in cyber-physical systems and reinforcement learning.', 'blog.cbf.tag1': 'ControlTheory', 'blog.cbf.tag2': 'CBF',
                 'blog.embodied.date': 'Dec 31, 2024', 'blog.embodied.title': 'From Tools to Agents: Embodied AI and Composite Robots', 'blog.embodied.desc': 'Discussing the evolution of robotics from mere tools to embodied AI agents driven by Large Foundation Models.', 'blog.embodied.tag1': 'LLM', 'blog.embodied.tag2': 'Embodied AI', 'blog.embodied.tag3': 'Mobile Manipulation',
-                'blog.item2.date': 'Oct 28, 2025', 'blog.item2.title': 'ROS 2 vs. ROS 1: Why Migration is Necessary', 'blog.item2.desc': 'ROS 1 is approaching EOL. Discussing the new features of ROS 2 (DDS, Real-time) and their importance for modern robotics.', 'blog.item2.tag2': 'Middleware',
-                'blog.item3.date': 'Sep 15, 2025', 'blog.item3.title': 'The Sim-to-Real Gap: Challenges & Opportunities', 'blog.item3.desc': 'Models trained in simulation often fail on real hardware. Reviewing recent methods in domain randomization and system ID.', 'blog.item3.tag2': 'RL',
                 'blog.bo.date': 'Mar 7, 2024', 'blog.bo.title': 'Falsifying Reachset Conformance using Bayesian Optimization', 'blog.bo.desc': 'Exploring a Robustness-Guided Search utilizing Bayesian Optimization to falsify Reachset Conformance between an abstract kinematic model and a complex dynamic vehicle model.',
-                'contact.title': 'Get In Touch', 'contact.desc': 'I am currently seeking Ph.D. opportunities for Fall 2026 entry. If my research interests align with yours, please feel free to contact me via email.',
+                'contact.title': 'Get In Touch', 'contact.desc': 'I am currently seeking Ph.D. opportunities. If my research interests align with yours, please feel free to contact me via email.',
                 'footer.copyright': '© 2026 Zeqi Li. All rights reserved.', 'footer.builtWith': 'Built with Tailwind CSS & Lucide Icons'
             },
-            'de': {
-                'page.title': 'Zeqi Li | Robotik & KI-Forscher', 'profile.name': 'Zeqi Li', 'profile.title': 'Robotik & KI-Forscher',
+            'de': {                'page.title': 'Zeqi Li | Robotik & KI-Forscher', 'profile.name': 'Zeqi Li', 'profile.title': 'Robotik & KI-Forscher',
                 'nav.home': 'Startseite', 'nav.research': 'Forschung', 'nav.journey': 'Werdegang', 'nav.blog': 'Blog', 'nav.contact': 'Kontakt',
                 'nav.home.mobile': 'Start', 'nav.research.mobile': 'Forschung', 'nav.journey.mobile': 'Werdegang', 'nav.blog.mobile': 'Blog', 'nav.contact.mobile': 'Kontakt',
                 'hero.greeting': 'Hallo, ich bin', 'hero.name': 'Zeqi Li', 'hero.typing_prefix': 'Ich bin ein ',
                 'hero.typing_words': 'Robotik-Forscher,KI-Enthusiast,Entwickler Autonomer Systeme',
-                'hero.intro1': 'Ein Forscher im Bereich Robotik & KI, Master-Absolvent der [Deine Universität].', 'hero.field': 'Robotik & KI', 'hero.school': '[Deine Universität]',
-                'hero.intro2': 'Derzeit auf der Suche nach einer Doktorandenstelle (Ph.D.) im Bereich [Autonome Systeme] für Herbst 2026.', 'hero.goal': '[Autonome Systeme]',
-                'keywords.robotics': 'Robotik', 'keywords.rl': 'Verstärkendes Lernen',
                 'hero.button.cv': 'Lebenslauf (CV)', 'hero.button.contact': 'Kontaktieren',
-                'common.code': 'Code', 'common.video': 'Video', 'common.ai_explain': 'KI-Erklärung', 'common.ai_loading': 'Analysiere...', 'common.ai_result_title': '✨ KI-Analyse-Ergebnis', 'common.ai_error': 'Analyse fehlgeschlagen. Bitte erneut versuchen.',
+                'common.video': 'Video', 'common.ai_explain': 'KI-Erklärung', 'common.ai_loading': 'Analysiere...', 'common.ai_result_title': '✨ KI-Analyse-Ergebnis', 'common.ai_error': 'Analyse fehlgeschlagen. Bitte erneut versuchen.',
                 'research.title': 'Ausgewählte Forschung',
-                'research.item1.meta': 'IROS 2025', 'research.item1.title': 'Imitationsgesteuerte bimanuale Planung für stabile Manipulation unter wechselnden externen Kräften', 'research.item1.desc': 'Ein imitationsgesteuertes bimanuales Planungs-Framework, das effiziente Greifübergangsstrategien und eine Optimierung der Bewegungsleistung für dynamische Umgebungen integriert.',
-                'research.item2.meta': 'IEEE/CBS @ 2025', 'research.item2.title': 'Spracherweiterte mobile Manipulation für effiziente Objektsuche in Innenräumen', 'research.item2.desc': 'Ein spracherweitertes, hierarchisches Navigations-Framework (GODHS), das semantische Wahrnehmung und räumliches Denken integriert, um eine effiziente, heuristisch gesteuerte Objektsuche in unstrukturierten Umgebungen zu ermöglichen.',
-                'research.seeall': 'Alle Forschungen ansehen',
+                'research.item1.title': 'Imitationsgesteuerte bimanuale Planung für stabile Manipulation unter wechselnden externen Kräften', 'research.item1.desc': 'Ein bimanueller Planer, der durch das Abtasten stabiler Schnittmengen von Greifmannigfaltigkeiten fließend zwischen Ein- und Zweiarmgriffen wechselt und einen per Imitation gelernten globalen Pfad mit einem QP-basierten lokalen Planer kombiniert – so bleiben kraftintensive Aufgaben wie Schneiden und Bohren stabil, ausführbar und kollisionsfrei.',
+                'research.item2.title': 'Spracherweiterte mobile Manipulation für effiziente Objektsuche in Innenräumen', 'research.item2.desc': 'GODHS lässt ein großes Sprachmodell ableiten, wo sich ein Objekt wahrscheinlich befindet, und sucht Ebene für Ebene – Szene, Raum, Träger, Merkmal, Objekt –, während ein Polarwinkel-Heuristikplaner den mobilen Manipulator effizient bewegt. In Isaac Sim findet es Ziele schneller als nicht-semantische Suchstrategien.',
+                'research.seeall': 'Alle Publikationen auf Google Scholar',
+                'research.item3.title': 'Von der Geometrie zur Intention: Ein Überblick über Kopfposenschätzung für HCI- und HRI-Systeme', 'research.item3.desc': 'Betrachtet die Kopfpose als Interaktionssignal statt als isoliertes geometrisches Ziel. Das Pose-to-Interaction-Framework (P2I) gliedert das Feld in Wahrnehmung, Semantik und Interaktion und zeigt die Lücke zwischen Benchmark-Winkelgenauigkeit und realer Interaktionsqualität auf.',
+                'research.type.conference': 'Konferenz', 'research.type.survey': 'Journal · Übersicht', 'research.badge.cofirst': 'Geteilte Erstautorschaft', 'research.badge.oa': 'Open Access', 'research.equal': 'Gleicher Beitrag',
+                'common.project_page': 'Projektseite', 'common.paper': 'Artikel', 'common.bibtex': 'BibTeX', 'common.copied': 'Kopiert!', 'common.under_construction': 'In Arbeit',
+                'blog.cat.practice': 'Projektpraxis', 'blog.cat.frontier': 'Forschungsfront', 'blog.bo.tag1': 'Bayes-Optimierung', 'blog.bo.tag2': 'Erreichbarkeit',
                 'journey.title': 'Akademischer Werdegang',
                 'journey.category.education': 'Bildungserfahrung', 'journey.category.research': 'Forschungserfahrung', 'journey.category.work': 'Berufserfahrung',
                 'journey.item0.date': 'Mai 2025 - Aktuell', 'journey.item0.degree': 'Wissenschaftlicher Mitarbeiter (Remote)', 'journey.item0.school': 'Istituto Italiano di Tecnologia (IIT), Genua, Italien',
                 'journey.item05.date': 'Jan 2025 - Apr 2025', 'journey.item05.degree': 'Forschungskooperator', 'journey.item05.school': 'Istituto Italiano di Tecnologia (IIT), Genua, Italien',
                 'journey.item1.date': 'Okt 2022 - Feb 2025', 'journey.item1.degree': 'M.Sc. in Robotik, Kognition, Intelligenz', 'journey.item1.school': 'Technische Universität München, München, Deutschland', 'journey.item1.desc': 'Note: 1.4 (sehr gut) | Abschlussarbeit: 1.0 (sehr gut).',
-                'journey.item2.date': 'Mai 2024 - Sep 2025', 'journey.item2.degree': 'Forschungspraktikant', 'journey.item2.school': 'KI.Fabrik, München, Deutschland', 'journey.item2.desc': '',
+                'journey.item2.date': 'Mai 2024 - Feb 2025', 'journey.item2.degree': 'Forschungspraktikant', 'journey.item2.school': 'KI.Fabrik, München, Deutschland', 
                 'journey.item25.date': 'Apr 2022 - Sep 2022', 'journey.item25.degree': 'Wissenschaftliche Hilfskraft (WHK)', 'journey.item25.school': 'Universität Siegen, Siegen, Deutschland',
                 'journey.item3.date': 'Okt 2020 - Mär 2022', 'journey.item3.degree': 'B.Sc. in Elektrotechnik (Phase II)', 'journey.item3.school': 'Universität Siegen, Siegen, Deutschland', 'journey.item3.desc': 'Note: 1.5 (sehr gut) | Abschlussarbeit: 1.3 (sehr gut).',
                 'journey.item35.date': 'Sep 2021 - Dez 2021', 'journey.item35.degree': 'Studentische Hilfskraft (SHK)', 'journey.item35.school': 'Universität Siegen, Siegen, Deutschland',
@@ -1180,10 +1285,8 @@
                 'blog.item1.date': '28. Juli 2024', 'blog.item1.title': 'DODO bauen: Brücke zwischen Simulation und Realität in der vogelähnlichen bipedalen Robotik', 'blog.item1.desc': 'Entwicklung eines bipedalen Roboters von Grund auf: Hardware-Verkabelung, Motorabstimmung und Überbrückung von MATLAB/Simulink mit Echtzeit-TwinCAT 3.', 'blog.item1.tag1': 'Bipedale Fortbewegung', 'blog.item1.tag2': 'Simulink', 'blog.item1.tag3': 'TwinCAT',
                 'blog.cbf.date': '14. Feb 2024', 'blog.cbf.title': 'Erhöhung der Sicherheit in komplexen Systemen: Die Rolle von Control Barrier Functions', 'blog.cbf.desc': 'Untersuchung, wie Control Barrier Functions (CBFs) Sicherheit und Machbarkeit in cyber-physischen Systemen und beim verstärkenden Lernen ausbalancieren.', 'blog.cbf.tag1': 'Regelungstechnik', 'blog.cbf.tag2': 'CBF',
                 'blog.embodied.date': '31. Dez 2024', 'blog.embodied.title': 'Von Werkzeugen zu Agenten: Verkörperte KI und Composite Robotics', 'blog.embodied.desc': 'Diskussion über die Evolution der Robotik von reinen Ausführungswerkzeugen zu verkörperten KI-Agenten, angetrieben von großen Basismodellen.', 'blog.embodied.tag1': 'LLM', 'blog.embodied.tag2': 'Verkörperte KI', 'blog.embodied.tag3': 'Composite Robotics',
-                'blog.item2.date': '28. Okt 2025', 'blog.item2.title': 'ROS 2 vs. ROS 1: Warum die Migration notwendig ist', 'blog.item2.desc': 'ROS 1 nähert sich dem EOL. Diskussion der neuen Funktionen von ROS 2 (DDS, Echtzeit) und ihrer Bedeutung für moderne Robotik.', 'blog.item2.tag2': 'Middleware',
-                'blog.item3.date': '15. Sep 2025', 'blog.item3.title': 'Die Sim-to-Real-Lücke: Herausforderungen & Chancen', 'blog.item3.desc': 'In Simulation trainierte Modelle scheitern oft auf realer Hardware. Ein Überblick über aktuelle Methoden der Domänenrandomisierung.', 'blog.item3.tag2': 'RL',
                 'blog.bo.date': '7. Mär 2024', 'blog.bo.title': 'Verfälschung der Erreichbarkeitskonformität mithilfe der Bayes\'schen Optimierung', 'blog.bo.desc': 'Untersuchung einer robustheitsgesteuerten Suche unter Verwendung der Bayes\'schen Optimierung, um die Erreichbarkeitskonformität zwischen einem abstrakten kinematischen Modell und einem komplexen dynamischen Fahrzeugmodell zu verfälschen.',
-                'contact.title': 'Kontakt aufnehmen', 'contact.desc': 'Ich suche derzeit nach einer Doktorandenstelle für Herbst 2026. Wenn meine Forschungsinteressen mit Ihren übereinstimmen, zögern Sie nicht, mich per E-Mail zu kontaktieren.',
+                'contact.title': 'Kontakt aufnehmen', 'contact.desc': 'Ich suche derzeit nach einer Doktorandenstelle. Wenn meine Forschungsinteressen mit Ihren übereinstimmen, zögern Sie nicht, mich per E-Mail zu kontaktieren.',
                 'footer.copyright': '© 2026 Zeqi Li. Alle Rechte vorbehalten.', 'footer.builtWith': 'Erstellt mit Tailwind CSS & Lucide Icons'
             }
         };
@@ -1218,7 +1321,8 @@
 
                 themeButtons.forEach(button => {
                     button.setAttribute('aria-pressed', String(isDark));
-                    button.setAttribute('aria-label', isDark ? 'Switch to light laboratory theme' : 'Switch to dark cosmic theme');
+                    // 可访问名称需包含按钮上可见的 LAB/COSMOS MODE 文字（WCAG 2.5.3）
+                    button.setAttribute('aria-label', isDark ? 'COSMOS MODE: switch to light laboratory theme' : 'LAB MODE: switch to dark cosmic theme');
                     button.setAttribute('title', isDark ? 'Switch to light laboratory theme' : 'Switch to dark cosmic theme');
                     const label = button.querySelector('.theme-toggle-label');
                     if (label) label.textContent = isDark ? 'COSMOS MODE' : 'LAB MODE';
@@ -1370,6 +1474,11 @@
                 'zh': '👀 找东西很麻烦对吧？尤其是当你让机器人在这张乱七八糟的桌子上“找我的水杯”时。机器人的视觉通常比较死板，稍微换个环境它就不认识了。\n\n这篇研究提出了一个叫做 GODHS 的神奇框架。简单来说，它给机器人装上了一个非常聪明的大语言模型（LLM）大脑，能像人一样“凭借常识”去推理（“水杯可能在水壶旁边”）。同时结合了一种聪明的行动策略，让机器人能够在这个完全陌生的室内环境里，迅速定位并且走过去拿到你要的物品！',
                 'en': '👀 Finding misplaced items is frustrating, especially if you ask a robot to "find my mug" in a messy, unfamiliar room. Traditional robot vision is rigid and easily gets confused when environments change.\n\nThis research introduces GODHS, a brilliant framework that acts like a smart brain for the robot. It uses a Large Language Model (LLM) to "reason with common sense" (e.g., "the mug is probably near the coffee maker"). By combining this semantic reasoning with an efficient spatial search strategy, the robot can quickly navigate completely unknown environments to locate your objects!',
                 'de': '👀 Verlegte Gegenstände zu finden ist frustrierend, besonders wenn Sie einen Roboter bitten, "meine Tasse zu finden" in einem unordentlichen, ihm unbekannten Raum. Traditionelles Robotersehen ist starr und lässt sich leicht verwirren.\n\nDiese Forschung stellt GODHS vor, ein Framework, das wie ein intelligentes Gehirn für den Roboter wirkt. Es nutzt ein Large Language Model (LLM), um "mit gesundem Menschenverstand zu schlussfolgern" (z.B. "die Tasse steht wahrscheinlich in der Nähe der Kaffeemaschine"). Durch die Kombination dieser semantischen Überlegungen mit einer effizienten räumlichen Suchstrategie kann der Roboter völlig unbekannte Umgebungen navigieren, um gesuchte Objekte schnell zu lokalisieren!'
+            },
+            'item3': {
+                'zh': '🙂 和别人说话时，对方的头朝向能透露很多信息：TA 在不在听？是在点头还是摇头？是不是有点困惑？计算机和机器人早就能把头部的偏航、俯仰、翻滚角估计得很准了，但“角度准”并不等于“真的读懂了你”。\n\n这篇综述把整个领域整理成三层：感知（随时间稳定地估计三维头部朝向）、语义（把这些动作理解成注意力、点头摇头等手势和内在状态）、交互（让系统据此做出合适的反应，并形成闭环）。结论是：几何这一层已经很成熟，但面向“语义”和“交互”的数据集与评价指标还很少——下一步的突破就该发生在这里。',
+                'en': '🙂 When you talk to someone, the direction of their head says a lot: are they listening, nodding, shaking their head, or confused? Computers and robots can already estimate head yaw, pitch and roll very precisely, but a precise angle does not mean the system actually understands you.\n\nThis survey organises the field into three layers: Perception (estimate a stable 3D head orientation over time), Semantics (read those motions as attention, gestures such as nodding, and internal states) and Interaction (use that meaning to drive the system\'s response in a closed loop). Its main finding: the geometry is largely solved, but datasets and metrics for the semantic and interaction layers are still scarce, and that is where the next breakthroughs need to happen.',
+                'de': '🙂 Wenn man mit jemandem spricht, verrät die Kopfhaltung viel: Hört die Person zu, nickt sie, schüttelt sie den Kopf oder ist sie verwirrt? Computer und Roboter können Gier-, Nick- und Rollwinkel des Kopfes bereits sehr genau schätzen, aber ein präziser Winkel heißt noch nicht, dass das System einen wirklich versteht.\n\nDiese Übersicht gliedert das Feld in drei Ebenen: Wahrnehmung (eine zeitlich stabile 3D-Kopforientierung schätzen), Semantik (diese Bewegungen als Aufmerksamkeit, Gesten wie Nicken und innere Zustände deuten) und Interaktion (daraus im geschlossenen Regelkreis das Verhalten des Systems ableiten). Das zentrale Ergebnis: Die Geometrie ist weitgehend gelöst, doch Datensätze und Metriken für Semantik und Interaktion sind noch rar – genau dort müssen die nächsten Durchbrüche passieren.'
             }
         };
 
@@ -1417,18 +1526,93 @@
             }
         }
 
+        // --- BibTeX：展开引用块并复制到剪贴板 ---
+        function initBibtexButtons() {
+            document.querySelectorAll('[data-bibtex-toggle]').forEach(button => {
+                const block = document.getElementById(`bibtex-${button.dataset.bibtexToggle}`);
+                const label = button.querySelector('.bibtex-label');
+                if (!block || !label) return;
+                let resetTimer = null;
+                button.addEventListener('click', async () => {
+                    const opening = block.hidden;
+                    block.hidden = !opening;
+                    button.setAttribute('aria-expanded', String(opening));
+                    if (!opening) return;
+                    try {
+                        await navigator.clipboard.writeText(block.textContent.trim());
+                        label.textContent = translations[currentLang]['common.copied'];
+                        clearTimeout(resetTimer);
+                        resetTimer = setTimeout(() => {
+                            label.textContent = translations[currentLang]['common.bibtex'];
+                        }, 1800);
+                    } catch (error) {
+                        // 剪贴板不可用时（非 https 等），展开的文本仍可手动复制。
+                    }
+                });
+            });
+        }
+
+        // Three.js 独立初始化：~750 KB 脚本在页面 load 之后才下载，不与首屏资源抢带宽；
+        // 失败、Save-Data 或减少动态效果时保留 CSS 实验室/星空降级背景。
+        function loadScript(src) {
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = src;
+                script.async = false;
+                script.onload = resolve;
+                script.onerror = reject;
+                document.head.appendChild(script);
+            });
+        }
+
+        let threeRequested = false;
+        function startThreeBackground() {
+            const html = document.documentElement;
+            if (threeRequested) return;
+            if (navigator.connection && navigator.connection.saveData) {
+                html.classList.add('webgl-unavailable');
+                return;
+            }
+            const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+            if (motionQuery.matches) {
+                // 与场景脚本一致：静态降级，用户关闭“减少动态效果”后再加载。
+                html.classList.add('webgl-reduced-motion');
+                const retry = event => {
+                    if (event.matches) return;
+                    html.classList.remove('webgl-reduced-motion');
+                    startThreeBackground();
+                };
+                if (typeof motionQuery.addEventListener === 'function') {
+                    motionQuery.addEventListener('change', retry);
+                }
+                return;
+            }
+            threeRequested = true;
+            loadScript('assets/vendor/three-r160.min.js')
+                .then(() => loadScript('assets/js/home-three-scene.js'))
+                .then(() => {
+                    if (typeof window.initThreeBackground !== 'function') throw new Error('scene unavailable');
+                    window.initThreeBackground();
+                })
+                .catch(() => html.classList.add('webgl-unavailable'));
+        }
+
+        function scheduleThreeBackground() {
+            const idle = typeof window.requestIdleCallback === 'function'
+                ? callback => window.requestIdleCallback(callback, { timeout: 1500 })
+                : callback => setTimeout(callback, 200);
+            if (document.readyState === 'complete') {
+                idle(startThreeBackground);
+            } else {
+                window.addEventListener('load', () => idle(startThreeBackground), { once: true });
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             initThemeControls();
-            // Three.js 独立初始化，失败时保留 CSS 实验室/星空降级背景。
-            if (typeof window.initThreeBackground === 'function') {
-                try {
-                    window.initThreeBackground();
-                } catch (error) {
-                    document.documentElement.classList.add('webgl-unavailable');
-                }
-            } else {
-                document.documentElement.classList.add('webgl-unavailable');
-            }
+            initBibtexButtons();
+            // 首屏绘制完成、页面 load 之后再加载并构建 WebGL 场景（画布就绪后自行淡入）。
+            scheduleThreeBackground();
 
             const sections = document.querySelectorAll('section[id]');
             const navLinksDesktop = document.querySelectorAll('#desktop-nav .nav-link');

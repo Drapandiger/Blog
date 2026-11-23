@@ -692,7 +692,7 @@ html[data-theme="dark"] body.home-page #home::after {
     box-shadow: 0 0 80px rgba(79, 70, 229, 0.08);
 }
 
-body.home-page #home > .scroll-animate {
+body.home-page #home > .hero-layout {
     position: relative;
     z-index: 3;
     max-width: min(62rem, 72%);
@@ -923,7 +923,7 @@ body.home-page .ai-result-box p {
     color: var(--home-text);
 }
 
-body.home-page #research > a[href="#research"] {
+body.home-page #research .research-more {
     padding: 0.65rem 0.9rem;
     border: 1px solid var(--home-border);
     border-radius: 999px;
@@ -1181,7 +1181,7 @@ body.home-page button:disabled {
         opacity: 0.28;
     }
 
-    body.home-page #home > .scroll-animate {
+    body.home-page #home > .hero-layout {
         max-width: 100%;
         padding-top: 4rem;
     }
@@ -1474,13 +1474,6 @@ body.home-page #home::after {
     display: none;
 }
 
-body.home-page #research .card-interactive h3 {
-    color: var(--home-text-strong);
-}
-
-body.home-page #research .card-interactive p:not(.text-primary-400):not(.ai-result-text) {
-    color: var(--home-text-muted);
-}
 
 @media (max-width: 767px) {
     body.home-page .hero-copy {
@@ -1566,5 +1559,224 @@ html.webgl-reduced-motion body.home-page #neural-canvas {
 
     html.webgl-ready[data-theme="dark"] body.home-page #neural-canvas {
         opacity: 0.72;
+    }
+}
+
+/* --------------------------------------------------------------------------
+   Hero entrance — transform only, so the first paint (and LCP) is immediate
+   -------------------------------------------------------------------------- */
+
+html.js-enabled body.home-page .hero-enter {
+    animation: heroEnter 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes heroEnter {
+    from {
+        transform: translateY(18px);
+    }
+
+    to {
+        transform: none;
+    }
+}
+
+/* The typed phrase is its own box: growing text no longer re-triggers LCP on
+ * the whole paragraph, and the reserved height stops the chips below jumping. */
+body.home-page #typewriter {
+    display: inline-block;
+}
+
+@media (max-width: 767px) {
+    body.home-page .hero-typing {
+        min-height: 3.25em;
+    }
+}
+
+/* --------------------------------------------------------------------------
+   Publications (Featured Research)
+   -------------------------------------------------------------------------- */
+
+body.home-page .pub-list {
+    display: grid;
+    gap: 1.75rem;
+}
+
+body.home-page .pub-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    overflow: hidden;
+}
+
+body.home-page .pub-media {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    padding: 0.9rem;
+    overflow: hidden;
+    /* Paper figures are drawn on white; keep the panel white in both themes. */
+    background: #ffffff;
+    border-bottom: 1px solid var(--home-border);
+    transition: filter var(--home-theme-duration) ease;
+}
+
+html[data-theme="dark"] body.home-page .pub-media {
+    filter: brightness(0.88) saturate(0.95);
+}
+
+body.home-page .pub-card .pub-media img {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 7 / 4;
+    object-fit: contain;
+    border-bottom: 0;
+    transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+body.home-page .pub-card:hover .pub-media img {
+    filter: none;
+    transform: scale(1.03);
+}
+
+body.home-page .pub-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+    min-width: 0;
+    padding: 1.5rem 1.6rem 1.6rem;
+}
+
+body.home-page .pub-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.45rem 0.6rem;
+}
+
+body.home-page .pub-venue {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    color: var(--home-primary);
+}
+
+body.home-page .pub-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.16rem 0.6rem;
+    border: 1px solid var(--home-border);
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    line-height: 1.5;
+    color: var(--home-text-muted);
+    background: var(--home-chip);
+}
+
+body.home-page .pub-tag-highlight {
+    color: var(--home-signal);
+    border-color: var(--home-border-strong);
+    border-color: color-mix(in srgb, var(--home-signal) 45%, transparent);
+    background: color-mix(in srgb, var(--home-signal) 11%, transparent);
+}
+
+body.home-page .pub-title {
+    font-size: 1.28rem;
+    font-weight: 800;
+    line-height: 1.35;
+    color: var(--home-text-strong);
+}
+
+body.home-page .pub-authors {
+    font-size: 0.92rem;
+    line-height: 1.55;
+    color: var(--home-text-muted);
+}
+
+body.home-page .pub-authors strong {
+    font-weight: 700;
+    color: var(--home-text-strong);
+    text-decoration: underline;
+    text-decoration-color: var(--home-primary);
+    text-decoration-thickness: 2px;
+    text-underline-offset: 3px;
+}
+
+body.home-page .pub-authors sup,
+body.home-page .pub-footnote sup {
+    margin-left: 1px;
+    font-size: 0.7em;
+}
+
+body.home-page .pub-desc {
+    font-size: 0.95rem;
+    line-height: 1.65;
+    color: var(--home-text);
+}
+
+body.home-page .pub-body .ai-result-box {
+    margin-bottom: 0;
+}
+
+body.home-page .pub-bibtex {
+    max-height: 15rem;
+    margin: 0;
+    padding: 0.9rem 1rem;
+    overflow: auto;
+    border: 1px solid var(--home-border);
+    border-left: 3px solid var(--home-secondary);
+    border-radius: var(--home-radius-sm);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.75rem;
+    line-height: 1.55;
+    white-space: pre;
+    color: var(--home-text);
+    background: var(--home-surface-strong);
+}
+
+body.home-page .pub-bibtex[hidden] {
+    display: none;
+}
+
+body.home-page .pub-links {
+    margin-top: auto;
+    padding-top: 0.35rem;
+}
+
+body.home-page .research-footer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+body.home-page .pub-footnote {
+    font-size: 0.85rem;
+    color: var(--home-text-muted);
+}
+
+@media (min-width: 1180px) {
+    body.home-page .pub-card {
+        grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+    }
+
+    body.home-page .pub-media {
+        border-right: 1px solid var(--home-border);
+        border-bottom: 0;
+    }
+}
+
+@media (max-width: 767px) {
+    body.home-page .pub-body {
+        padding: 1.2rem 1.15rem 1.3rem;
+    }
+
+    body.home-page .pub-title {
+        font-size: 1.12rem;
     }
 }

@@ -6,6 +6,44 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#f4f9f7">
     <title>Advancing Safety in Complex Systems: The Role of Control Barrier Functions | Zeqi Li</title>
+    <meta name="description" content="How control barrier functions (CBFs) balance safety and feasibility in cyber-physical systems and reinforcement learning.">
+    <meta name="author" content="Zeqi Li">
+    <link rel="canonical" href="https://drapandiger.github.io/Blog/assets/blog/cbf/page/blog-cbf.html">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Zeqi Li">
+    <meta property="og:title" content="Advancing Safety in Complex Systems: The Role of Control Barrier Functions">
+    <meta property="og:description" content="How control barrier functions (CBFs) balance safety and feasibility in cyber-physical systems and reinforcement learning.">
+    <meta property="og:url" content="https://drapandiger.github.io/Blog/assets/blog/cbf/page/blog-cbf.html">
+    <meta property="og:image" content="https://drapandiger.github.io/Blog/assets/blog/cbf/images/cbfcover-og.jpg">
+    <meta property="article:published_time" content="2024-02-14">
+    <meta property="article:author" content="https://drapandiger.github.io/Blog/">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Advancing Safety in Complex Systems: The Role of Control Barrier Functions">
+    <meta name="twitter:description" content="How control barrier functions (CBFs) balance safety and feasibility in cyber-physical systems and reinforcement learning.">
+    <meta name="twitter:image" content="https://drapandiger.github.io/Blog/assets/blog/cbf/images/cbfcover-og.jpg">
+    <script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": "Advancing Safety in Complex Systems: The Role of Control Barrier Functions",
+    "description": "How control barrier functions (CBFs) balance safety and feasibility in cyber-physical systems and reinforcement learning.",
+    "datePublished": "2024-02-14",
+    "inLanguage": "en",
+    "url": "https://drapandiger.github.io/Blog/assets/blog/cbf/page/blog-cbf.html",
+    "mainEntityOfPage": "https://drapandiger.github.io/Blog/assets/blog/cbf/page/blog-cbf.html",
+    "image": "https://drapandiger.github.io/Blog/assets/blog/cbf/images/cbfcover-og.jpg",
+    "keywords": [
+        "Control barrier functions",
+        "Control theory",
+        "Safe reinforcement learning"
+    ],
+    "author": {
+        "@type": "Person",
+        "name": "Zeqi Li",
+        "url": "https://drapandiger.github.io/Blog/"
+    }
+}
+    </script>
 
     <!-- Favicon -->
     <link rel="apple-touch-icon" sizes="180x180" href="../../../../favicon_io/apple-touch-icon.png">
@@ -30,14 +68,16 @@
             if (window.lucide && typeof window.lucide.createIcons === 'function') {
                 window.lucide.createIcons();
             } else {
-                document.documentElement.classList.add('lucide-unavailable');
+                window.__lucidePending = true;
             }
         };
     </script>
+    <!-- Inter: self-hosted (@font-face in site.css) -->
+    <link rel="preload" href="../../../../assets/fonts/inter/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="../../../../assets/css/site.css">
 
-    <!-- Lucide Icons (local fixed version) -->
-    <script src="../../../../assets/vendor/lucide-0.468.0.min.js"
+    <!-- Lucide Icons: site subset (tools/build-lucide-subset.mjs), non-blocking -->
+    <script src="../../../../assets/js/lucide-subset.js" defer
         onerror="document.documentElement.classList.add('lucide-unavailable')"></script>
 
     <!-- MathJax 渲染公式 -->
@@ -373,7 +413,7 @@
 
             <!-- Hero Image -->
             <div class="rounded-2xl overflow-hidden mb-12 border border-slate-800 shadow-2xl max-w-5xl mx-auto">
-                <img src="../images/cbfcover.png" alt="CBF Cover" class="w-full h-auto object-cover">
+                <img width="1600" height="824" fetchpriority="high" decoding="async" src="../images/cbfcover.webp" alt="CBF Cover" class="w-full h-auto object-cover">
             </div>
 
             <!-- Content Body -->
@@ -414,7 +454,7 @@
                 <!-- Motivation Image Comparison -->
                 <div
                     class="my-8 rounded-xl overflow-hidden border border-slate-800 shadow-lg bg-slate-900/50 p-6 max-w-4xl mx-auto">
-                    <img src="../images/1BoundCBF.jpg" alt="CBF Boundary vs Traditional Boundary"
+                    <img width="1600" height="753" loading="lazy" decoding="async" src="../images/1BoundCBF.webp" alt="CBF Boundary vs Traditional Boundary"
                         class="w-full h-auto rounded-lg">
                     <p class="text-sm text-slate-500 mt-4 text-center italic">Figure 1: Evolution from traditional
                         boundaries to dynamic CBF constraints.</p>
@@ -898,7 +938,7 @@
                     class="my-8 rounded-xl overflow-hidden border border-slate-800 shadow-lg bg-slate-900/50 p-6 text-center max-w-3xl mx-auto">
                     <!-- RL Architecture -->
                     <div class="rounded-lg mb-4 flex relative overflow-hidden border border-slate-700">
-                        <img src="../images/rl.png" alt="RL Architecture" class="w-full h-auto object-cover">
+                        <img width="1600" height="515" loading="lazy" decoding="async" src="../images/rl.webp" alt="RL Architecture" class="w-full h-auto object-cover">
                     </div>
                     <p class="text-sm text-slate-400">Figure 2: RL-CBF-CLF-QP framework mapping learned uncertainties to
                         safety bounds (Choi, J., et al. 2020).</p>
@@ -935,25 +975,25 @@
                 <div class="grid grid-cols-2 gap-4 my-8 max-w-4xl mx-auto">
                     <div
                         class="bg-slate-800/50 rounded-lg p-2 border border-slate-700 flex flex-col items-center text-center hover:bg-slate-800 transition-colors">
-                        <img src="../images/app1.png" alt="Autonomous Driving"
+                        <img width="1200" height="675" loading="lazy" decoding="async" src="../images/app1.webp" alt="Autonomous Driving"
                             class="w-full h-32 object-cover rounded mb-2">
                         <h4 class="font-bold text-slate-200">Autonomous Driving</h4>
                     </div>
                     <div
                         class="bg-slate-800/50 rounded-lg p-2 border border-slate-700 flex flex-col items-center text-center hover:bg-slate-800 transition-colors">
-                        <img src="../images/app2.png" alt="Manipulator Robots"
+                        <img width="1200" height="675" loading="lazy" decoding="async" src="../images/app2.webp" alt="Manipulator Robots"
                             class="w-full h-32 object-cover rounded mb-2">
                         <h4 class="font-bold text-slate-200">Manipulator Robots</h4>
                     </div>
                     <div
                         class="bg-slate-800/50 rounded-lg p-2 border border-slate-700 flex flex-col items-center text-center hover:bg-slate-800 transition-colors">
-                        <img src="../images/app3.png" alt="Traffic Management"
+                        <img width="1200" height="675" loading="lazy" decoding="async" src="../images/app3.webp" alt="Traffic Management"
                             class="w-full h-32 object-cover rounded mb-2">
                         <h4 class="font-bold text-slate-200">Traffic Management</h4>
                     </div>
                     <div
                         class="bg-slate-800/50 rounded-lg p-2 border border-slate-700 flex flex-col items-center text-center hover:bg-slate-800 transition-colors">
-                        <img src="../images/app4.jpg" alt="Multi-Agent Systems"
+                        <img width="1200" height="675" loading="lazy" decoding="async" src="../images/app4.jpg" alt="Multi-Agent Systems"
                             class="w-full h-32 object-cover rounded mb-2">
                         <h4 class="font-bold text-slate-200">Multi-Agent Systems</h4>
                     </div>
@@ -976,19 +1016,19 @@
                     <div class="grid md:grid-cols-3 gap-4 mb-4">
                         <!-- Simulation 1 -->
                         <div class="bg-slate-800 rounded-lg p-2 border border-slate-700 relative group overflow-hidden">
-                            <img src="../images/001.jpg" alt="Simulation 1" class="w-full rounded">
+                            <img width="724" height="93" loading="lazy" decoding="async" src="../images/001.jpg" alt="Simulation 1" class="w-full rounded">
                             <p class="text-xs text-slate-400 mt-2 text-center h-10 flex items-center justify-center">(a)
                                 Ego vehicle overtakes a slow leading one</p>
                         </div>
                         <!-- Simulation 2 -->
                         <div class="bg-slate-800 rounded-lg p-2 border border-slate-700 relative group overflow-hidden">
-                            <img src="../images/002.jpg" alt="Simulation 2" class="w-full rounded">
+                            <img width="724" height="93" loading="lazy" decoding="async" src="../images/002.jpg" alt="Simulation 2" class="w-full rounded">
                             <p class="text-xs text-slate-400 mt-2 text-center h-10 flex items-center justify-center">(b)
                                 Vehicle in target lane approaches ego one</p>
                         </div>
                         <!-- Simulation 3 -->
                         <div class="bg-slate-800 rounded-lg p-2 border border-slate-700 relative group overflow-hidden">
-                            <img src="../images/003.jpg" alt="Simulation 3" class="w-full rounded">
+                            <img width="724" height="93" loading="lazy" decoding="async" src="../images/003.jpg" alt="Simulation 3" class="w-full rounded">
                             <p class="text-xs text-slate-400 mt-2 text-center h-10 flex items-center justify-center">(c)
                                 Ego vehicle avoids another surrounding vehicle</p>
                         </div>
@@ -1011,7 +1051,7 @@
                     class="my-8 rounded-xl overflow-hidden border border-slate-800 shadow-lg bg-slate-900/50 p-6 text-center max-w-2xl mx-auto">
                     <div
                         class="bg-slate-800 border border-slate-700 rounded-lg mb-4 flex items-center justify-center relative overflow-hidden">
-                        <img src="../images/merging.jpg" alt="Lane Merging" class="w-full h-auto object-cover">
+                        <img width="376" height="230" loading="lazy" decoding="async" src="../images/merging.jpg" alt="Lane Merging" class="w-full h-auto object-cover">
                     </div>
                     <p class="text-sm text-slate-400">Figure 4: Vehicles merging at the merging point from two lanes
                         using CBF-QP (Xiao, Wei, et al.).</p>
@@ -1032,7 +1072,7 @@
                     class="rounded-xl overflow-hidden border border-slate-800 shadow-lg bg-slate-900/50 p-6 text-center max-w-2xl mx-auto mb-8">
                     <div
                         class="bg-slate-800 border border-slate-700 rounded-lg mb-4 flex items-center justify-center relative overflow-hidden">
-                        <img src="../images/overtake.jpg" alt="Overtaking" class="w-full h-auto object-cover">
+                        <img width="966" height="319" loading="lazy" decoding="async" src="../images/overtake.jpg" alt="Overtaking" class="w-full h-auto object-cover">
                     </div>
                     <p class="text-sm text-slate-400">Figure 5: Overtaking another car using MPC-DCBF through predicted
                         reachable trajectories (Zeng, J., et al. 2021).</p>

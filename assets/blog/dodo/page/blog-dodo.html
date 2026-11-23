@@ -6,6 +6,46 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#f4f9f7">
     <title>Building DODO: Bridging Simulation and Reality in Bird-like Bipedal Robotics | Zeqi Li</title>
+    <meta name="description" content="Developing a bipedal robot from scratch: wiring hardware, tuning motors, and bridging MATLAB/Simulink with real-time TwinCAT 3.">
+    <meta name="author" content="Zeqi Li">
+    <link rel="canonical" href="https://drapandiger.github.io/Blog/assets/blog/dodo/page/blog-dodo.html">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Zeqi Li">
+    <meta property="og:title" content="Building DODO: Bridging Simulation and Reality in Bird-like Bipedal Robotics">
+    <meta property="og:description" content="Developing a bipedal robot from scratch: wiring hardware, tuning motors, and bridging MATLAB/Simulink with real-time TwinCAT 3.">
+    <meta property="og:url" content="https://drapandiger.github.io/Blog/assets/blog/dodo/page/blog-dodo.html">
+    <meta property="og:image" content="https://drapandiger.github.io/Blog/assets/blog/dodo/images/dodocover-og.jpg">
+    <meta property="article:published_time" content="2024-07-28">
+    <meta property="article:author" content="https://drapandiger.github.io/Blog/">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Building DODO: Bridging Simulation and Reality in Bird-like Bipedal Robotics">
+    <meta name="twitter:description" content="Developing a bipedal robot from scratch: wiring hardware, tuning motors, and bridging MATLAB/Simulink with real-time TwinCAT 3.">
+    <meta name="twitter:image" content="https://drapandiger.github.io/Blog/assets/blog/dodo/images/dodocover-og.jpg">
+    <script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": "Building DODO: Bridging Simulation and Reality in Bird-like Bipedal Robotics",
+    "description": "Developing a bipedal robot from scratch: wiring hardware, tuning motors, and bridging MATLAB/Simulink with real-time TwinCAT 3.",
+    "datePublished": "2024-07-28",
+    "inLanguage": "en",
+    "url": "https://drapandiger.github.io/Blog/assets/blog/dodo/page/blog-dodo.html",
+    "mainEntityOfPage": "https://drapandiger.github.io/Blog/assets/blog/dodo/page/blog-dodo.html",
+    "image": "https://drapandiger.github.io/Blog/assets/blog/dodo/images/dodocover-og.jpg",
+    "keywords": [
+        "Bipedal locomotion",
+        "Simulink",
+        "TwinCAT",
+        "EtherCAT",
+        "Motor control"
+    ],
+    "author": {
+        "@type": "Person",
+        "name": "Zeqi Li",
+        "url": "https://drapandiger.github.io/Blog/"
+    }
+}
+    </script>
 
     <!-- Favicon -->
     <link rel="apple-touch-icon" sizes="180x180" href="../../../../favicon_io/apple-touch-icon.png">
@@ -30,14 +70,16 @@
             if (window.lucide && typeof window.lucide.createIcons === 'function') {
                 window.lucide.createIcons();
             } else {
-                document.documentElement.classList.add('lucide-unavailable');
+                window.__lucidePending = true;
             }
         };
     </script>
+    <!-- Inter: self-hosted (@font-face in site.css) -->
+    <link rel="preload" href="../../../../assets/fonts/inter/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="../../../../assets/css/site.css">
 
-    <!-- Lucide Icons (local fixed version) -->
-    <script src="../../../../assets/vendor/lucide-0.468.0.min.js"
+    <!-- Lucide Icons: site subset (tools/build-lucide-subset.mjs), non-blocking -->
+    <script src="../../../../assets/js/lucide-subset.js" defer
         onerror="document.documentElement.classList.add('lucide-unavailable')"></script>
     <style>
         body {
@@ -249,7 +291,7 @@
 
             <!-- Hero Image Placeholder -->
             <div class="rounded-2xl overflow-hidden mb-12 border border-slate-800 shadow-2xl max-w-5xl mx-auto">
-                <img src="../images/dodocover.png" alt="DODO Robot Project Cover" class="w-full h-auto object-cover">
+                <img width="1600" height="893" fetchpriority="high" decoding="async" src="../images/dodocover.webp" alt="DODO Robot Project Cover" class="w-full h-auto object-cover">
             </div>
 
             <!-- Content Body -->
@@ -291,7 +333,7 @@
 
                 <div
                     class="my-8 rounded-xl overflow-hidden border border-slate-800 shadow-lg bg-slate-900/50 p-6 text-center max-w-3xl mx-auto">
-                    <img src="../images/robotic_leg_assembly.png" alt="Robotic leg assembly"
+                    <img width="1021" height="462" loading="lazy" decoding="async" src="../images/robotic_leg_assembly.webp" alt="Robotic leg assembly"
                         class="w-full h-auto object-cover rounded-lg mb-4">
                     <p class="text-sm text-slate-400">Figure 1: The robotic leg assembly, highlighting the key joints
                         and motor components.</p>
@@ -315,7 +357,7 @@
 
                 <div
                     class="my-8 rounded-xl overflow-hidden border border-slate-800 shadow-lg bg-slate-900/50 p-6 text-center max-w-3xl mx-auto">
-                    <img src="../images/enetwiring.png" alt="EtherCAT wiring diagram"
+                    <img width="1172" height="362" loading="lazy" decoding="async" src="../images/enetwiring.png" alt="EtherCAT wiring diagram"
                         class="w-full h-auto object-cover rounded-lg mb-4">
                     <p class="text-sm text-slate-400">Figure 2: EtherCAT daisy-chain topology for synchronized
                         multi-motor control.</p>
@@ -350,8 +392,10 @@
                         Pendulum Model (LIPM)</strong>.</p>
                 <div
                     class="my-8 rounded-xl overflow-hidden border border-slate-800 shadow-lg bg-slate-900/50 p-6 text-center max-w-md mx-auto flex flex-col justify-between">
-                    <img src="../images/model.gif" alt="LIPM Gait Model"
-                        class="w-full h-auto object-cover rounded-lg mb-4">
+                    <video class="block w-full h-auto object-cover rounded-lg mb-4" width="338" height="394" muted loop playsinline preload="none"
+                        poster="../images/model-poster.webp" data-autoplay-visible aria-label="LIPM Gait Model">
+                        <source src="../images/model.mp4" type="video/mp4">
+                    </video>
                     <p class="text-sm text-slate-400">Figure 3(a): Simulated LIPM gait model.</p>
                 </div>
 
@@ -363,7 +407,7 @@
 
                 <div
                     class="my-8 rounded-xl overflow-hidden border border-slate-800 shadow-lg bg-slate-900/50 p-6 text-center w-full mx-auto flex flex-col justify-between">
-                    <img src="../images/simulink.png" alt="Simulink model"
+                    <img width="865" height="318" loading="lazy" decoding="async" src="../images/simulink.png" alt="Simulink model"
                         class="w-full h-auto object-cover rounded-lg mb-4">
                     <p class="text-sm text-slate-400">Figure 3(b): The core Simulink model controlling the robot's
                         LIPM gait.</p>
@@ -387,7 +431,7 @@
 
                 <div
                     class="my-8 rounded-xl overflow-hidden border border-slate-800 shadow-lg bg-slate-900/50 p-6 text-center max-w-2xl mx-auto">
-                    <img src="../images/twincat3.png" alt="Structure integrating Simulink interface"
+                    <img width="666" height="728" loading="lazy" decoding="async" src="../images/twincat3.webp" alt="Structure integrating Simulink interface"
                         class="w-full h-auto object-cover rounded-lg mb-4">
                     <p class="text-sm text-slate-400">Figure 4: The full-loop communication architecture bridging
                         Simulink, TwinCAT, and the physical motors.</p>
@@ -411,7 +455,7 @@
                 </ol>
                 <div
                     class="my-8 rounded-xl overflow-hidden border border-slate-800 shadow-lg bg-slate-900/50 p-6 text-center max-w-3xl mx-auto">
-                    <img src="../images/high.png" alt="3-Level Control System Architecture"
+                    <img width="682" height="403" loading="lazy" decoding="async" src="../images/high.png" alt="3-Level Control System Architecture"
                         class="w-full h-auto object-cover rounded-lg mb-4">
                     <p class="text-sm text-slate-400">Figure 5: Hierarchical 3-Level Control System Architecture
                         separating cognition, strategy, and execution.</p>
@@ -437,35 +481,45 @@
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 my-8 max-w-5xl mx-auto">
                     <div
                         class="rounded-xl overflow-hidden border border-slate-800 shadow-lg bg-slate-900/50 p-2 text-center">
-                        <img src="../images/rotation.gif" alt="Rotation joint test"
-                            class="w-full h-auto object-cover rounded-lg mb-2">
+                        <video class="block w-full h-auto object-cover rounded-lg mb-2" width="478" height="850" muted loop playsinline preload="none"
+                        poster="../images/rotation-poster.webp" data-autoplay-visible aria-label="Rotation joint test">
+                        <source src="../images/rotation.mp4" type="video/mp4">
+                    </video>
                         <p class="text-xs text-slate-400">Rotation Joint</p>
                     </div>
                     <div
                         class="rounded-xl overflow-hidden border border-slate-800 shadow-lg bg-slate-900/50 p-2 text-center">
-                        <img src="../images/hip.gif" alt="Hip joint test"
-                            class="w-full h-auto object-cover rounded-lg mb-2">
+                        <video class="block w-full h-auto object-cover rounded-lg mb-2" width="478" height="850" muted loop playsinline preload="none"
+                        poster="../images/hip-poster.webp" data-autoplay-visible aria-label="Hip joint test">
+                        <source src="../images/hip.mp4" type="video/mp4">
+                    </video>
                         <p class="text-xs text-slate-400">Hip Joint <span
                                 class="text-rose-400 opacity-80">(Struggled)</span></p>
                     </div>
                     <div
                         class="rounded-xl overflow-hidden border border-slate-800 shadow-lg bg-slate-900/50 p-2 text-center">
-                        <img src="../images/knee.gif" alt="Knee joint test"
-                            class="w-full h-auto object-cover rounded-lg mb-2">
+                        <video class="block w-full h-auto object-cover rounded-lg mb-2" width="478" height="850" muted loop playsinline preload="none"
+                        poster="../images/knee-poster.webp" data-autoplay-visible aria-label="Knee joint test">
+                        <source src="../images/knee.mp4" type="video/mp4">
+                    </video>
                         <p class="text-xs text-slate-400">Knee Joint</p>
                     </div>
                     <div
                         class="rounded-xl overflow-hidden border border-slate-800 shadow-lg bg-slate-900/50 p-2 text-center">
-                        <img src="../images/foot.gif" alt="Foot joint test"
-                            class="w-full h-auto object-cover rounded-lg mb-2">
+                        <video class="block w-full h-auto object-cover rounded-lg mb-2" width="478" height="850" muted loop playsinline preload="none"
+                        poster="../images/foot-poster.webp" data-autoplay-visible aria-label="Foot joint test">
+                        <source src="../images/foot.mp4" type="video/mp4">
+                    </video>
                         <p class="text-xs text-slate-400">Foot Joint</p>
                     </div>
                 </div>
 
                 <div
                     class="my-8 rounded-xl overflow-hidden border border-slate-800 shadow-lg bg-slate-900/50 p-6 text-center max-w-3xl mx-auto">
-                    <img src="../images/wave.gif" alt="Sinusoidal signal oscilloscope data"
-                        class="w-full h-auto object-cover rounded-lg mb-4">
+                    <video class="block w-full h-auto object-cover rounded-lg mb-4" width="450" height="512" muted loop playsinline preload="none"
+                        poster="../images/wave-poster.webp" data-autoplay-visible aria-label="Sinusoidal signal oscilloscope data">
+                        <source src="../images/wave.mp4" type="video/mp4">
+                    </video>
                     <p class="text-sm text-slate-400">Figure 6: Oscilloscope data from the sine wave tracking test.
                         Position tracking was accurate, but revealed a power bottleneck at the hip joint.</p>
                 </div>

@@ -133,9 +133,46 @@
         });
     }
 
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initBlogTheme, { once: true });
-    } else {
+    /* Looping demo clips (converted from multi-MB GIFs) download and play only
+     * while on screen. With reduced motion, or without IntersectionObserver,
+     * they stay on their poster frame and expose native controls instead. */
+    function initInlineVideos() {
+        const videos = Array.from(document.querySelectorAll('video[data-autoplay-visible]'));
+        if (!videos.length) {
+            return;
+        }
+
+        const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (reduceMotion || typeof window.IntersectionObserver !== 'function') {
+            videos.forEach(function (video) { video.controls = true; });
+            return;
+        }
+
+        const observer = new IntersectionObserver(function (entries) {
+            entries.forEach(function (entry) {
+                const video = entry.target;
+                if (!entry.isIntersecting) {
+                    video.pause();
+                    return;
+                }
+                const playing = video.play();
+                if (playing && typeof playing.catch === 'function') {
+                    playing.catch(function () { video.controls = true; });
+                }
+            });
+        }, { rootMargin: '200px 0px' });
+
+        videos.forEach(function (video) { observer.observe(video); });
+    }
+
+    function initPage() {
         initBlogTheme();
+        initInlineVideos();
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initPage, { once: true });
+    } else {
+        initPage();
     }
 }());

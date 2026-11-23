@@ -6,6 +6,45 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#f4f9f7">
     <title>Falsifying Reachset Conformance in Cyber-Physical Systems using Bayesian Optimization | Zeqi Li</title>
+    <meta name="description" content="Exploring a robustness-guided search that uses Bayesian optimization to falsify reachset conformance between an abstract kinematic model and a complex dynamic vehicle model.">
+    <meta name="author" content="Zeqi Li">
+    <link rel="canonical" href="https://drapandiger.github.io/Blog/assets/blog/bo/page/blog-bo.html">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Zeqi Li">
+    <meta property="og:title" content="Falsifying Reachset Conformance in Cyber-Physical Systems using Bayesian Optimization">
+    <meta property="og:description" content="Exploring a robustness-guided search that uses Bayesian optimization to falsify reachset conformance between an abstract kinematic model and a complex dynamic vehicle model.">
+    <meta property="og:url" content="https://drapandiger.github.io/Blog/assets/blog/bo/page/blog-bo.html">
+    <meta property="og:image" content="https://drapandiger.github.io/Blog/assets/home/og-profile.jpg">
+    <meta property="article:published_time" content="2024-03-07">
+    <meta property="article:author" content="https://drapandiger.github.io/Blog/">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Falsifying Reachset Conformance in Cyber-Physical Systems using Bayesian Optimization">
+    <meta name="twitter:description" content="Exploring a robustness-guided search that uses Bayesian optimization to falsify reachset conformance between an abstract kinematic model and a complex dynamic vehicle model.">
+    <meta name="twitter:image" content="https://drapandiger.github.io/Blog/assets/home/og-profile.jpg">
+    <script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": "Falsifying Reachset Conformance in Cyber-Physical Systems using Bayesian Optimization",
+    "description": "Exploring a robustness-guided search that uses Bayesian optimization to falsify reachset conformance between an abstract kinematic model and a complex dynamic vehicle model.",
+    "datePublished": "2024-03-07",
+    "inLanguage": "en",
+    "url": "https://drapandiger.github.io/Blog/assets/blog/bo/page/blog-bo.html",
+    "mainEntityOfPage": "https://drapandiger.github.io/Blog/assets/blog/bo/page/blog-bo.html",
+    "image": "https://drapandiger.github.io/Blog/assets/home/og-profile.jpg",
+    "keywords": [
+        "Bayesian optimization",
+        "Reachability analysis",
+        "Cyber-physical systems",
+        "Safety verification"
+    ],
+    "author": {
+        "@type": "Person",
+        "name": "Zeqi Li",
+        "url": "https://drapandiger.github.io/Blog/"
+    }
+}
+    </script>
 
     <!-- Favicon -->
     <link rel="apple-touch-icon" sizes="180x180" href="../../../../favicon_io/apple-touch-icon.png">
@@ -30,14 +69,16 @@
             if (window.lucide && typeof window.lucide.createIcons === 'function') {
                 window.lucide.createIcons();
             } else {
-                document.documentElement.classList.add('lucide-unavailable');
+                window.__lucidePending = true;
             }
         };
     </script>
+    <!-- Inter: self-hosted (@font-face in site.css) -->
+    <link rel="preload" href="../../../../assets/fonts/inter/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="../../../../assets/css/site.css">
 
-    <!-- Lucide Icons (local fixed version) -->
-    <script src="../../../../assets/vendor/lucide-0.468.0.min.js"
+    <!-- Lucide Icons: site subset (tools/build-lucide-subset.mjs), non-blocking -->
+    <script src="../../../../assets/js/lucide-subset.js" defer
         onerror="document.documentElement.classList.add('lucide-unavailable')"></script>
 
     <!-- MathJax 渲染公式 -->
@@ -231,7 +272,7 @@
 
             <!-- Hero Image placeholder -->
             <div class="rounded-2xl overflow-hidden mb-12 border border-slate-800 shadow-2xl max-w-5xl mx-auto">
-                <img src="../images/falsi_cover.png" alt="BO Cover" class="w-full h-auto object-cover" onerror="this.style.display='none'">
+                <img fetchpriority="high" decoding="async" src="../images/falsi_cover.png" alt="BO Cover" class="w-full h-auto object-cover" onerror="this.style.display='none'">
             </div>
 
             <!-- Content Body -->
@@ -355,7 +396,7 @@ Require: Input domain X; Initial dataset D_0
                 </div>
 
                 <div class="my-8 rounded-xl overflow-hidden border border-slate-800 shadow-lg bg-slate-900/50 p-6 max-w-4xl mx-auto flex flex-col items-center">
-                    <img src="../images/figure-placeholder.svg" alt="Bounding Sets" class="max-h-96 w-auto rounded-lg object-contain">
+                    <img loading="lazy" decoding="async" src="../images/figure-placeholder.svg" alt="Bounding Sets" class="max-h-96 w-auto rounded-lg object-contain">
                     <p class="text-sm text-slate-500 mt-4 text-center italic">Image: Bounding high-order reachable sets using Zonotopes, aligned to vehicle-fixed coordinates.</p>
                 </div>
 
@@ -417,7 +458,7 @@ Require: Input domain X; Initial dataset D_0
                 </ol>
 
                 <div class="my-8 rounded-xl overflow-hidden border border-slate-800 shadow-lg bg-slate-900/50 p-6 max-w-4xl mx-auto flex flex-col items-center">
-                    <img src="../images/figure-placeholder.svg" alt="Test case curves" class="max-h-96 w-auto rounded-lg object-contain">
+                    <img loading="lazy" decoding="async" src="../images/figure-placeholder.svg" alt="Test case curves" class="max-h-96 w-auto rounded-lg object-contain">
                     <p class="text-sm text-slate-500 mt-4 text-center italic">Image: Sinusoid, Bézier, and Sigmoid steering angle and velocity behaviors over time.</p>
                 </div>
 
@@ -438,7 +479,7 @@ Require: Input domain X; Initial dataset D_0
                 </ul>
 
                 <div class="my-8 rounded-xl overflow-hidden border border-slate-800 shadow-lg bg-slate-900/50 p-6 max-w-4xl mx-auto flex flex-col items-center">
-                    <img src="../images/figure-placeholder.svg" alt="Robustness Distance" class="max-h-96 w-auto rounded-lg object-contain">
+                    <img loading="lazy" decoding="async" src="../images/figure-placeholder.svg" alt="Robustness Distance" class="max-h-96 w-auto rounded-lg object-contain">
                     <p class="text-sm text-slate-500 mt-4 text-center italic">Image: Calculation of distance between a trajectory point and the boundary, accounting for measurement error epsilon.</p>
                 </div>
 
@@ -494,7 +535,7 @@ Require: Input domain X; Initial dataset D_0
                 <p>Using the <strong>UCB</strong> acquisition function with a 50-iteration limit, BO efficiently navigated the search space. By the 25th iteration, BO discovered a set of parameters <code>[7.99, 4.00, 3.99, 5.99]</code> that drove the robustness value to <strong class="text-rose-400">$-0.2587$</strong>. We successfully falsified the model!</p>
 
                 <div class="my-8 rounded-xl overflow-hidden border border-slate-800 shadow-lg bg-slate-900/50 p-6 max-w-4xl mx-auto flex flex-col items-center">
-                    <img src="../images/figure-placeholder.svg" alt="Trajectory falsification" class="max-h-96 w-auto rounded-lg object-contain">
+                    <img loading="lazy" decoding="async" src="../images/figure-placeholder.svg" alt="Trajectory falsification" class="max-h-96 w-auto rounded-lg object-contain">
                     <p class="text-sm text-slate-500 mt-4 text-center italic">Image: Above - Trajectory safely inside the reachset. Below - The exact falsification moment where the complex trajectory breaks out of the Zonotope reachable set.</p>
                 </div>
 
@@ -507,14 +548,14 @@ Require: Input domain X; Initial dataset D_0
                 </ul>
 
                 <div class="my-8 rounded-xl overflow-hidden border border-slate-800 shadow-lg bg-slate-900/50 p-6 max-w-4xl mx-auto flex flex-col items-center">
-                    <img src="../images/figure-placeholder.svg" alt="Acquisition Functions" class="max-h-96 w-auto rounded-lg object-contain">
+                    <img loading="lazy" decoding="async" src="../images/figure-placeholder.svg" alt="Acquisition Functions" class="max-h-96 w-auto rounded-lg object-contain">
                     <p class="text-sm text-slate-500 mt-4 text-center italic">Image: Searched robustness of EI (left) showing massive fluctuation, and PI (right) flatlining in a local minimum.</p>
                 </div>
 
                 <p>Furthermore, swapping the Sinusoid curve for <strong>Bézier</strong> and <strong>Sigmoid</strong> curves yielded similarly successful falsifications within 50 iterations, proving the flexibility of the parameterization.</p>
 
                 <div class="my-8 rounded-xl overflow-hidden border border-slate-800 shadow-lg bg-slate-900/50 p-6 max-w-4xl mx-auto flex flex-col items-center">
-                    <img src="../images/figure-placeholder.svg" alt="Curve Conformance" class="max-h-96 w-auto rounded-lg object-contain">
+                    <img loading="lazy" decoding="async" src="../images/figure-placeholder.svg" alt="Curve Conformance" class="max-h-96 w-auto rounded-lg object-contain">
                     <p class="text-sm text-slate-500 mt-4 text-center italic">Image: Conformance relationship falsification using Bézier and Sigmoid test case curves.</p>
                 </div>
 
@@ -524,14 +565,14 @@ Require: Input domain X; Initial dataset D_0
                 <p>The abstract representation tracks planar motion and hitch angle $\alpha$. The complex counterpart is a Simulink 3DOF Vehicle Dynamics Blockset model that accounts for aerodynamic drag $F_{\mathrm{aero}}$, rolling resistance $F_{\mathrm{roll}}$, and requires a closed-loop forward feedback controller to align torque $T$ inputs with the abstract model's acceleration.</p>
 
                 <div class="my-8 rounded-xl overflow-hidden border border-slate-800 shadow-lg bg-slate-900/50 p-6 max-w-4xl mx-auto flex flex-col items-center">
-                    <img src="../images/figure-placeholder.svg" alt="Two-axle tractor towing a two-axle trailer" class="max-h-96 w-auto rounded-lg object-contain">
+                    <img loading="lazy" decoding="async" src="../images/figure-placeholder.svg" alt="Two-axle tractor towing a two-axle trailer" class="max-h-96 w-auto rounded-lg object-contain">
                     <p class="text-sm text-slate-500 mt-4 text-center italic">Image: Simulink dynamic model architecture for a two-axle tractor towing a trailer.</p>
                 </div>
 
                 <p>After 50 iterations, BO evaluated the individual conformance of the Tractor, Hitch, and Trailer. The algorithm successfully identified a test case where the trajectory of the <strong>Hitch</strong> narrowly exceeded its reachable set, proving the method's robust generalizability to multi-body dynamical systems.</p>
 
                 <div class="my-8 rounded-xl overflow-hidden border border-slate-800 shadow-lg bg-slate-900/50 p-6 max-w-4xl mx-auto flex flex-col items-center">
-                    <img src="../images/figure-placeholder.svg" alt="Semi-trailer Conformance" class="max-h-96 w-auto rounded-lg object-contain">
+                    <img loading="lazy" decoding="async" src="../images/figure-placeholder.svg" alt="Semi-trailer Conformance" class="max-h-96 w-auto rounded-lg object-contain">
                     <p class="text-sm text-slate-500 mt-4 text-center italic">Image: Conformance relationship of Trailer center, Hitch center, and Tractor center.</p>
                 </div>
 
@@ -609,10 +650,10 @@ Require: Input domain X; Initial dataset D_0
 
                 <ol>
                     <li><strong>Flat Robustness Landscapes:</strong> If the abstract model’s non-determinism bounds ($\mathcal{W}$) are overly conservative (too large), the trajectory maintains a constant distance to the nearest set edge. This creates a flat optimization landscape (constant robustness), starving the Gaussian Process of gradients and preventing it from escaping local minima.
-                        <div class="mt-4 mb-6"><img src="../images/figure-placeholder.svg" alt="Flat Landscape" class="max-h-64 object-contain rounded-lg border border-slate-800"></div>
+                        <div class="mt-4 mb-6"><img loading="lazy" decoding="async" src="../images/figure-placeholder.svg" alt="Flat Landscape" class="max-h-64 object-contain rounded-lg border border-slate-800"></div>
                     </li>
                     <li><strong>Poor Abstract Model Design:</strong> If the abstract model fundamentally fails to capture the complex dynamics, trajectories will wildly deviate. Falsification becomes trivial, but the resulting test cases are useless for edge-case debugging.
-                        <div class="mt-4 mb-6"><img src="../images/figure-placeholder.svg" alt="Poor Abstract Model" class="max-h-64 object-contain rounded-lg border border-slate-800"></div>
+                        <div class="mt-4 mb-6"><img loading="lazy" decoding="async" src="../images/figure-placeholder.svg" alt="Poor Abstract Model" class="max-h-64 object-contain rounded-lg border border-slate-800"></div>
                     </li>
                     <li><strong>Hardware & Time Constraints:</strong> BO's GP updates scale poorly ($O(N^3)$) with dataset size. Limiting iterations prevents finding the global optimum if the space is highly non-linear.</li>
                 </ol>
