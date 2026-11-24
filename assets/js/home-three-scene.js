@@ -128,6 +128,8 @@
         const uPixelRatio = { value: renderer.getPixelRatio() };
         const uPointer3 = { value: new THREE.Vector3(9999, 9999, 0) };
         const uPointerStrength = { value: 0 };
+        /* Dims the neural network while a robot constellation is on stage. */
+        const uNetworkDim = { value: 1 };
 
         function registerMaterial(collection, material, baseOpacity, keepDepthWrite) {
             material.transparent = true;
@@ -289,6 +291,7 @@
 
         const nodeFragmentShader = [
             'uniform float uOpacity;',
+            'uniform float uDim;',
             'varying vec3 vColor;',
             'varying float vFire;',
             'varying float vHover;',
@@ -298,7 +301,7 @@
             '    float core = exp(-d * d * 9.0);',
             '    float halo = exp(-d * 2.6) * 0.5;',
             '    float energy = 0.62 + vFire * 1.5 + vHover * 0.9;',
-            '    float alpha = (core + halo) * uOpacity * min(1.35, energy);',
+            '    float alpha = (core + halo) * uOpacity * uDim * min(1.35, energy);',
             '    if (alpha < 0.004) discard;',
             '    vec3 color = mix(vColor, vec3(1.0), min(0.85, vFire * 0.8 + vHover * 0.45));',
             '    gl_FragColor = vec4(color * (core * 1.9 + halo) * energy, alpha);',
@@ -324,6 +327,7 @@
         const edgeFragmentShader = [
             'uniform float uTime;',
             'uniform float uOpacity;',
+            'uniform float uDim;',
             'uniform vec3 uPointer3;',
             'uniform float uPointerStrength;',
             'varying float vT;',
@@ -341,7 +345,7 @@
             '    vec3 cool = vec3(0.35, 0.8, 0.98);',
             '    vec3 warm = vec3(0.65, 0.55, 0.99);',
             '    vec3 color = mix(cool, warm, fract(vSeed * 5.13));',
-            '    float alpha = min(1.0, intensity) * (0.45 + 0.55 * fade) * uOpacity;',
+            '    float alpha = min(1.0, intensity) * (0.45 + 0.55 * fade) * uOpacity * uDim;',
             '    if (alpha < 0.004) discard;',
             '    gl_FragColor = vec4(color * intensity * 1.9, alpha);',
             OUTPUT_GLSL,
@@ -369,6 +373,72 @@
             '    if (alpha < 0.004) discard;',
             '    vec3 color = mix(vec3(0.45, 0.75, 1.0), vec3(1.0), pow(vUv.x, 3.0));',
             '    gl_FragColor = vec4(color * (0.7 + head), alpha);',
+            OUTPUT_GLSL,
+            '}'
+        ].join('\n');
+
+        /* Robot constellations (Cosmos): per-point alpha so stars can gather,
+         * draw and dissolve without touching the shared crossfade opacity. */
+        const chartStarVertexShader = [
+            'attribute float aSize;',
+            'attribute float aAlpha;',
+            'attribute float aSpike;',
+            'attribute vec3 aColor;',
+            'uniform float uPixelRatio;',
+            'varying vec3 vColor;',
+            'varying float vAlpha;',
+            'varying float vSpike;',
+            'void main() {',
+            '    vColor = aColor;',
+            '    vAlpha = aAlpha;',
+            '    vSpike = aSpike;',
+            '    vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);',
+            '    gl_PointSize = aSize * uPixelRatio * (240.0 / -mvPosition.z);',
+            '    gl_Position = projectionMatrix * mvPosition;',
+            '}'
+        ].join('\n');
+
+        const chartStarFragmentShader = [
+            'uniform float uOpacity;',
+            'varying vec3 vColor;',
+            'varying float vAlpha;',
+            'varying float vSpike;',
+            'void main() {',
+            '    vec2 p = gl_PointCoord - 0.5;',
+            '    float d = length(p) * 2.0;',
+            '    float core = exp(-d * d * 10.0);',
+            '    float halo = exp(-d * 3.0) * 0.42;',
+            '    float sx = exp(-abs(p.y) * 38.0) * max(0.0, 1.0 - abs(p.x) * 2.1);',
+            '    float sy = exp(-abs(p.x) * 38.0) * max(0.0, 1.0 - abs(p.y) * 2.1);',
+            '    float spikes = (sx + sy) * 0.7 * vSpike;',
+            '    float alpha = (core + halo + spikes) * vAlpha * uOpacity;',
+            '    if (alpha < 0.004) discard;',
+            '    gl_FragColor = vec4(vColor * (core * 1.8 + halo + spikes * 1.2), alpha);',
+            OUTPUT_GLSL,
+            '}'
+        ].join('\n');
+
+        const chartLineVertexShader = [
+            'attribute float aAlpha;',
+            'attribute float aMix;',
+            'varying float vAlpha;',
+            'varying float vMix;',
+            'void main() {',
+            '    vAlpha = aAlpha;',
+            '    vMix = aMix;',
+            '    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);',
+            '}'
+        ].join('\n');
+
+        const chartLineFragmentShader = [
+            'uniform float uOpacity;',
+            'varying float vAlpha;',
+            'varying float vMix;',
+            'void main() {',
+            '    float alpha = vAlpha * uOpacity;',
+            '    if (alpha < 0.004) discard;',
+            '    vec3 color = mix(vec3(0.45, 0.86, 1.0), vec3(0.76, 0.64, 1.0), vMix);',
+            '    gl_FragColor = vec4(color * 1.35, alpha);',
             OUTPUT_GLSL,
             '}'
         ].join('\n');
@@ -651,6 +721,12 @@
             wristRoll: null,
             fingerLeft: null,
             fingerRight: null,
+            gripAnchor: null,
+            parcels: [],
+            amrCargo: null,
+            dogCargo: null,
+            scanLamp: null,
+            scanLine: null,
             armLedRing: null,
             amr: null,
             amrWheels: [],
@@ -665,6 +741,78 @@
             panels: [],
             statusLights: [],
             pulseMaterials: []
+        };
+
+        /* Pick-and-place geometry, in lab-local units. The arm joints below
+         * are built from these numbers so the IK and the mesh agree. */
+        const ARM_BASE = { x: 0.3, z: 0.15 };
+        const SHOULDER_HEIGHT = 1.06;            // yaw column (0.66) + shoulder (0.4)
+        const UPPER_ARM = 1.1;                   // shoulder -> elbow
+        const FOREARM = 0.86;                    // elbow -> wrist
+        const WRIST_ROLL_OFFSET = 0.1;           // wrist -> roll flange
+        const GRIP_CENTER = 0.335;               // roll flange -> held block centre
+        const TOOL_LENGTH = WRIST_ROLL_OFFSET + GRIP_CENTER;
+        const SAMPLE_SIZE = 0.16;
+        const FINGER_THICKNESS = 0.035;
+        const FINGER_PAD = 0.012;
+        const JAW_OPEN = 0.13;                   // half gap between the pads
+        const JAW_CLOSED = SAMPLE_SIZE / 2;
+
+        /* Logistics cell: the AMR brings a parcel in from the left, the arm
+         * has it scanned at the vision station, then hands it to the
+         * quadruped (which walks it off-stage) or drops a failed one in the
+         * reject bin. One parcel every ITEM_PERIOD seconds; the 48 s cycle
+         * divides the 3600 s clock wrap so nothing ever jumps. Times below
+         * are seconds from the start of a parcel's slot. */
+        const ITEM_PERIOD = 16;
+        const PARCELS = [
+            { color: 0xe97435, pass: true },
+            { color: 0x3b82f6, pass: true },
+            { color: 0xe8b62c, pass: false }
+        ];
+        const CELL_CYCLE = ITEM_PERIOD * PARCELS.length;
+        const AMR_LANE_Z = 0.6;
+        const AMR_DOCK_X = -1.05;
+        const AMR_OFFSTAGE_X = -9;
+        const AMR_CARGO_X = 0.18;                // cargo pad, ahead of the mast
+        const AMR_CARGO_Y = 0.5 + SAMPLE_SIZE / 2;
+        const AMR_WHEEL_RADIUS = 0.18;
+        const DOG_DOCK = { x: 1.8, z: 0.62 };
+        const DOG_EXIT = { x: 7.5, z: -1.35 };
+        const DOG_HEADING = Math.atan2(-(DOG_EXIT.z - DOG_DOCK.z), DOG_EXIT.x - DOG_DOCK.x);
+        const DOG_ROUTE = Math.hypot(DOG_EXIT.x - DOG_DOCK.x, DOG_EXIT.z - DOG_DOCK.z);
+        const DOG_BODY_Y = 0.98;
+        const DOG_CARGO = { x: -0.05, y: 0.27 + SAMPLE_SIZE / 2 };   // body-local
+        const SCAN_POINT = { x: 1.1, y: 1.2, z: -0.95 };
+        const SCAN_POST = { x: 1.55, z: -1.35 };
+        const SCAN_HEAD_Y = 2.2;
+        const BIN = { x: -0.6, z: -0.85, radius: 0.26, height: 0.5, releaseY: 0.95 };
+        const TIMING = {
+            amrArrive: -1.5, amrDocked: 4.0, amrTurn: 6.5, amrLeave: 7.7, amrGone: 11.7,
+            grasp: 5.9, scanStart: 8.2, scanEnd: 9.1, verdictEnd: 10.8,
+            handoff: 11.9, binRelease: 11.3,
+            dogLeave: 12.5, dogOffstage: 17.7, dogReturn: 18.5, dogBack: 23.7, dogSettled: 24.9
+        };
+
+        /* Arm cylindrical coordinates (yaw 0 = arm bends toward -x). */
+        function armCoordinates(x, y, z) {
+            const dx = x - ARM_BASE.x;
+            const dz = z - ARM_BASE.z;
+            return { yaw: Math.atan2(dz, -dx), reach: Math.hypot(dx, dz), y };
+        }
+
+        /* With the tool pointing down, a held block's yaw is armYaw - roll;
+         * pick the smallest roll that squares the jaws to a block of blockYaw. */
+        function alignRoll(armYaw, blockYaw) {
+            const quarter = Math.PI / 2;
+            const roll = armYaw - blockYaw;
+            return roll - Math.round(roll / quarter) * quarter;
+        }
+
+        const DOG_CARGO_WORLD = {
+            x: DOG_DOCK.x + DOG_CARGO.x * Math.cos(DOG_HEADING),
+            y: DOG_BODY_Y + DOG_CARGO.y,
+            z: DOG_DOCK.z - DOG_CARGO.x * Math.sin(DOG_HEADING)
         };
 
         function physicalMaterial(color, options) {
@@ -770,7 +918,10 @@
                 opacity: 1
             });
             [
-                [0.3, 0.15, 1.9], [-2.45, 0.7, 3.4], [2.62, -0.25, 2.2], [-0.55, -2.1, 3.3]
+                /* Arm, bench, bin, scanner post. The AMR and the quadruped
+                 * carry their own contact shadows because they move. */
+                [ARM_BASE.x, ARM_BASE.z, 1.9], [-0.55, -2.1, 3.3],
+                [BIN.x, BIN.z, 0.8], [SCAN_POST.x, SCAN_POST.z, 0.6]
             ].forEach(entry => {
                 const contact = new THREE.Mesh(
                     new THREE.CircleGeometry(entry[2] * 0.5, 28),
@@ -914,7 +1065,7 @@
 
             /* Industrial 6-axis arm running a pick-and-place loop. */
             const arm = new THREE.Group();
-            arm.position.set(0.3, 0, 0.15);
+            arm.position.set(ARM_BASE.x, 0, ARM_BASE.z);
             solidMesh(arm, new THREE.CylinderGeometry(0.6, 0.68, 0.14, 28), graphite,
                 [0, 0.07, 0], null, true);
             const ledRing = solidMesh(arm, new THREE.TorusGeometry(0.55, 0.02, 8, 40), ledCyan,
@@ -933,7 +1084,7 @@
             solidMesh(armYaw, new THREE.BoxGeometry(0.1, 0.32, 0.3), graphite, [0.18, 0.34, 0]);
 
             const shoulder = new THREE.Group();
-            shoulder.position.set(0, 0.4, 0);
+            shoulder.position.set(0, SHOULDER_HEIGHT - 0.66, 0);
             armYaw.add(shoulder);
             labRefs.shoulder = shoulder;
             solidMesh(shoulder, new THREE.SphereGeometry(0.2, 24, 16), graphite, [0, 0, 0]);
@@ -942,7 +1093,7 @@
             solidMesh(shoulder, new THREE.BoxGeometry(0.08, 0.7, 0.06), tealMetal, [0.13, 0.52, 0]);
 
             const elbow = new THREE.Group();
-            elbow.position.set(0, 1.1, 0);
+            elbow.position.set(0, UPPER_ARM, 0);
             shoulder.add(elbow);
             labRefs.elbow = elbow;
             solidMesh(elbow, new THREE.SphereGeometry(0.16, 24, 16), tealMetal, [0, 0, 0]);
@@ -953,24 +1104,114 @@
             );
 
             const wrist = new THREE.Group();
-            wrist.position.set(0, 0.86, 0);
+            wrist.position.set(0, FOREARM, 0);
             elbow.add(wrist);
             labRefs.wrist = wrist;
             solidMesh(wrist, new THREE.SphereGeometry(0.12, 20, 14), graphite, [0, 0, 0]);
             const wristRoll = new THREE.Group();
-            wristRoll.position.set(0, 0.1, 0);
+            wristRoll.position.set(0, WRIST_ROLL_OFFSET, 0);
             wrist.add(wristRoll);
             labRefs.wristRoll = wristRoll;
             solidMesh(wristRoll, new THREE.CylinderGeometry(0.085, 0.095, 0.16, 18), tealMetal, [0, 0.05, 0]);
-            solidMesh(wristRoll, new THREE.BoxGeometry(0.32, 0.07, 0.16), graphite, [0, 0.17, 0]);
-            const fingerGeometry = new THREE.TorusGeometry(0.15, 0.032, 8, 14, 2.3);
-            const fingerLeft = solidMesh(wristRoll, fingerGeometry, graphite,
-                [-0.09, 0.24, 0], [0, 0, -0.45]);
-            const fingerRight = solidMesh(wristRoll, fingerGeometry, graphite,
-                [0.09, 0.24, 0], [0, 0, Math.PI - 2.3 + 0.45]);
-            labRefs.fingerLeft = fingerLeft;
-            labRefs.fingerRight = fingerRight;
+            solidMesh(wristRoll, new THREE.BoxGeometry(0.4, 0.07, 0.16), graphite, [0, 0.17, 0]);
+
+            /* Parallel-jaw gripper: two fingers slide along the palm and
+             * clamp the sample block, whose centre sits at gripAnchor. */
+            const fingerGeometry = new THREE.BoxGeometry(FINGER_THICKNESS, 0.2, 0.1);
+            const fingerPadGeometry = new THREE.BoxGeometry(FINGER_PAD, 0.09, 0.08);
+            const makeFinger = side => {
+                const finger = new THREE.Group();
+                finger.position.set(side * (JAW_OPEN + FINGER_PAD + FINGER_THICKNESS / 2), 0.305, 0);
+                solidMesh(finger, fingerGeometry, graphite, [0, 0, 0]);
+                solidMesh(finger, fingerPadGeometry, tealMetal,
+                    [-side * (FINGER_THICKNESS + FINGER_PAD) / 2, 0.04, 0]);
+                wristRoll.add(finger);
+                return finger;
+            };
+            labRefs.fingerLeft = makeFinger(-1);
+            labRefs.fingerRight = makeFinger(1);
+            const gripAnchor = new THREE.Group();
+            gripAnchor.position.set(0, GRIP_CENTER, 0);
+            wristRoll.add(gripAnchor);
+            labRefs.gripAnchor = gripAnchor;
             labInner.add(arm);
+
+            /* Vision QC station: a post with an overhead camera, a downlight
+             * cone, a sweeping scan line and a verdict lamp. */
+            const scanner = new THREE.Group();
+            solidMesh(scanner, new THREE.CylinderGeometry(0.17, 0.2, 0.04, 24), graphite,
+                [SCAN_POST.x, 0.02, SCAN_POST.z], null, true);
+            solidMesh(scanner, new THREE.CylinderGeometry(0.035, 0.045, SCAN_HEAD_Y + 0.05, 12), shellWhite,
+                [SCAN_POST.x, (SCAN_HEAD_Y + 0.05) / 2, SCAN_POST.z], null, true);
+            const boomDx = SCAN_POINT.x - SCAN_POST.x;
+            const boomDz = SCAN_POINT.z - SCAN_POST.z;
+            solidMesh(scanner, new THREE.BoxGeometry(Math.hypot(boomDx, boomDz) + 0.08, 0.05, 0.05), graphite,
+                [(SCAN_POST.x + SCAN_POINT.x) / 2, SCAN_HEAD_Y + 0.06, (SCAN_POST.z + SCAN_POINT.z) / 2],
+                [0, Math.atan2(-boomDz, boomDx), 0], true);
+            solidMesh(scanner, new THREE.BoxGeometry(0.22, 0.12, 0.18), shellWhite,
+                [SCAN_POINT.x, SCAN_HEAD_Y, SCAN_POINT.z], null, true);
+            solidMesh(scanner, new THREE.CylinderGeometry(0.05, 0.055, 0.05, 16), graphite,
+                [SCAN_POINT.x, SCAN_HEAD_Y - 0.08, SCAN_POINT.z]);
+            const scanLampMaterial = registerMaterial(labMaterials,
+                new THREE.MeshBasicMaterial({ color: 0x2dd4bf }), 1, true);
+            solidMesh(scanner, new THREE.SphereGeometry(0.04, 12, 8), scanLampMaterial,
+                [SCAN_POINT.x, SCAN_HEAD_Y + 0.08, SCAN_POINT.z]);
+            /* Status ring around the lens repeats the verdict colour. */
+            solidMesh(scanner, new THREE.TorusGeometry(0.1, 0.018, 8, 32), scanLampMaterial,
+                [SCAN_POINT.x, SCAN_HEAD_Y - 0.075, SCAN_POINT.z], [Math.PI / 2, 0, 0]);
+            labRefs.scanLamp = scanLampMaterial;
+            const scanCone = new THREE.Mesh(
+                new THREE.CylinderGeometry(0.05, 0.24, SCAN_HEAD_Y - 0.1 - (SCAN_POINT.y - 0.12), 24, 1, true),
+                makeShaderMaterial(labMaterials, {
+                    vertexShader: nebulaVertexShader,
+                    fragmentShader: coneFragmentShader,
+                    opacity: 0.7,
+                    side: THREE.DoubleSide
+                })
+            );
+            scanCone.position.set(SCAN_POINT.x, (SCAN_HEAD_Y - 0.1 + SCAN_POINT.y - 0.12) / 2, SCAN_POINT.z);
+            scanner.add(scanCone);
+            const scanLine = new THREE.Mesh(
+                new THREE.PlaneGeometry(0.34, 0.34),
+                registerMaterial(labMaterials,
+                    new THREE.MeshBasicMaterial({ color: 0x2ee6d6, side: THREE.DoubleSide }), 0.55, false)
+            );
+            scanLine.rotation.x = -Math.PI / 2;
+            scanLine.position.set(SCAN_POINT.x, SCAN_POINT.y, SCAN_POINT.z);
+            scanLine.visible = false;
+            scanner.add(scanLine);
+            labRefs.scanLine = scanLine;
+            labInner.add(scanner);
+
+            /* Reject bin (open top, amber warning rim). */
+            const binMaterial = registerMaterial(labMaterials, new THREE.MeshPhysicalMaterial({
+                color: 0x2b4744, roughness: 0.5, metalness: 0.4, side: THREE.DoubleSide, envMapIntensity: 0.7
+            }), 1, true);
+            const bin = new THREE.Group();
+            bin.position.set(BIN.x, 0, BIN.z);
+            solidMesh(bin, new THREE.CylinderGeometry(BIN.radius, BIN.radius - 0.04, BIN.height, 28, 1, true),
+                binMaterial, [0, BIN.height / 2, 0], null, true);
+            solidMesh(bin, new THREE.CircleGeometry(BIN.radius - 0.04, 28), binMaterial,
+                [0, 0.02, 0], [-Math.PI / 2, 0, 0]);
+            solidMesh(bin, new THREE.TorusGeometry(BIN.radius, 0.022, 8, 36), amber,
+                [0, BIN.height, 0], [Math.PI / 2, 0, 0]);
+            labInner.add(bin);
+
+            /* One parcel per slot; each knows its own colour. */
+            const parcelGeometry = new THREE.BoxGeometry(SAMPLE_SIZE, SAMPLE_SIZE, SAMPLE_SIZE);
+            const parcelBandGeometry = new THREE.BoxGeometry(SAMPLE_SIZE + 0.008, 0.03, SAMPLE_SIZE + 0.008);
+            labRefs.parcels = PARCELS.map(parcel => {
+                const block = new THREE.Group();
+                const shell = physicalMaterial(parcel.color, {
+                    roughness: 0.32, metalness: 0.12, clearcoat: 0.6,
+                    emissive: parcel.color, emissiveIntensity: 0.12
+                });
+                solidMesh(block, parcelGeometry, shell, [0, 0, 0], null, true);
+                solidMesh(block, parcelBandGeometry, shellWhite, [0, 0, 0]);
+                block.visible = false;
+                labInner.add(block);
+                return block;
+            });
 
             /* Sagging service cable from the arm base to the bench. */
             const cableCurve = new THREE.CatmullRomCurve3([
@@ -982,7 +1223,7 @@
             solidMesh(labInner, new THREE.TubeGeometry(cableCurve, 24, 0.022, 6), rubber,
                 [0.3, 0, 0.15], null, false);
 
-            /* Autonomous mobile robot patrolling an elliptical route. */
+            /* Autonomous mobile robot shuttling parcels in from the left. */
             const amr = new THREE.Group();
             labRefs.amr = amr;
             solidMesh(amr, new THREE.BoxGeometry(1.05, 0.2, 0.66), graphite,
@@ -1006,8 +1247,14 @@
                 amr.add(wheel);
                 labRefs.amrWheels.push(wheel);
             });
-            solidMesh(amr, new THREE.CylinderGeometry(0.035, 0.045, 0.3, 10), graphite, [0, 0.62, 0]);
-            const lidar = solidMesh(amr, new THREE.CylinderGeometry(0.085, 0.095, 0.1, 18), tealMetal, [0, 0.82, 0]);
+            /* Sensor mast sits at the rear so the front half is a cargo pad. */
+            solidMesh(amr, new THREE.CylinderGeometry(0.035, 0.045, 0.3, 10), graphite, [-0.3, 0.62, 0]);
+            const lidar = solidMesh(amr, new THREE.CylinderGeometry(0.085, 0.095, 0.1, 18), tealMetal, [-0.3, 0.82, 0]);
+            solidMesh(amr, new THREE.BoxGeometry(0.3, 0.02, 0.3), tealMetal, [AMR_CARGO_X, 0.49, 0]);
+            const amrCargo = new THREE.Group();
+            amrCargo.position.set(AMR_CARGO_X, AMR_CARGO_Y, 0);
+            amr.add(amrCargo);
+            labRefs.amrCargo = amrCargo;
             solidMesh(lidar, new THREE.BoxGeometry(0.02, 0.05, 0.19), ledCyan, [0, 0, 0], null, false);
             labRefs.amrLidar = lidar;
             labRefs.statusLights.push(
@@ -1027,12 +1274,17 @@
             sweepSpinner.add(sweep);
             amr.add(sweepSpinner);
             labRefs.amrSweep = sweepSpinner;
+            const amrShadow = new THREE.Mesh(new THREE.CircleGeometry(0.75, 28), contactMaterial);
+            amrShadow.rotation.x = -Math.PI / 2;
+            amrShadow.position.y = 0.006;
+            amr.add(amrShadow);
+            amr.position.set(AMR_DOCK_X, 0, AMR_LANE_Z);
             labInner.add(amr);
 
             /* Quadruped inspection robot. */
             const quadruped = new THREE.Group();
-            quadruped.position.set(2.62, 0, -0.25);
-            quadruped.rotation.y = -0.55;
+            quadruped.position.set(DOG_DOCK.x, 0, DOG_DOCK.z);
+            quadruped.rotation.y = DOG_HEADING;
             labRefs.quadruped = quadruped;
             const body = new THREE.Group();
             body.position.y = 0.98;
@@ -1040,7 +1292,14 @@
             labRefs.quadrupedBody = body;
             solidMesh(body, new THREE.CapsuleGeometry(0.24, 0.66, 6, 18), shellWhite,
                 [0, 0, 0], [0, 0, Math.PI / 2], true);
-            solidMesh(body, new THREE.BoxGeometry(0.42, 0.12, 0.3), tealMetal, [-0.08, 0.24, 0]);
+            /* Cargo tray on the back; the parcel centre sits at dogCargo. */
+            solidMesh(body, new THREE.BoxGeometry(0.42, 0.06, 0.3), tealMetal, [DOG_CARGO.x, 0.24, 0]);
+            solidMesh(body, new THREE.BoxGeometry(0.42, 0.04, 0.02), graphite, [DOG_CARGO.x, 0.29, 0.14]);
+            solidMesh(body, new THREE.BoxGeometry(0.42, 0.04, 0.02), graphite, [DOG_CARGO.x, 0.29, -0.14]);
+            const dogCargo = new THREE.Group();
+            dogCargo.position.set(DOG_CARGO.x, DOG_CARGO.y, 0);
+            body.add(dogCargo);
+            labRefs.dogCargo = dogCargo;
             solidMesh(body, new THREE.CylinderGeometry(0.008, 0.008, 0.4, 6), graphite, [-0.42, 0.42, 0]);
             labRefs.statusLights.push(
                 solidMesh(body, new THREE.SphereGeometry(0.02, 8, 6), amber, [-0.42, 0.63, 0], null, false)
@@ -1080,6 +1339,10 @@
                     phase: anchor[2]
                 });
             });
+            const dogShadow = new THREE.Mesh(new THREE.CircleGeometry(0.85, 28), contactMaterial);
+            dogShadow.rotation.x = -Math.PI / 2;
+            dogShadow.position.y = 0.006;
+            quadruped.add(dogShadow);
             labInner.add(quadruped);
 
             /* Drifting holographic motes give the air some depth. */
@@ -1112,48 +1375,247 @@
             }
         }
 
-        /* Arm pick-and-place choreography. */
-        const armTimeline = {
-            transition: 1.35,
-            poses: [
-                { yaw: 0.15, shoulder: -0.35, elbow: 0.95, wrist: -0.55, grip: 0.075, hold: 0.8 },
-                { yaw: 0.85, shoulder: 0.28, elbow: 1.35, wrist: -1.15, grip: 0.075, hold: 0.15 },
-                { yaw: 0.85, shoulder: 0.34, elbow: 1.42, wrist: -1.22, grip: 0.02, hold: 0.4 },
-                { yaw: -0.7, shoulder: -0.45, elbow: 0.7, wrist: -0.25, grip: 0.02, hold: 0.25 },
-                { yaw: -0.7, shoulder: -0.12, elbow: 1.05, wrist: -0.85, grip: 0.075, hold: 0.5 }
-            ]
-        };
-        armTimeline.total = armTimeline.poses.reduce(
-            (sum, pose) => sum + armTimeline.transition + pose.hold, 0
-        );
+        /* ------------------------------------------------------------------
+         * Logistics choreography. Every actor is a pure function of the
+         * scene clock, so frames can be skipped (hidden tab, low FPS) and
+         * everything stays in sync.
+         * ------------------------------------------------------------------ */
 
-        const armPose = { yaw: 0, shoulder: 0, elbow: 0, wrist: 0, grip: 0.075 };
-        function evaluateArmPose(time) {
-            let cursor = time % armTimeline.total;
-            const poses = armTimeline.poses;
-            for (let index = 0; index < poses.length; index += 1) {
-                const current = poses[index];
-                const next = poses[(index + 1) % poses.length];
-                if (cursor < current.hold) {
-                    armPose.yaw = current.yaw;
-                    armPose.shoulder = current.shoulder;
-                    armPose.elbow = current.elbow;
-                    armPose.wrist = current.wrist;
-                    armPose.grip = current.grip;
-                    return;
+        function easeOutQuad(t) { return 1 - (1 - t) * (1 - t); }
+        function easeInQuad(t) { return t * t; }
+        function easeInOutSine(t) { return 0.5 - 0.5 * Math.cos(Math.PI * t); }
+        function clamp01(t) { return t < 0 ? 0 : (t > 1 ? 1 : t); }
+        /* Seconds since the start of slot `index`, wrapped into [-4, CELL_CYCLE - 4). */
+        function slotTime(time, index) {
+            let local = ((time - index * ITEM_PERIOD) % CELL_CYCLE + CELL_CYCLE) % CELL_CYCLE;
+            if (local >= CELL_CYCLE - 4) local -= CELL_CYCLE;
+            return local;
+        }
+
+        /* Arm keyframes: tool targets in the arm's cylindrical frame (yaw,
+         * reach, parcel-centre height y) plus jaw gap and wrist roll. An
+         * analytic two-link IK turns each frame into joint angles with the
+         * tool pointing straight down, so parcels land exactly on the AMR
+         * pad, under the scanner and on the quadruped's tray. */
+        const ARM_TARGETS = {
+            pickup: armCoordinates(AMR_DOCK_X + AMR_CARGO_X, AMR_CARGO_Y, AMR_LANE_Z),
+            scan: armCoordinates(SCAN_POINT.x, SCAN_POINT.y, SCAN_POINT.z),
+            handoff: armCoordinates(DOG_CARGO_WORLD.x, DOG_CARGO_WORLD.y, DOG_CARGO_WORLD.z),
+            reject: armCoordinates(BIN.x, BIN.releaseY, BIN.z),
+            ready: { yaw: 0.9, reach: 0.85, y: 1.3 }
+        };
+        /* Rolls that square the jaws to the parcel on the AMR (yaw 0) and to
+         * the quadruped's tray; a held parcel's yaw is armYaw - roll. */
+        const PICK_ROLL = alignRoll(ARM_TARGETS.pickup.yaw, 0);
+        const PLACE_ROLL = alignRoll(ARM_TARGETS.handoff.yaw, DOG_HEADING);
+        const REJECT_DROP_YAW = ARM_TARGETS.reject.yaw - PICK_ROLL;
+
+        function buildArmTrack() {
+            const { pickup, scan, handoff, reject, ready } = ARM_TARGETS;
+            const pickRoll = PICK_ROLL;
+            const placeRoll = PLACE_ROLL;
+            const hover = 0.32;
+            const lifted = (target, dy) => ({ yaw: target.yaw, reach: target.reach, y: target.y + dy });
+            const keys = [];
+            const key = (t, target, jaw, roll, arc) => keys.push({
+                t, yaw: target.yaw, reach: target.reach, y: target.y, jaw, roll, arc: arc || 0
+            });
+            PARCELS.forEach((parcel, index) => {
+                const b = index * ITEM_PERIOD;
+                key(b, ready, JAW_OPEN, pickRoll);
+                key(b + 4.1, ready, JAW_OPEN, pickRoll);
+                key(b + 5.1, lifted(pickup, hover), JAW_OPEN, pickRoll);
+                key(b + 5.6, pickup, JAW_OPEN, pickRoll);
+                key(b + TIMING.grasp, pickup, JAW_CLOSED, pickRoll);
+                key(b + 6.45, lifted(pickup, hover), JAW_CLOSED, pickRoll);
+                key(b + 8.05, scan, JAW_CLOSED, pickRoll, 0.15);
+                key(b + 9.6, scan, JAW_CLOSED, pickRoll);
+                if (parcel.pass) {
+                    key(b + 11.1, lifted(handoff, hover), JAW_CLOSED, placeRoll, 0.1);
+                    key(b + 11.6, handoff, JAW_CLOSED, placeRoll);
+                    key(b + TIMING.handoff, handoff, JAW_OPEN, placeRoll);
+                    key(b + 12.4, lifted(handoff, hover), JAW_OPEN, placeRoll);
+                    key(b + 13.9, ready, JAW_OPEN, pickRoll);
+                } else {
+                    key(b + 11.0, reject, JAW_CLOSED, pickRoll, 0.1);
+                    key(b + TIMING.binRelease, reject, JAW_OPEN, pickRoll);
+                    key(b + 12.9, ready, JAW_OPEN, pickRoll);
                 }
-                cursor -= current.hold;
-                if (cursor < armTimeline.transition) {
-                    const blend = easeInOutCubic(cursor / armTimeline.transition);
-                    armPose.yaw = current.yaw + (next.yaw - current.yaw) * blend;
-                    armPose.shoulder = current.shoulder + (next.shoulder - current.shoulder) * blend;
-                    armPose.elbow = current.elbow + (next.elbow - current.elbow) * blend;
-                    armPose.wrist = current.wrist + (next.wrist - current.wrist) * blend;
-                    armPose.grip = current.grip + (next.grip - current.grip) * blend;
-                    return;
-                }
-                cursor -= armTimeline.transition;
+            });
+            key(CELL_CYCLE, ready, JAW_OPEN, pickRoll);
+            /* Unwrap yaw so every move takes the short way round. */
+            for (let index = 1; index < keys.length; index += 1) {
+                let delta = keys[index].yaw - keys[index - 1].yaw;
+                delta -= Math.round(delta / (Math.PI * 2)) * Math.PI * 2;
+                keys[index].yaw = keys[index - 1].yaw + delta;
             }
+            return keys;
+        }
+        const armKeys = buildArmTrack();
+
+        const armTarget = { yaw: 0, reach: 0, y: 0, jaw: JAW_OPEN, roll: 0 };
+        const armPose = { yaw: 0, shoulder: 0, elbow: 0, wrist: 0, roll: 0, jaw: JAW_OPEN };
+
+        function solveArmPose() {
+            const maxReach = UPPER_ARM + FOREARM - 0.002;
+            let horizontal = armTarget.reach;
+            let vertical = armTarget.y + TOOL_LENGTH - SHOULDER_HEIGHT;
+            const distance = Math.hypot(horizontal, vertical);
+            if (distance > maxReach) {
+                horizontal *= maxReach / distance;
+                vertical *= maxReach / distance;
+            }
+            const reach = Math.min(distance, maxReach);
+            const cosElbow = (reach * reach - UPPER_ARM * UPPER_ARM - FOREARM * FOREARM) /
+                (2 * UPPER_ARM * FOREARM);
+            /* Positive elbow angle = elbow-up solution. */
+            const elbow = Math.acos(Math.max(-1, Math.min(1, cosElbow)));
+            const shoulder = Math.atan2(horizontal, vertical) -
+                Math.atan2(FOREARM * Math.sin(elbow), UPPER_ARM + FOREARM * Math.cos(elbow));
+            armPose.yaw = armTarget.yaw;
+            armPose.shoulder = shoulder;
+            armPose.elbow = elbow;
+            /* Joint angles sum to pi: the tool axis points straight down. */
+            armPose.wrist = Math.PI - shoulder - elbow;
+            armPose.roll = armTarget.roll;
+            armPose.jaw = armTarget.jaw;
+        }
+
+        let armKeyCursor = 0;
+        function evaluateArmPose(time) {
+            const cycleTime = ((time % CELL_CYCLE) + CELL_CYCLE) % CELL_CYCLE;
+            if (cycleTime < armKeys[armKeyCursor].t || cycleTime >= armKeys[armKeyCursor + 1].t) {
+                armKeyCursor = 0;
+                while (armKeyCursor < armKeys.length - 2 && cycleTime >= armKeys[armKeyCursor + 1].t) {
+                    armKeyCursor += 1;
+                }
+            }
+            const from = armKeys[armKeyCursor];
+            const to = armKeys[armKeyCursor + 1];
+            const span = to.t - from.t;
+            const blend = span > 0 ? easeInOutCubic(clamp01((cycleTime - from.t) / span)) : 1;
+            armTarget.yaw = from.yaw + (to.yaw - from.yaw) * blend;
+            armTarget.reach = from.reach + (to.reach - from.reach) * blend;
+            armTarget.y = from.y + (to.y - from.y) * blend + Math.sin(Math.PI * blend) * to.arc;
+            armTarget.jaw = from.jaw + (to.jaw - from.jaw) * blend;
+            armTarget.roll = from.roll + (to.roll - from.roll) * blend;
+            solveArmPose();
+        }
+
+        /* AMR: drives in loaded and brakes at the dock, waits for the pick,
+         * turns on the spot and drives out empty; reloads off-stage. */
+        const amrState = { x: AMR_DOCK_X, heading: 0, odometer: 0, turn: 0 };
+        function evaluateAmr(time) {
+            /* Slot-local time in [amrArrive, amrArrive + ITEM_PERIOD). */
+            const slot = (((time - TIMING.amrArrive) % ITEM_PERIOD) + ITEM_PERIOD) % ITEM_PERIOD +
+                TIMING.amrArrive;
+            const run = AMR_DOCK_X - AMR_OFFSTAGE_X;
+            if (slot >= TIMING.amrGone) {
+                /* Off-stage: reloads and turns back while out of view. */
+                amrState.x = AMR_OFFSTAGE_X;
+                amrState.heading = Math.PI;
+                amrState.odometer = run * 2;
+                amrState.turn = Math.PI;
+                return;
+            }
+            if (slot < TIMING.amrDocked) {
+                const s = easeOutQuad(clamp01((slot - TIMING.amrArrive) / (TIMING.amrDocked - TIMING.amrArrive)));
+                amrState.x = AMR_OFFSTAGE_X + run * s;
+                amrState.heading = 0;
+                amrState.odometer = run * s;
+                amrState.turn = 0;
+            } else if (slot < TIMING.amrTurn) {
+                amrState.x = AMR_DOCK_X;
+                amrState.heading = 0;
+                amrState.odometer = run;
+                amrState.turn = 0;
+            } else if (slot < TIMING.amrLeave) {
+                const s = easeInOutCubic((slot - TIMING.amrTurn) / (TIMING.amrLeave - TIMING.amrTurn));
+                amrState.x = AMR_DOCK_X;
+                amrState.heading = Math.PI * s;
+                amrState.odometer = run;
+                amrState.turn = Math.PI * s;
+            } else {
+                const s = easeInQuad((slot - TIMING.amrLeave) / (TIMING.amrGone - TIMING.amrLeave));
+                amrState.x = AMR_DOCK_X - run * s;
+                amrState.heading = Math.PI;
+                amrState.odometer = run * (1 + s);
+                amrState.turn = Math.PI;
+            }
+        }
+
+        /* Quadruped: waits at the dock facing its exit; after each passed
+         * parcel it trots off-stage, comes back and turns around. */
+        const dogState = { x: DOG_DOCK.x, z: DOG_DOCK.z, heading: DOG_HEADING, odometer: 0 };
+        function evaluateDog(time, target) {
+            target.x = DOG_DOCK.x;
+            target.z = DOG_DOCK.z;
+            target.heading = DOG_HEADING;
+            target.odometer = 0;
+            PARCELS.forEach((parcel, index) => {
+                if (!parcel.pass) return;
+                const u = ((time - index * ITEM_PERIOD) % CELL_CYCLE + CELL_CYCLE) % CELL_CYCLE;
+                if (u < TIMING.dogLeave || u >= TIMING.dogSettled) return;
+                const turnArc = Math.PI * 0.45;
+                if (u < TIMING.dogOffstage) {
+                    const s = easeInOutSine((u - TIMING.dogLeave) / (TIMING.dogOffstage - TIMING.dogLeave));
+                    target.x = DOG_DOCK.x + (DOG_EXIT.x - DOG_DOCK.x) * s;
+                    target.z = DOG_DOCK.z + (DOG_EXIT.z - DOG_DOCK.z) * s;
+                    target.odometer = DOG_ROUTE * s;
+                } else if (u < TIMING.dogReturn) {
+                    target.x = DOG_EXIT.x;
+                    target.z = DOG_EXIT.z;
+                    target.heading = DOG_HEADING + Math.PI;
+                    target.odometer = DOG_ROUTE;
+                } else if (u < TIMING.dogBack) {
+                    const s = easeInOutSine((u - TIMING.dogReturn) / (TIMING.dogBack - TIMING.dogReturn));
+                    target.x = DOG_EXIT.x + (DOG_DOCK.x - DOG_EXIT.x) * s;
+                    target.z = DOG_EXIT.z + (DOG_DOCK.z - DOG_EXIT.z) * s;
+                    target.heading = DOG_HEADING + Math.PI;
+                    target.odometer = DOG_ROUTE * (1 + s);
+                } else {
+                    const s = easeInOutCubic((u - TIMING.dogBack) / (TIMING.dogSettled - TIMING.dogBack));
+                    target.heading = DOG_HEADING + Math.PI * (1 - s);
+                    target.odometer = DOG_ROUTE * 2 + turnArc * s;
+                }
+            });
+        }
+        const dogPrevious = { x: 0, z: 0, heading: 0, odometer: 0 };
+
+        /* Where each parcel is right now: on the AMR, in the gripper, on the
+         * quadruped, falling into the reject bin, or off-stage (hidden). */
+        function placeParcel(block, parcel, index, time) {
+            const u = slotTime(time, index);
+            const done = parcel.pass ? TIMING.handoff : TIMING.binRelease;
+            let parent = null;
+            if (u < TIMING.amrArrive) {
+                parent = null;
+            } else if (u < TIMING.grasp) {
+                parent = labRefs.amrCargo;
+            } else if (u < done) {
+                parent = labRefs.gripAnchor;
+            } else if (parcel.pass && u < TIMING.dogOffstage) {
+                parent = labRefs.dogCargo;
+            } else if (!parcel.pass) {
+                /* Free fall into the bin; hidden once below the rim. */
+                const fall = u - TIMING.binRelease;
+                const y = BIN.releaseY - 6.5 * fall * fall;
+                if (y > BIN.height - SAMPLE_SIZE / 2 - 0.02) {
+                    if (block.parent !== labInner) labInner.add(block);
+                    block.visible = true;
+                    block.position.set(BIN.x, y, BIN.z);
+                    block.rotation.set(fall * 2.2, REJECT_DROP_YAW, fall * 1.4);
+                    return;
+                }
+            }
+            if (!parent) {
+                block.visible = false;
+                return;
+            }
+            if (block.parent !== parent) parent.add(block);
+            block.visible = true;
+            block.position.set(0, 0, 0);
+            block.rotation.set(0, 0, 0);
         }
 
         /* ------------------------------------------------------------------
@@ -1164,7 +1626,9 @@
             starLayers: [],
             nebulae: [],
             network: null,
-            meteors: []
+            meteors: [],
+            chart: null,
+            chartParts: null
         };
 
         function makeStarField(count, spread, sizeRange, brightRatio, baseOpacity) {
@@ -1310,7 +1774,7 @@
                 opacity: 1,
                 blending: THREE.AdditiveBlending,
                 depthTest: false,
-                uniforms: { uPointer3, uPointerStrength }
+                uniforms: { uPointer3, uPointerStrength, uDim: uNetworkDim }
             });
             network.add(new THREE.Points(nodeGeometry, nodeMaterial));
 
@@ -1405,7 +1869,7 @@
                 opacity: 1,
                 blending: THREE.AdditiveBlending,
                 depthTest: false,
-                uniforms: { uPointer3, uPointerStrength }
+                uniforms: { uPointer3, uPointerStrength, uDim: uNetworkDim }
             });
             network.add(new THREE.LineSegments(edgeGeometry, edgeMaterial));
         }
@@ -1491,6 +1955,687 @@
                 spawnMeteor(meteor, true);
                 spaceRefs.meteors.push(meteor);
             }
+
+            buildConstellations();
+        }
+
+        /* ------------------------------------------------------------------
+         * Cosmos: robot constellations. The lab's three robots reappear as
+         * living star charts and replay the lab's hand-off in the sky: the
+         * rover brings a data packet, the manipulator swings it across, the
+         * quadruped trots off with it and the packet leaves as a shooting
+         * star. Pure function of the scene clock (36 s loop, divides 3600).
+         * Chart units: x right, y up; the group is fitted on screen by
+         * placeConstellations().
+         * ------------------------------------------------------------------ */
+        const CHART_CYCLE = 36;
+        const CHART_BOUNDS = { minX: -1.95, maxX: 2.45, minY: -1.55, maxY: 1.3 };
+        const CHART_PLANE_Z = 0.6;
+        const ROVER_HOME = { x: -1.0, y: -0.6 };
+        const ROVER_PACKET = { x: 0.35, y: 0.42 };
+        const ARM_ROOT = { x: 0.15, y: -1.0 };
+        const CHART_UPPER = 0.8;
+        const CHART_FORE = 0.7;
+        const CHART_TOOL = 0.2;
+        const DOG_HOME = { x: 1.3, y: -0.55 };
+        const DOG_PACKET_Y = 0.26;
+        const PACKET_P1 = { x: ROVER_HOME.x + ROVER_PACKET.x, y: ROVER_HOME.y + ROVER_PACKET.y };
+        const PACKET_P2 = { x: DOG_HOME.x, y: DOG_HOME.y + DOG_PACKET_Y };
+        /* Every hand-off overlaps: the arm is formed before the rover is
+         * left, the rover only drives off once the packet is lifted, and
+         * the quadruped is drawn before the arm hovers over it. */
+        const CHART_TIMES = {
+            roverParked: 4.2, packetIn: 1.6,
+            grip: 13.9, roverLeaves: 14.5, release: 18.5,
+            dogWalk: 21.6, dogWalkSpan: 7.2,
+            launch: 24.5, launchEnd: 25.9,
+            activeIn: [0, 1.5], activeOut: [28.8, 30.8]
+        };
+
+        function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
+        function easeInCubic(t) { return t * t * t; }
+        function smoothWindow(t, inStart, inEnd, outStart, outEnd) {
+            const rise = clamp01((t - inStart) / (inEnd - inStart));
+            const fall = clamp01((t - outStart) / (outEnd - outStart));
+            return easeInOutCubic(rise) * (1 - easeInOutCubic(fall));
+        }
+
+        /* Rover, side view: body, sensor mast, two rolling wheels. */
+        function roverOffset(t) {
+            if (t < CHART_TIMES.roverParked) {
+                return -0.9 * (1 - easeOutCubic(clamp01(t / CHART_TIMES.roverParked)));
+            }
+            if (t > CHART_TIMES.roverLeaves) return -0.8 * easeInQuad(clamp01((t - CHART_TIMES.roverLeaves) / 2.0));
+            return 0;
+        }
+        function poseRover(t, out) {
+            const offset = roverOffset(t);
+            const cx = ROVER_HOME.x + offset;
+            const cy = ROVER_HOME.y + Math.sin(t * 2.1) * 0.008;
+            const body = [[-0.75, -0.05], [0.75, -0.05], [0.75, 0.28], [-0.75, 0.28], [-0.45, 0.28], [-0.45, 0.68]];
+            body.forEach((point, index) => out[index].set(cx + point[0], cy + point[1], 0));
+            const wheelAngle = -offset / 0.19;
+            [-0.45, 0.45].forEach((wheelX, wheel) => {
+                for (let spoke = 0; spoke < 5; spoke += 1) {
+                    const angle = wheelAngle + spoke * Math.PI * 2 / 5;
+                    out[6 + wheel * 5 + spoke].set(
+                        cx + wheelX + Math.cos(angle) * 0.19,
+                        cy - 0.24 + Math.sin(angle) * 0.19,
+                        0
+                    );
+                }
+            });
+        }
+        function roverPacket(t, target) {
+            const offset = t < CHART_TIMES.roverLeaves ? roverOffset(t) : 0;
+            return target.set(PACKET_P1.x + offset, PACKET_P1.y + Math.sin(t * 2.1) * 0.008, 0);
+        }
+
+        /* Manipulator: keyframes in cylindrical coordinates (yaw psi, reach,
+         * grip height). Projecting the yawed arm onto the chart makes the
+         * swing read as a 3D turn and keeps the elbow on top throughout. */
+        const chartArmKeys = (() => {
+            const ready = { psi: 1.9, reach: 0.45, y: 0.45 };
+            const left = { psi: Math.PI, reach: Math.abs(PACKET_P1.x - ARM_ROOT.x) };
+            const right = { psi: 0, reach: Math.abs(PACKET_P2.x - ARM_ROOT.x) };
+            const open = 0.12;
+            const shut = 0.065;
+            const key = (t, base, y, jaw, arc) => ({ t, psi: base.psi, reach: base.reach, y, jaw, arc: arc || 0 });
+            const grip = CHART_TIMES.grip;
+            const release = CHART_TIMES.release;
+            return [
+                key(0, ready, ready.y, open),
+                key(grip - 1.9, ready, ready.y, open),
+                key(grip - 0.8, left, PACKET_P1.y + 0.3, open),
+                key(grip - 0.3, left, PACKET_P1.y, open),
+                key(grip, left, PACKET_P1.y, shut),
+                key(CHART_TIMES.roverLeaves, left, PACKET_P1.y + 0.35, shut),
+                key(grip + 2.6, right, PACKET_P2.y + 0.35, shut, 0.2),
+                key(release - 1.0, right, PACKET_P2.y + 0.35, shut),
+                key(release - 0.3, right, PACKET_P2.y, shut),
+                key(release, right, PACKET_P2.y, open),
+                key(release + 0.7, right, PACKET_P2.y + 0.35, open),
+                key(release + 1.8, ready, ready.y, open),
+                key(CHART_CYCLE, ready, ready.y, open)
+            ];
+        })();
+        const chartArm = { psi: 0, reach: 0, y: 0, jaw: 0 };
+        const chartGrip = new THREE.Vector3();
+        function solveChartArm(t, out) {
+            let index = 0;
+            while (index < chartArmKeys.length - 2 && t >= chartArmKeys[index + 1].t) index += 1;
+            const from = chartArmKeys[index];
+            const to = chartArmKeys[index + 1];
+            const blend = easeInOutCubic(clamp01((t - from.t) / (to.t - from.t)));
+            chartArm.psi = from.psi + (to.psi - from.psi) * blend;
+            chartArm.reach = from.reach + (to.reach - from.reach) * blend;
+            chartArm.y = from.y + (to.y - from.y) * blend + Math.sin(Math.PI * blend) * to.arc;
+            chartArm.jaw = from.jaw + (to.jaw - from.jaw) * blend;
+
+            /* In-plane two-link IK (r outward, y up), elbow-up branch. */
+            const shoulderY = ARM_ROOT.y + 0.45;
+            let dr = chartArm.reach;
+            let dy = chartArm.y + CHART_TOOL - shoulderY;
+            let distance = Math.hypot(dr, dy);
+            const maxReach = CHART_UPPER + CHART_FORE - 0.001;
+            if (distance > maxReach) {
+                dr *= maxReach / distance;
+                dy *= maxReach / distance;
+                distance = maxReach;
+            }
+            const phi = Math.atan2(dy, dr);
+            const beta = Math.acos(Math.max(-1, Math.min(1,
+                (CHART_UPPER * CHART_UPPER + distance * distance - CHART_FORE * CHART_FORE) /
+                (2 * CHART_UPPER * Math.max(distance, 0.001)))));
+            const elbowR = Math.cos(phi + beta) * CHART_UPPER;
+            const elbowY = shoulderY + Math.sin(phi + beta) * CHART_UPPER;
+            const wristY = shoulderY + dy;
+            const cosPsi = Math.cos(chartArm.psi);
+            const depth = -Math.sin(chartArm.psi) * 0.6;
+            const project = (r, y, point) => point.set(ARM_ROOT.x + r * cosPsi, y, r * depth);
+            out[0].set(ARM_ROOT.x - 0.32, ARM_ROOT.y, 0);
+            out[1].set(ARM_ROOT.x + 0.32, ARM_ROOT.y, 0);
+            out[2].set(ARM_ROOT.x - 0.17, ARM_ROOT.y + 0.28, 0);
+            out[3].set(ARM_ROOT.x + 0.17, ARM_ROOT.y + 0.28, 0);
+            out[4].set(ARM_ROOT.x, shoulderY, 0);
+            project(elbowR, elbowY, out[5]);
+            project(dr, wristY, out[6]);
+            project(dr, wristY - 0.1, out[7]);
+            project(dr - chartArm.jaw, wristY - 0.24, out[8]);
+            project(dr + chartArm.jaw, wristY - 0.24, out[9]);
+            project(dr, wristY - CHART_TOOL, chartGrip);
+        }
+
+        /* Quadruped, side view: spine, head, antenna and four trotting legs
+         * (far legs dimmer). Walks off to the right after the hand-off. */
+        function dogWalk(t) {
+            const start = CHART_TIMES.dogWalk;
+            const span = CHART_TIMES.dogWalkSpan;
+            const progress = clamp01((t - start) / span);
+            return { distance: 2.1 * progress * progress, speed: t > start && t < start + span ? 4.2 * progress / span : 0 };
+        }
+        function poseDog(t, out) {
+            const walk = dogWalk(t);
+            const gait = clamp01(walk.speed / 0.25);
+            const phase = walk.distance / 0.34 * Math.PI * 2;
+            const cx = DOG_HOME.x + walk.distance;
+            const cy = DOG_HOME.y + Math.sin(t * 1.3) * 0.008 * (1 - gait) +
+                Math.abs(Math.sin(phase)) * 0.02 * gait;
+            const nod = Math.sin(t * 0.9) * 0.025 * (1 - gait);
+            out[0].set(cx - 0.5, cy, 0);
+            out[1].set(cx, cy + 0.1, 0);
+            out[2].set(cx + 0.5, cy + 0.02, 0);
+            out[3].set(cx + 0.8, cy + 0.28 + nod, 0);
+            out[4].set(cx + 1.02, cy + 0.2 + nod, 0);
+            out[5].set(cx - 0.58, cy + 0.45, 0);
+            /* near front, far front, near rear, far rear (trot pairs). */
+            const legs = [[2, 0, 0], [2, Math.PI, -0.12], [0, Math.PI, 0], [0, 0, -0.12]];
+            legs.forEach((leg, index) => {
+                const hip = out[leg[0]];
+                const step = phase + leg[1];
+                const swing = 0.15 + 0.38 * Math.sin(step) * gait + Math.sin(t * 0.8 + index) * 0.03 * (1 - gait);
+                const knee = -0.55 - 0.45 * Math.max(0, Math.cos(step)) * gait;
+                const kneePoint = out[6 + index * 2];
+                const footPoint = out[7 + index * 2];
+                kneePoint.set(hip.x + Math.sin(swing) * 0.3 + leg[2] * 0.3, hip.y - Math.cos(swing) * 0.3, leg[2]);
+                footPoint.set(kneePoint.x + Math.sin(swing + knee) * 0.3, kneePoint.y - Math.cos(swing + knee) * 0.3, leg[2]);
+            });
+        }
+        function dogPacket(t, target) {
+            poseDog(t, chartScratch);
+            return target.set(chartScratch[1].x, chartScratch[1].y + DOG_PACKET_Y - 0.1, 0);
+        }
+
+        const WHITE_STAR = 0xeef6ff;
+        const CYAN_STAR = 0xbfe8ff;
+        const VIOLET_STAR = 0xd9ccff;
+        const chartFigures = [
+            {
+                title: 'VEHICULUM ERRANS', subtitle: 'I · ROVER',
+                label: [ROVER_HOME.x + 0.05, ROVER_HOME.y - 0.78],
+                gather: [0, 2.6], draw: [1.5, 4.0], labelIn: [4.0, 4.8], labelOut: [14.0, 14.6],
+                dissolve: [14.9, 17.1],
+                stars: [
+                    [1.3, WHITE_STAR, 0.6], [1.5, WHITE_STAR, 1], [1.5, WHITE_STAR, 1], [1.3, CYAN_STAR, 0.4],
+                    [1.1, CYAN_STAR, 0], [1.8, CYAN_STAR, 1],
+                    [0.9, CYAN_STAR, 0], [0.9, CYAN_STAR, 0], [0.9, CYAN_STAR, 0], [0.9, CYAN_STAR, 0], [0.9, CYAN_STAR, 0],
+                    [0.9, CYAN_STAR, 0], [0.9, CYAN_STAR, 0], [0.9, CYAN_STAR, 0], [0.9, CYAN_STAR, 0], [0.9, CYAN_STAR, 0]
+                ],
+                edges: [[0, 1], [1, 2], [2, 4], [4, 3], [3, 0], [4, 5],
+                    [6, 7], [7, 8], [8, 9], [9, 10], [10, 6],
+                    [11, 12], [12, 13], [13, 14], [14, 15], [15, 11]],
+                pose: poseRover
+            },
+            {
+                title: 'BRACHIUM FABRILE', subtitle: 'II · MANIPULATOR',
+                label: [ARM_ROOT.x - 0.05, 1.12],
+                gather: [7.6, 10.0], draw: [8.8, 11.2], labelIn: [11.2, 12.0], labelOut: [19.7, 20.3],
+                dissolve: [20.3, 22.5],
+                stars: [
+                    [1.1, VIOLET_STAR, 0], [1.1, VIOLET_STAR, 0], [1.0, VIOLET_STAR, 0], [1.0, VIOLET_STAR, 0],
+                    [1.7, WHITE_STAR, 1], [1.6, WHITE_STAR, 1], [1.5, WHITE_STAR, 0.7],
+                    [1.1, CYAN_STAR, 0], [0.9, CYAN_STAR, 0], [0.9, CYAN_STAR, 0]
+                ],
+                edges: [[0, 1], [1, 3], [3, 2], [2, 0], [2, 4], [3, 4], [4, 5], [5, 6], [6, 7], [7, 8], [7, 9]],
+                pose: solveChartArm
+            },
+            {
+                title: 'CANIS MECHANICUS', subtitle: 'III · QUADRUPED',
+                label: [DOG_HOME.x + 0.15, DOG_HOME.y - 0.82],
+                gather: [13.9, 16.3], draw: [15.1, 17.5], labelIn: [17.5, 18.3], labelOut: [25.7, 26.3],
+                dissolve: [26.3, 29.1],
+                stars: [
+                    [1.6, WHITE_STAR, 1], [1.2, WHITE_STAR, 0.3], [1.6, WHITE_STAR, 1], [1.4, CYAN_STAR, 0.5],
+                    [1.0, CYAN_STAR, 0], [1.3, VIOLET_STAR, 0.8],
+                    [1.0, CYAN_STAR, 0], [1.1, WHITE_STAR, 0], [0.75, VIOLET_STAR, 0], [0.8, VIOLET_STAR, 0],
+                    [1.0, CYAN_STAR, 0], [1.1, WHITE_STAR, 0], [0.75, VIOLET_STAR, 0], [0.8, VIOLET_STAR, 0]
+                ],
+                edges: [[0, 1], [1, 2], [2, 3], [3, 4], [0, 5],
+                    [2, 6], [6, 7], [2, 8], [8, 9], [0, 10], [10, 11], [0, 12], [12, 13]],
+                faint: [7, 8, 11, 12],
+                pose: poseDog
+            }
+        ];
+        const chartScratch = Array.from({ length: 16 }, () => new THREE.Vector3());
+
+        function drawSpacedText(context, text, centerX, y, spacing) {
+            const glyphs = Array.from(text);
+            const widths = glyphs.map(glyph => context.measureText(glyph).width);
+            const total = widths.reduce((sum, width) => sum + width, 0) + spacing * (glyphs.length - 1);
+            let x = centerX - total / 2;
+            glyphs.forEach((glyph, index) => {
+                context.fillText(glyph, x, y);
+                x += widths[index] + spacing;
+            });
+        }
+
+        function makeChartLabel(title, subtitle) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 1024;
+            canvas.height = 192;
+            const texture = new THREE.CanvasTexture(canvas);
+            if (THREE.SRGBColorSpace) texture.colorSpace = THREE.SRGBColorSpace;
+            const paint = () => {
+                const context = canvas.getContext('2d');
+                if (!context) return;
+                context.clearRect(0, 0, canvas.width, canvas.height);
+                context.textBaseline = 'middle';
+                context.textAlign = 'left';
+                context.font = '600 56px Inter, "Helvetica Neue", Arial, sans-serif';
+                context.fillStyle = 'rgba(236, 242, 255, 0.96)';
+                drawSpacedText(context, title, 512, 66, 15);
+                context.strokeStyle = 'rgba(125, 211, 252, 0.5)';
+                context.lineWidth = 2;
+                context.beginPath();
+                context.moveTo(392, 112);
+                context.lineTo(632, 112);
+                context.stroke();
+                context.font = '600 34px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
+                context.fillStyle = 'rgba(186, 200, 255, 0.95)';
+                drawSpacedText(context, subtitle, 512, 152, 8);
+                texture.needsUpdate = true;
+            };
+            paint();
+            if (document.fonts && typeof document.fonts.load === 'function') {
+                document.fonts.load('600 56px Inter').then(() => { if (!disposed) paint(); }, () => {});
+            }
+            const material = new THREE.SpriteMaterial({
+                map: texture, transparent: true, depthTest: false, depthWrite: false, opacity: 0
+            });
+            material.toneMapped = false;
+            const sprite = new THREE.Sprite(material);
+            sprite.scale.set(2.0, 0.375, 1);
+            sprite.renderOrder = 6;
+            return sprite;
+        }
+
+        function buildConstellations() {
+            const chart = new THREE.Group();
+            chart.name = 'Robot constellations';
+            spaceGroup.add(chart);
+            spaceRefs.chart = chart;
+
+            const starCount = chartFigures.reduce((sum, figure) => sum + figure.stars.length, 0);
+            const edgeCount = chartFigures.reduce((sum, figure) => sum + figure.edges.length, 0);
+            /* stars + one drawing tip per edge + the packet */
+            const pointCount = starCount + edgeCount + 1;
+            const pointPositions = new Float32Array(pointCount * 3);
+            const pointSizes = new Float32Array(pointCount);
+            const pointAlphas = new Float32Array(pointCount);
+            const pointSpikes = new Float32Array(pointCount);
+            const pointColors = new Float32Array(pointCount * 3);
+            const color = new THREE.Color();
+            let starCursor = 0;
+            let edgeCursor = 0;
+            chartFigures.forEach(figure => {
+                figure.starOffset = starCursor;
+                figure.edgeOffset = edgeCursor;
+                figure.home = figure.stars.map(() => new THREE.Vector3());
+                figure.scatterIn = figure.stars.map(() => {
+                    const angle = random() * Math.PI * 2;
+                    const distance = 1.2 + random() * 1.4;
+                    return new THREE.Vector3(Math.cos(angle) * distance, Math.sin(angle) * distance * 0.7, (random() - 0.5) * 1.2);
+                });
+                figure.scatterOut = figure.stars.map(() => {
+                    const angle = random() * Math.PI * 2;
+                    const distance = 0.9 + random() * 1.6;
+                    return new THREE.Vector3(Math.cos(angle) * distance, Math.sin(angle) * distance * 0.7, (random() - 0.5) * 1.2);
+                });
+                figure.depth = figure.stars.map(() => (random() - 0.5) * 0.24);
+                figure.stars.forEach((star, index) => {
+                    const slot = starCursor + index;
+                    pointSizes[slot] = star[0];
+                    pointSpikes[slot] = star[2];
+                    color.setHex(star[1]);
+                    pointColors[slot * 3] = color.r;
+                    pointColors[slot * 3 + 1] = color.g;
+                    pointColors[slot * 3 + 2] = color.b;
+                });
+                figure.edges.forEach((edge, index) => {
+                    const slot = starCount + edgeCursor + index;
+                    pointSizes[slot] = 1.5;
+                    pointSpikes[slot] = 0;
+                    pointColors[slot * 3] = 0.85;
+                    pointColors[slot * 3 + 1] = 0.97;
+                    pointColors[slot * 3 + 2] = 1.0;
+                });
+                figure.sprite = makeChartLabel(figure.title, figure.subtitle);
+                figure.sprite.position.set(figure.label[0], figure.label[1], 0.2);
+                chart.add(figure.sprite);
+                starCursor += figure.stars.length;
+                edgeCursor += figure.edges.length;
+            });
+            const packetSlot = pointCount - 1;
+            pointSizes[packetSlot] = 2.6;
+            pointSpikes[packetSlot] = 1;
+            color.setHex(0xffc56b);
+            pointColors[packetSlot * 3] = color.r;
+            pointColors[packetSlot * 3 + 1] = color.g;
+            pointColors[packetSlot * 3 + 2] = color.b;
+
+            const pointGeometry = new THREE.BufferGeometry();
+            pointGeometry.setAttribute('position', new THREE.BufferAttribute(pointPositions, 3).setUsage(THREE.DynamicDrawUsage));
+            pointGeometry.setAttribute('aSize', new THREE.BufferAttribute(pointSizes, 1));
+            pointGeometry.setAttribute('aAlpha', new THREE.BufferAttribute(pointAlphas, 1).setUsage(THREE.DynamicDrawUsage));
+            pointGeometry.setAttribute('aSpike', new THREE.BufferAttribute(pointSpikes, 1));
+            pointGeometry.setAttribute('aColor', new THREE.BufferAttribute(pointColors, 3));
+            const chartUniformOpacity = { value: 0 };
+            const pointMaterial = new THREE.ShaderMaterial({
+                vertexShader: chartStarVertexShader,
+                fragmentShader: chartStarFragmentShader,
+                uniforms: { uOpacity: chartUniformOpacity, uPixelRatio },
+                transparent: true,
+                depthTest: false,
+                depthWrite: false,
+                blending: THREE.AdditiveBlending
+            });
+            const points = new THREE.Points(pointGeometry, pointMaterial);
+            points.frustumCulled = false;
+            points.renderOrder = 5;
+
+            const linePositions = new Float32Array(edgeCount * 2 * 3);
+            const lineAlphas = new Float32Array(edgeCount * 2);
+            const lineMix = new Float32Array(edgeCount * 2);
+            for (let index = 0; index < edgeCount * 2; index += 1) lineMix[index] = random();
+            const lineGeometry = new THREE.BufferGeometry();
+            lineGeometry.setAttribute('position', new THREE.BufferAttribute(linePositions, 3).setUsage(THREE.DynamicDrawUsage));
+            lineGeometry.setAttribute('aAlpha', new THREE.BufferAttribute(lineAlphas, 1).setUsage(THREE.DynamicDrawUsage));
+            lineGeometry.setAttribute('aMix', new THREE.BufferAttribute(lineMix, 1));
+            const lineMaterial = new THREE.ShaderMaterial({
+                vertexShader: chartLineVertexShader,
+                fragmentShader: chartLineFragmentShader,
+                uniforms: { uOpacity: chartUniformOpacity },
+                transparent: true,
+                depthTest: false,
+                depthWrite: false,
+                blending: THREE.AdditiveBlending
+            });
+            const lines = new THREE.LineSegments(lineGeometry, lineMaterial);
+            lines.frustumCulled = false;
+            lines.renderOrder = 4;
+
+            /* Dashed "ecliptic" arc behind the figures, like a star atlas. */
+            const dashCount = 46;
+            const eclipticPositions = new Float32Array(dashCount * 2 * 3);
+            const eclipticAlphas = new Float32Array(dashCount * 2);
+            const eclipticMix = new Float32Array(dashCount * 2);
+            const arcPoint = s => [
+                -2.15 + 4.75 * s,
+                -1.22 + 1.95 * s + 0.42 * Math.sin(Math.PI * s),
+                -0.3
+            ];
+            for (let dash = 0; dash < dashCount; dash += 1) {
+                const a = arcPoint(dash / dashCount);
+                const b = arcPoint((dash + 0.5) / dashCount);
+                eclipticPositions.set(a, dash * 6);
+                eclipticPositions.set(b, dash * 6 + 3);
+                const edgeFade = Math.sin(Math.PI * (dash + 0.25) / dashCount);
+                eclipticAlphas[dash * 2] = 0.22 * edgeFade;
+                eclipticAlphas[dash * 2 + 1] = 0.22 * edgeFade;
+                eclipticMix[dash * 2] = 0.8;
+                eclipticMix[dash * 2 + 1] = 0.8;
+            }
+            const eclipticGeometry = new THREE.BufferGeometry();
+            eclipticGeometry.setAttribute('position', new THREE.BufferAttribute(eclipticPositions, 3));
+            eclipticGeometry.setAttribute('aAlpha', new THREE.BufferAttribute(eclipticAlphas, 1));
+            eclipticGeometry.setAttribute('aMix', new THREE.BufferAttribute(eclipticMix, 1));
+            const eclipticOpacity = { value: 0 };
+            const ecliptic = new THREE.LineSegments(eclipticGeometry, new THREE.ShaderMaterial({
+                vertexShader: chartLineVertexShader,
+                fragmentShader: chartLineFragmentShader,
+                uniforms: { uOpacity: eclipticOpacity },
+                transparent: true,
+                depthTest: false,
+                depthWrite: false,
+                blending: THREE.AdditiveBlending
+            }));
+            ecliptic.frustumCulled = false;
+            ecliptic.renderOrder = 3;
+
+            /* The packet's exit streak reuses the meteor shader. */
+            const cometMaterial = new THREE.ShaderMaterial({
+                vertexShader: meteorVertexShader,
+                fragmentShader: meteorFragmentShader,
+                uniforms: { uOpacity: { value: 0 }, uLife: { value: -1 } },
+                transparent: true,
+                depthTest: false,
+                depthWrite: false,
+                blending: THREE.AdditiveBlending
+            });
+            const comet = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), cometMaterial);
+            comet.visible = false;
+            comet.renderOrder = 5;
+
+            chart.add(ecliptic, lines, points, comet);
+            spaceRefs.chartParts = {
+                starCount, edgeCount, packetSlot,
+                pointPositions, pointAlphas, pointGeometry, linePositions, lineAlphas, lineGeometry,
+                opacity: chartUniformOpacity, eclipticOpacity, comet, cometMaterial
+            };
+        }
+
+        const chartPacket = new THREE.Vector3();
+        const chartLaunch = new THREE.Vector3();
+        const CHART_LAUNCH_DIR = new THREE.Vector3(0.55, 0.835, 0);
+
+        function updateConstellations(time, weight) {
+            const parts = spaceRefs.chartParts;
+            if (!parts) return;
+            const t = ((time % CHART_CYCLE) + CHART_CYCLE) % CHART_CYCLE;
+            const activity = smoothWindow(t, CHART_TIMES.activeIn[0], CHART_TIMES.activeIn[1],
+                CHART_TIMES.activeOut[0], CHART_TIMES.activeOut[1]);
+            uNetworkDim.value = 1 - 0.58 * activity;
+            parts.opacity.value = weight;
+            parts.eclipticOpacity.value = weight * activity;
+            if (spaceRefs.chart) spaceRefs.chart.rotation.y = pointerCurrent.x * 0.1;
+
+            const positions = parts.pointPositions;
+            const alphas = parts.pointAlphas;
+            const linePositions = parts.linePositions;
+            const lineAlphas = parts.lineAlphas;
+
+            chartFigures.forEach(figure => {
+                const starTotal = figure.stars.length;
+                const edgeTotal = figure.edges.length;
+                const live = t >= figure.gather[0] && t < figure.dissolve[1];
+                if (live) figure.pose(t, figure.home);
+                for (let index = 0; index < starTotal; index += 1) {
+                    const slot = figure.starOffset + index;
+                    if (!live) {
+                        alphas[slot] = 0;
+                        continue;
+                    }
+                    const gatherSpan = figure.gather[1] - figure.gather[0] - 1.1;
+                    const gatherStart = figure.gather[0] + gatherSpan * index / Math.max(1, starTotal - 1);
+                    const gathered = easeOutCubic(clamp01((t - gatherStart) / 1.1));
+                    const dissolveSpan = figure.dissolve[1] - figure.dissolve[0] - 1.3;
+                    const dissolveStart = figure.dissolve[0] + 0.3 + dissolveSpan * index / Math.max(1, starTotal - 1);
+                    const scattered = easeInCubic(clamp01((t - dissolveStart) / 1.0));
+                    const home = figure.home[index];
+                    const from = figure.scatterIn[index];
+                    const to = figure.scatterOut[index];
+                    const zBase = home.z + figure.depth[index];
+                    positions[slot * 3] = home.x + from.x * (1 - gathered) + to.x * scattered;
+                    positions[slot * 3 + 1] = home.y + from.y * (1 - gathered) + to.y * scattered;
+                    positions[slot * 3 + 2] = zBase + from.z * (1 - gathered) + to.z * scattered;
+                    let twinkle = 0.85 + 0.15 * Math.sin(time * (1.3 + index * 0.37) + index);
+                    if (figure.faint && figure.faint.indexOf(index) !== -1) twinkle *= 0.55;
+                    alphas[slot] = gathered * (1 - scattered) * twinkle;
+                }
+                /* Rover lidar blinks once it has arrived. */
+                if (figure === chartFigures[0] && live && t > CHART_TIMES.roverParked) {
+                    alphas[figure.starOffset + 5] *= 0.55 + 0.45 * Math.pow(0.5 + 0.5 * Math.sin(time * 5.2), 6) * 2;
+                }
+                const lineFade = 1 - clamp01((t - figure.dissolve[0]) / 0.8);
+                const drawSpan = figure.draw[1] - figure.draw[0] - 0.55;
+                for (let index = 0; index < edgeTotal; index += 1) {
+                    const edge = figure.edges[index];
+                    const lineSlot = figure.edgeOffset + index;
+                    const tipSlot = parts.starCount + lineSlot;
+                    const drawStart = figure.draw[0] + drawSpan * index / Math.max(1, edgeTotal - 1);
+                    const drawn = live ? easeInOutCubic(clamp01((t - drawStart) / 0.55)) : 0;
+                    const a = figure.starOffset + edge[0];
+                    const b = figure.starOffset + edge[1];
+                    const ax = positions[a * 3];
+                    const ay = positions[a * 3 + 1];
+                    const az = positions[a * 3 + 2];
+                    const bx = ax + (positions[b * 3] - ax) * drawn;
+                    const by = ay + (positions[b * 3 + 1] - ay) * drawn;
+                    const bz = az + (positions[b * 3 + 2] - az) * drawn;
+                    linePositions[lineSlot * 6] = ax;
+                    linePositions[lineSlot * 6 + 1] = ay;
+                    linePositions[lineSlot * 6 + 2] = az;
+                    linePositions[lineSlot * 6 + 3] = bx;
+                    linePositions[lineSlot * 6 + 4] = by;
+                    linePositions[lineSlot * 6 + 5] = bz;
+                    let strength = drawn > 0 ? 0.52 * lineFade : 0;
+                    if (figure.faint && (figure.faint.indexOf(edge[0]) !== -1 || figure.faint.indexOf(edge[1]) !== -1)) {
+                        strength *= 0.5;
+                    }
+                    lineAlphas[lineSlot * 2] = strength;
+                    lineAlphas[lineSlot * 2 + 1] = strength;
+                    positions[tipSlot * 3] = bx;
+                    positions[tipSlot * 3 + 1] = by;
+                    positions[tipSlot * 3 + 2] = bz;
+                    alphas[tipSlot] = drawn > 0 && drawn < 1 ? Math.sin(Math.PI * drawn) : 0;
+                }
+                const labelAlpha = smoothWindow(t, figure.labelIn[0], figure.labelIn[1],
+                    figure.labelOut[0], figure.labelOut[1]);
+                figure.sprite.material.opacity = labelAlpha * weight * 0.92;
+                figure.sprite.visible = labelAlpha > 0.003;
+            });
+
+            /* The data packet: rides the rover until the arm lifts it off,
+             * is carried across, rides the quadruped, then leaves as a
+             * shooting star. */
+            let packetAlpha = 0;
+            const comet = parts.comet;
+            comet.visible = false;
+            if (t >= CHART_TIMES.packetIn && t < CHART_TIMES.grip) {
+                roverPacket(t, chartPacket);
+                packetAlpha = clamp01((t - CHART_TIMES.packetIn) / 0.8);
+            } else if (t >= CHART_TIMES.grip && t < CHART_TIMES.release) {
+                solveChartArm(t, chartScratch);
+                chartPacket.copy(chartGrip);
+                packetAlpha = 1;
+            } else if (t >= CHART_TIMES.release && t < CHART_TIMES.launch) {
+                dogPacket(t, chartPacket);
+                packetAlpha = 1;
+            } else if (t >= CHART_TIMES.launch && t < CHART_TIMES.launchEnd) {
+                const life = (t - CHART_TIMES.launch) / (CHART_TIMES.launchEnd - CHART_TIMES.launch);
+                dogPacket(CHART_TIMES.launch, chartLaunch);
+                chartPacket.copy(chartLaunch).addScaledVector(CHART_LAUNCH_DIR, 4.2 * life * life);
+                packetAlpha = 1 - clamp01((life - 0.55) / 0.45);
+                comet.visible = true;
+                parts.cometMaterial.uniforms.uLife.value = life;
+                parts.cometMaterial.uniforms.uOpacity.value = weight;
+                comet.scale.set(1.5, 0.07, 1);
+                comet.rotation.z = Math.atan2(CHART_LAUNCH_DIR.y, CHART_LAUNCH_DIR.x);
+                comet.position.copy(chartPacket).addScaledVector(CHART_LAUNCH_DIR, -0.72);
+            }
+            const packetSlot = parts.packetSlot;
+            const pulse = 0.85 + 0.15 * Math.sin(time * 3.1);
+            positions[packetSlot * 3] = chartPacket.x;
+            positions[packetSlot * 3 + 1] = chartPacket.y;
+            positions[packetSlot * 3 + 2] = chartPacket.z + 0.05;
+            alphas[packetSlot] = packetAlpha * pulse;
+
+            parts.pointGeometry.attributes.position.needsUpdate = true;
+            parts.pointGeometry.attributes.aAlpha.needsUpdate = true;
+            parts.lineGeometry.attributes.position.needsUpdate = true;
+            parts.lineGeometry.attributes.aAlpha.needsUpdate = true;
+        }
+
+        /* Fit the chart into the free sky: right of the headline and above
+         * the skill pills on desktop (or above the headline when that strip
+         * is too narrow), above the headline on mobile. */
+        const chartNdc = new THREE.Vector3();
+        const chartRayDirection = new THREE.Vector3();
+        function screenToChartPlane(x, y, target) {
+            chartNdc.set((x / viewportWidth) * 2 - 1, -(y / viewportHeight) * 2 + 1, 0.5).unproject(camera);
+            chartRayDirection.copy(chartNdc).sub(camera.position).normalize();
+            const distance = (CHART_PLANE_Z - camera.position.z) / chartRayDirection.z;
+            return target.copy(camera.position).addScaledVector(chartRayDirection, distance);
+        }
+        const chartCornerA = new THREE.Vector3();
+        const chartCornerB = new THREE.Vector3();
+        const chartCenter = new THREE.Vector3();
+        function measureHeroRects() {
+            const scrollY = window.scrollY || window.pageYOffset || 0;
+            const result = { headline: null, pillsTop: null };
+            if (headline) {
+                const range = document.createRange();
+                range.selectNodeContents(headline);
+                const rect = range.getBoundingClientRect();
+                if (rect.width > 0) {
+                    result.headline = { left: rect.left, right: rect.right, top: rect.top + scrollY };
+                }
+            }
+            const pills = document.querySelector('#home .flex.flex-wrap');
+            if (pills) {
+                const rect = pills.getBoundingClientRect();
+                if (rect.height > 0) result.pillsTop = rect.top + scrollY;
+            }
+            return result;
+        }
+        function placeConstellations() {
+            const chart = spaceRefs.chart;
+            if (!chart || !viewportWidth) return;
+            camera.updateMatrixWorld(true);
+            const hero = measureHeroRects();
+            const chartWidth = CHART_BOUNDS.maxX - CHART_BOUNDS.minX;
+            const chartHeight = CHART_BOUNDS.maxY - CHART_BOUNDS.minY;
+            const boxes = [];
+            const headlineTop = hero.headline ? hero.headline.top : viewportHeight * 0.38;
+            if (mobileLayout) {
+                boxes.push({ left: viewportWidth * 0.06, right: viewportWidth * 0.94, top: 72, bottom: headlineTop - 18 });
+            } else {
+                const headlineRight = hero.headline ? hero.headline.right : viewportWidth * 0.5;
+                const pillsTop = hero.pillsTop || viewportHeight * 0.62;
+                boxes.push({
+                    left: Math.max(headlineRight + 56, viewportWidth * 0.5),
+                    right: viewportWidth - 40,
+                    top: Math.max(72, viewportHeight * 0.1),
+                    bottom: Math.min(viewportHeight * 0.74, pillsTop - 22)
+                });
+                boxes.push({
+                    left: hero.headline ? hero.headline.left : viewportWidth * 0.3,
+                    right: viewportWidth - 40,
+                    top: 56,
+                    bottom: headlineTop - 26
+                });
+            }
+            let best = null;
+            boxes.forEach(box => {
+                if (box.right - box.left < 40 || box.bottom - box.top < 40) return;
+                const middleY = (box.top + box.bottom) / 2;
+                const middleX = (box.left + box.right) / 2;
+                screenToChartPlane(box.left, middleY, chartCornerA);
+                screenToChartPlane(box.right, middleY, chartCornerB);
+                const worldWidth = chartCornerB.x - chartCornerA.x;
+                screenToChartPlane(middleX, box.top, chartCornerA);
+                screenToChartPlane(middleX, box.bottom, chartCornerB);
+                const worldHeight = chartCornerA.y - chartCornerB.y;
+                const pixelsPerWorld = (box.right - box.left) / worldWidth;
+                const maxPixels = mobileLayout ? 360 : 640;
+                const scale = Math.min(worldWidth / chartWidth, worldHeight / chartHeight,
+                    maxPixels / pixelsPerWorld / chartWidth);
+                if (!best || scale > best.scale) best = { scale, middleX, middleY };
+            });
+            if (!best) {
+                chart.visible = false;
+                return;
+            }
+            chart.visible = true;
+            screenToChartPlane(best.middleX, best.middleY, chartCenter);
+            const centerX = (CHART_BOUNDS.minX + CHART_BOUNDS.maxX) / 2;
+            const centerY = (CHART_BOUNDS.minY + CHART_BOUNDS.maxY) / 2;
+            chart.scale.setScalar(best.scale);
+            chart.position.set(
+                chartCenter.x - spaceGroup.position.x - centerX * best.scale,
+                chartCenter.y - spaceGroup.position.y - centerY * best.scale,
+                CHART_PLANE_Z - spaceGroup.position.z
+            );
         }
 
         /* Each theme's scene is built lazily: the active one synchronously,
@@ -1498,6 +2643,9 @@
         let labBuilt = false;
         let spaceBuilt = false;
         let disposed = false;
+        /* Set once applyLayout() has run; layout state below is in its TDZ
+         * while the initial theme is being built. */
+        let layoutReady = false;
 
         function ensureLab() {
             if (labBuilt) return;
@@ -1510,6 +2658,7 @@
             if (spaceBuilt) return;
             spaceBuilt = true;
             buildSpace();
+            if (layoutReady) placeConstellations();
         }
 
         if (html.dataset.theme === 'dark') {
@@ -1526,12 +2675,81 @@
         let viewportHeight = 0;
         let mobileLayout = initialMobile;
         let resizeFrame = null;
+        let layoutDirty = false;
         const cameraBase = new THREE.Vector3();
         const cameraTarget = new THREE.Vector3();
         const pointerTarget = new THREE.Vector2();
         const pointerCurrent = new THREE.Vector2();
         const pointerNdc = new THREE.Vector2(99, 99);
         let pointerActive = false;
+
+        /* Lab-local points bounding the set: bench corner, monitor and the
+         * docked AMR on one side; holo panels, docked quadruped and scanner
+         * head on the other. The AMR's approach lane and the quadruped's
+         * exit run off-stage on purpose. */
+        const labExtentPoints = [
+            [-1.93, 1.09, -1.62], [-1.6, 1.95, -2.2], [AMR_DOCK_X - 0.55, 0.5, AMR_LANE_Z],
+            [3.22, 1.95, 0.8], [DOG_DOCK.x + 0.75, 1.1, DOG_DOCK.z - 0.25], [SCAN_POINT.x, SCAN_HEAD_Y + 0.1, SCAN_POINT.z]
+        ].map(point => new THREE.Vector3(point[0], point[1], point[2]));
+        const extentProbe = new THREE.Vector3();
+        const headline = document.querySelector('#home h1');
+
+        function measureLabExtent() {
+            labGroup.updateMatrixWorld(true);
+            let left = Infinity;
+            let right = -Infinity;
+            labExtentPoints.forEach(point => {
+                extentProbe.copy(point).applyMatrix4(labGroup.matrixWorld).project(camera);
+                const x = (extentProbe.x + 1) * 0.5 * viewportWidth;
+                left = Math.min(left, x);
+                right = Math.max(right, x);
+            });
+            return { left, right };
+        }
+
+        function measureHeadlineRight() {
+            if (!headline) return 0;
+            const range = document.createRange();
+            range.selectNodeContents(headline);
+            const rect = range.getBoundingClientRect();
+            return rect.width > 0 ? rect.right : 0;
+        }
+
+        /* Desktop: the lab is a fixed backdrop, so on laptop-width screens
+         * the default framing put the monitor, hologram and gripper right
+         * behind the headline. Slide the set into the strip right of the
+         * headline, shrink it (to 78 % at most) when that strip is narrow,
+         * and only when it still doesn't fit let it run off the right edge
+         * (up to a quarter) before overlapping the text. */
+        function fitLabBesideHeadline(baseScale) {
+            const freeLeft = measureHeadlineRight() + 32;
+            const freeRight = viewportWidth - 24;
+            camera.updateMatrixWorld(true);
+            let extent = measureLabExtent();
+            if (extent.left >= freeLeft && extent.right <= freeRight) return;
+
+            const fit = Math.max(0.78, Math.min(1, (freeRight - freeLeft) / (extent.right - extent.left)));
+            labGroup.scale.setScalar(baseScale * fit);
+            extent = measureLabExtent();
+            const width = extent.right - extent.left;
+            const lowest = freeLeft;
+            const highest = freeRight - width;
+            const targetLeft = lowest <= highest
+                ? Math.min(Math.max(extent.left, lowest), highest)
+                : Math.min(lowest, freeRight - width * 0.75);
+            /* A pure x shift moves each projected point linearly, so a
+             * measured pixels-per-unit converges in a step or two. */
+            for (let pass = 0; pass < 2; pass += 1) {
+                labGroup.position.x += 1;
+                const shifted = measureLabExtent().left;
+                labGroup.position.x -= 1;
+                const pixelsPerUnit = shifted - extent.left;
+                if (!(pixelsPerUnit > 0)) return;
+                labGroup.position.x += (targetLeft - extent.left) / pixelsPerUnit;
+                extent = measureLabExtent();
+                if (Math.abs(extent.left - targetLeft) < 1) return;
+            }
+        }
 
         function applyLayout() {
             /* Size from the canvas's CSS box (100vw x 100vh) rather than the
@@ -1561,6 +2779,7 @@
             } else {
                 labGroup.position.set(3.3, -1.7, -0.3);
                 labGroup.scale.setScalar(1.12);
+                fitLabBesideHeadline(1.12);
                 spaceGroup.position.set(3.05, 0.05, -0.9);
                 spaceGroup.scale.setScalar(1);
             }
@@ -1570,6 +2789,8 @@
             );
             uPixelRatio.value = renderer.getPixelRatio();
             renderer.setSize(viewportWidth, viewportHeight, false);
+            layoutReady = true;
+            placeConstellations();
         }
 
         let themeMix = html.dataset.theme === 'dark' ? 1 : 0;
@@ -1659,63 +2880,94 @@
          * Animation
          * ------------------------------------------------------------------ */
 
+        const DOG_STRIDE = 0.5;
+        const SCAN_IDLE = 0x2dd4bf;
+        const SCAN_BLINK = 0xe6fffb;
+        const SCAN_PASS = 0x22c55e;
+        const SCAN_FAIL = 0xef4444;
+
         function updateLaboratory(time) {
             if (!labBuilt) return;
+
+            /* Arm: IK pose from the keyframe track. */
             evaluateArmPose(time);
-            const wobble = Math.sin(time * 2.3) * 0.008;
-            if (labRefs.armYaw) labRefs.armYaw.rotation.y = armPose.yaw;
-            if (labRefs.shoulder) labRefs.shoulder.rotation.z = armPose.shoulder + wobble;
-            if (labRefs.elbow) labRefs.elbow.rotation.z = armPose.elbow + wobble * 1.4;
-            if (labRefs.wrist) labRefs.wrist.rotation.z = armPose.wrist;
-            if (labRefs.wristRoll) labRefs.wristRoll.rotation.y = Math.sin(time * 0.4) * 0.9;
-            if (labRefs.fingerLeft) labRefs.fingerLeft.position.x = -0.03 - armPose.grip;
-            if (labRefs.fingerRight) labRefs.fingerRight.position.x = 0.03 + armPose.grip;
+            labRefs.armYaw.rotation.y = armPose.yaw;
+            labRefs.shoulder.rotation.z = armPose.shoulder;
+            labRefs.elbow.rotation.z = armPose.elbow;
+            labRefs.wrist.rotation.z = armPose.wrist;
+            labRefs.wristRoll.rotation.y = armPose.roll;
+            const fingerOffset = armPose.jaw + FINGER_PAD + FINGER_THICKNESS / 2;
+            labRefs.fingerLeft.position.x = -fingerOffset;
+            labRefs.fingerRight.position.x = fingerOffset;
 
-            /* AMR patrol loop. */
-            if (labRefs.amr) {
-                const theta = time * 0.24;
-                const centerX = -2.45;
-                const centerZ = 0.7;
-                const radiusX = 1.05;
-                const radiusZ = 0.6;
-                labRefs.amr.position.set(
-                    centerX + Math.cos(theta) * radiusX,
-                    0,
-                    centerZ + Math.sin(theta) * radiusZ
-                );
-                const dx = -Math.sin(theta) * radiusX;
-                const dz = Math.cos(theta) * radiusZ;
-                labRefs.amr.rotation.y = Math.atan2(-dz, dx);
-                labRefs.amrWheels.forEach(wheel => {
-                    wheel.rotation.z = -time * 2.1;
-                });
-                if (labRefs.amrSweep) labRefs.amrSweep.rotation.y = time * 1.7;
-                if (labRefs.amrLidar) labRefs.amrLidar.rotation.y = time * 5.0;
-            }
+            /* AMR: wheels roll with the distance driven; turning on the spot
+             * spins the two sides in opposite directions. */
+            evaluateAmr(time);
+            labRefs.amr.position.set(amrState.x, 0, AMR_LANE_Z);
+            labRefs.amr.rotation.y = amrState.heading;
+            labRefs.amrWheels.forEach(wheel => {
+                const track = wheel.position.z;
+                wheel.rotation.z = -(amrState.odometer + amrState.turn * track) / AMR_WHEEL_RADIUS;
+            });
+            labRefs.amrSweep.rotation.y = time * 1.7;
+            labRefs.amrLidar.rotation.y = time * 5.0;
 
-            /* Quadruped idles, breathes and watches the cursor. */
-            if (labRefs.quadrupedBody) {
-                labRefs.quadrupedBody.position.y = 0.98 + Math.sin(time * 1.1) * 0.02;
-                labRefs.quadrupedBody.rotation.x = Math.sin(time * 0.55) * 0.015;
-            }
-            if (labRefs.quadrupedHead) {
-                let headYaw = Math.sin(time * 0.32) * 0.38 + Math.sin(time * 0.17 + 2.0) * 0.18;
-                if (uPointerStrength.value > 0.05 && labRefs.quadruped) {
-                    const local = pointerLabLocal;
-                    const dx = local.x - labRefs.quadruped.position.x;
-                    const dz = local.z - labRefs.quadruped.position.z;
-                    let track = Math.atan2(-dz, dx) - labRefs.quadruped.rotation.y;
-                    track = Math.max(-0.7, Math.min(0.7, track));
-                    headYaw += (track - headYaw) * 0.55 * uPointerStrength.value;
-                }
-                labRefs.quadrupedHead.rotation.y += (headYaw - labRefs.quadrupedHead.rotation.y) * 0.08;
-                labRefs.quadrupedHead.rotation.z = Math.sin(time * 0.9) * 0.03;
-            }
+            /* Quadruped: a trot gait driven by distance travelled, blended
+             * with the idle breathing when it stands still. */
+            evaluateDog(time, dogState);
+            evaluateDog(time - 0.1, dogPrevious);
+            const dogSpeed = Math.max(0, dogState.odometer - dogPrevious.odometer) / 0.1;
+            const gait = clamp01(dogSpeed / 0.6);
+            const gaitPhase = dogState.odometer / DOG_STRIDE * Math.PI * 2;
+            labRefs.quadruped.position.set(dogState.x, 0, dogState.z);
+            labRefs.quadruped.rotation.y = dogState.heading;
+            labRefs.quadrupedBody.position.y = DOG_BODY_Y +
+                Math.sin(time * 1.1) * 0.006 * (1 - gait) +
+                Math.abs(Math.sin(gaitPhase)) * 0.025 * gait;
+            labRefs.quadrupedBody.rotation.x = Math.sin(time * 0.55) * 0.004 * (1 - gait) +
+                Math.sin(gaitPhase) * 0.025 * gait;
             labRefs.quadrupedLegs.forEach((leg, index) => {
                 const idle = Math.sin(time * 0.8 + leg.phase + index * 0.35);
-                leg.hip.rotation.z = leg.hipBase + idle * 0.03;
-                leg.knee.rotation.z = leg.kneeBase - idle * 0.024;
+                const step = gaitPhase + leg.phase;
+                /* Diagonal pairs share a phase (trot); the knee folds while
+                 * the foot swings forward. */
+                leg.hip.rotation.z = leg.hipBase + idle * 0.03 * (1 - gait) + Math.sin(step) * 0.32 * gait;
+                leg.knee.rotation.z = leg.kneeBase - idle * 0.024 * (1 - gait) -
+                    Math.max(0, Math.cos(step)) * 0.5 * gait;
             });
+            let headYaw = (Math.sin(time * 0.32) * 0.38 + Math.sin(time * 0.17 + 2.0) * 0.18) * (1 - gait);
+            if (uPointerStrength.value > 0.05 && gait < 0.05) {
+                const dx = pointerLabLocal.x - dogState.x;
+                const dz = pointerLabLocal.z - dogState.z;
+                let track = Math.atan2(-dz, dx) - dogState.heading;
+                track = Math.atan2(Math.sin(track), Math.cos(track));
+                track = Math.max(-0.7, Math.min(0.7, track));
+                headYaw += (track - headYaw) * 0.55 * uPointerStrength.value;
+            }
+            labRefs.quadrupedHead.rotation.y += (headYaw - labRefs.quadrupedHead.rotation.y) * 0.08;
+            labRefs.quadrupedHead.rotation.z = Math.sin(time * 0.9) * 0.03;
+
+            /* Vision station: the scan line sweeps the held parcel, then the
+             * lamp shows the verdict (green = to the quadruped, red = reject). */
+            let lampColor = SCAN_IDLE;
+            let scanning = false;
+            let scanY = SCAN_POINT.y;
+            PARCELS.forEach((parcel, index) => {
+                const u = slotTime(time, index);
+                if (u >= TIMING.scanStart && u < TIMING.scanEnd) {
+                    const progress = (u - TIMING.scanStart) / (TIMING.scanEnd - TIMING.scanStart);
+                    scanning = true;
+                    scanY = SCAN_POINT.y + 0.11 * Math.cos(progress * Math.PI * 2);
+                    lampColor = Math.floor(u * 8) % 2 ? SCAN_BLINK : SCAN_IDLE;
+                } else if (u >= TIMING.scanEnd && u < TIMING.verdictEnd) {
+                    lampColor = parcel.pass ? SCAN_PASS : SCAN_FAIL;
+                }
+            });
+            labRefs.scanLine.visible = scanning;
+            labRefs.scanLine.position.y = scanY;
+            labRefs.scanLamp.color.setHex(lampColor);
+
+            PARCELS.forEach((parcel, index) => placeParcel(labRefs.parcels[index], parcel, index, time));
 
             /* Holographics. */
             if (labRefs.holoGlobe) {
@@ -1769,6 +3021,7 @@
                 meteor.mesh.position.copy(meteor.from)
                     .addScaledVector(meteor.velocity, life * meteor.duration);
             });
+            updateConstellations(time, themeMix);
         }
 
         let sceneTime = 0;
@@ -1851,10 +3104,11 @@
                 const rect = canvas.getBoundingClientRect();
                 const nextWidth = Math.max(1, Math.round(rect.width) || window.innerWidth);
                 const nextHeight = Math.max(1, Math.round(rect.height) || window.innerHeight);
-                if (nextWidth === viewportWidth && nextHeight === viewportHeight &&
+                if (!layoutDirty && nextWidth === viewportWidth && nextHeight === viewportHeight &&
                     mobileQuery.matches === mobileLayout) {
                     return;
                 }
+                layoutDirty = false;
                 applyLayout();
                 const now = performance.now();
                 renderFrame(now, 1 / 60);
@@ -1923,6 +3177,7 @@
             }
             const geometries = new Set();
             const materials = new Set();
+            const textures = new Set();
             scene.traverse(object => {
                 if (object.isLight && object.shadow) object.shadow.dispose();
                 if (object.geometry) geometries.add(object.geometry);
@@ -1930,17 +3185,22 @@
                     const objectMaterials = Array.isArray(object.material)
                         ? object.material
                         : [object.material];
-                    objectMaterials.forEach(material => materials.add(material));
+                    objectMaterials.forEach(material => {
+                        materials.add(material);
+                        if (material.map) textures.add(material.map);
+                    });
                 }
             });
             geometries.forEach(geometry => geometry.dispose());
             materials.forEach(material => material.dispose());
+            textures.forEach(texture => texture.dispose());
             if (environmentTarget) {
                 environmentTarget.dispose();
                 environmentTarget = null;
                 scene.environment = null;
             }
             renderer.dispose();
+            if (headlineObserver) headlineObserver.disconnect();
             window.removeEventListener('pointermove', handlePointerMove);
             window.removeEventListener('blur', resetPointer);
             window.removeEventListener('resize', handleResize);
@@ -1969,6 +3229,23 @@
         }
         canvas.addEventListener('webglcontextlost', handleContextLost);
         canvas.addEventListener('webglcontextrestored', handleContextRestored);
+
+        /* The desktop framing depends on the headline's width, which changes
+         * with the language switch and when web fonts finish swapping in. */
+        function requestRelayout() {
+            if (disposed) return;
+            layoutDirty = true;
+            handleResize();
+        }
+        const headlineObserver = headline && typeof MutationObserver === 'function'
+            ? new MutationObserver(requestRelayout)
+            : null;
+        if (headlineObserver) {
+            headlineObserver.observe(headline, { childList: true, characterData: true, subtree: true });
+        }
+        if (document.fonts && document.fonts.ready) {
+            document.fonts.ready.then(requestRelayout, () => {});
+        }
 
         applyLayout();
         setTheme(html.dataset.theme, true);
