@@ -1,0 +1,1112 @@
+/*
+ * Homepage — phone edition. Loaded with media="(max-width: 767px)", so every
+ * rule here applies to phones only and the desktop layout is untouched.
+ *
+ * Concept: a pocket robot console. The Three.js scene becomes a live monitor
+ * at the top of the page (HUD + viewfinder corners), an ID sheet slides over
+ * its lower edge, and the sections below turn into phone-native components:
+ * a swipe deck for papers, segmented panes for the journey, a compact feed
+ * for posts, tap tiles for contact and a floating dock for navigation.
+ */
+
+body.home-page {
+    --m-gutter: 1rem;
+    --m-bar-h: 3.4rem;
+    --m-stage-h: clamp(25rem, 58svh, 34rem);
+    --m-sheet-overlap: 3.4rem;
+    --m-dock-h: 3.85rem;
+    --m-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    counter-reset: m-section;
+}
+
+/* --------------------------------------------------------------------------
+   Ambient layers: lighter on a phone GPU
+   -------------------------------------------------------------------------- */
+
+body.home-page #scroll-progress,
+body.home-page .aurora-blob,
+body.home-page #spotlight-effect {
+    display: none;
+}
+
+html[data-theme="dark"] body.home-page .aurora-container::before {
+    animation: none;
+}
+
+/* --------------------------------------------------------------------------
+   Stage: the canvas is a monitor at the top of the document
+   -------------------------------------------------------------------------- */
+
+/* Backdrop behind the canvas; also the whole picture when WebGL is off. */
+body.home-page::before {
+    position: absolute;
+    z-index: 0;
+    top: 0;
+    right: 0;
+    left: 0;
+    height: var(--m-stage-h);
+    content: "";
+    pointer-events: none;
+    -webkit-mask-image: linear-gradient(180deg, #000 70%, transparent);
+    mask-image: linear-gradient(180deg, #000 70%, transparent);
+}
+
+html[data-theme="light"] body.home-page::before {
+    background:
+        radial-gradient(ellipse 85% 48% at 50% 64%, rgba(255, 255, 255, 0.92), transparent 72%),
+        linear-gradient(var(--home-grid) 1px, transparent 1px) 0 0 / 26px 26px,
+        linear-gradient(90deg, var(--home-grid) 1px, transparent 1px) 0 0 / 26px 26px,
+        linear-gradient(180deg, #dcede8 0%, #e9f4f0 55%, var(--home-bg) 100%);
+}
+
+html[data-theme="dark"] body.home-page::before {
+    background:
+        radial-gradient(ellipse 75% 45% at 50% 46%, rgba(91, 33, 182, 0.32), transparent 72%),
+        radial-gradient(ellipse 60% 36% at 78% 70%, rgba(8, 145, 178, 0.16), transparent 72%),
+        linear-gradient(180deg, #03040c 0%, #070a1d 100%);
+}
+
+html[data-theme] body.home-page #neural-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: var(--m-stage-h);
+    -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 80%, transparent 100%);
+    mask-image: linear-gradient(180deg, #000 0%, #000 80%, transparent 100%);
+}
+
+html.webgl-ready[data-theme] body.home-page #neural-canvas {
+    opacity: 1;
+}
+
+/* --------------------------------------------------------------------------
+   App bar: transparent over the stage, condenses once the name scrolls away
+   -------------------------------------------------------------------------- */
+
+body.home-page #lang-switcher-mobile {
+    position: fixed;
+    z-index: 40;
+    top: 0;
+    right: 0;
+    left: 0;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    flex-wrap: nowrap;
+    gap: 0.5rem;
+    height: calc(var(--m-bar-h) + env(safe-area-inset-top));
+    margin: 0;
+    padding: env(safe-area-inset-top) var(--m-gutter) 0;
+    border-bottom: 1px solid transparent;
+    transition:
+        background-color 280ms ease,
+        border-color 280ms ease,
+        box-shadow 280ms ease;
+}
+
+body.home-page #lang-switcher-mobile > * + * {
+    margin-left: 0;
+}
+
+body.home-page #lang-switcher-mobile.is-condensed {
+    border-bottom-color: var(--home-border);
+    background: var(--home-nav-bg);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    -webkit-backdrop-filter: blur(18px) saturate(140%);
+    backdrop-filter: blur(18px) saturate(140%);
+}
+
+body.home-page .m-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    min-width: 0;
+    margin-right: auto;
+    font-size: 0.95rem;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    color: var(--home-text-strong);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateY(0.4rem);
+    transition:
+        opacity 260ms ease,
+        transform 260ms cubic-bezier(0.22, 1, 0.36, 1),
+        visibility 0s linear 260ms;
+}
+
+body.home-page .m-brand span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+body.home-page #lang-switcher-mobile.is-condensed .m-brand {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: none;
+    transition-delay: 0s;
+}
+
+body.home-page .m-brand img {
+    flex: 0 0 auto;
+    width: 1.8rem;
+    height: 1.8rem;
+    border: 1.5px solid var(--home-primary);
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+body.home-page .mobile-controls [data-theme-toggle] {
+    margin-right: 0;
+    border: 1px solid var(--home-border);
+    background: var(--home-surface);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+}
+
+body.home-page .m-lang {
+    display: flex;
+    gap: 2px;
+    padding: 3px;
+    border: 1px solid var(--home-border);
+    border-radius: 0.85rem;
+    background: var(--home-surface);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+}
+
+body.home-page .m-lang .lang-btn {
+    min-width: 2.15rem;
+    height: 1.95rem;
+    padding: 0 0.45rem;
+    border: 0;
+    border-radius: 0.62rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--home-text-muted);
+    background: transparent;
+    box-shadow: none;
+}
+
+body.home-page .m-lang .lang-btn:not(.active):hover {
+    transform: none;
+    background: var(--home-primary-soft);
+}
+
+body.home-page .m-lang .lang-btn.active {
+    color: #ffffff;
+    background: var(--home-primary-strong);
+    box-shadow: none;
+}
+
+/* --------------------------------------------------------------------------
+   Page frame
+   -------------------------------------------------------------------------- */
+
+body.home-page main {
+    padding: 0 var(--m-gutter) calc(var(--m-dock-h) + 1.75rem + env(safe-area-inset-bottom));
+}
+
+/* :where() keeps this generic rule weaker than the per-section ones below. */
+body.home-page main > section:where(:not(#home)) {
+    padding: 3.1rem 0 0;
+    counter-increment: m-section;
+    /* Lands the section title just under the app bar after a dock tap. */
+    scroll-margin-top: calc(env(safe-area-inset-top) + 1.1rem);
+}
+
+body.home-page main > section:not(#home)::before {
+    display: none;
+}
+
+/* Scroll-in fades would leave swiped-in cards blank; show everything. */
+body.home-page main .scroll-animate {
+    opacity: 1;
+    transform: none;
+}
+
+body.home-page .card-interactive:hover,
+body.home-page .card-interactive:hover img {
+    transform: none;
+}
+
+body.home-page .card-interactive {
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Section titles: chapter number, title, short accent bar. */
+body.home-page main > section > h2 {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.45rem;
+    width: auto;
+    margin: 0 0 1.1rem;
+    padding: 0;
+    font-size: 1.7rem;
+    line-height: 1.12;
+    letter-spacing: -0.02em;
+    text-align: left;
+    filter: none;
+}
+
+body.home-page main > section > h2::before {
+    content: counter(m-section, decimal-leading-zero) " ——";
+    font-family: var(--m-mono);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    color: var(--home-primary);
+}
+
+body.home-page main > section > h2::after {
+    position: static;
+    width: 2.25rem;
+    height: 3px;
+    border-radius: 999px;
+}
+
+body.home-page main > section > h2 > i,
+body.home-page main > section > h2 > svg {
+    display: none;
+}
+
+/* --------------------------------------------------------------------------
+   Hero: HUD over the stage + ID sheet
+   -------------------------------------------------------------------------- */
+
+body.home-page #home {
+    display: block;
+    min-height: 0;
+    padding-top: calc(var(--m-stage-h) - var(--m-sheet-overlap));
+    overflow: visible;
+    border-radius: 0;
+    isolation: auto;
+}
+
+/* Viewfinder corners around the free part of the stage. */
+body.home-page #home::before {
+    position: absolute;
+    z-index: 2;
+    top: calc(var(--m-bar-h) + env(safe-area-inset-top) + 2.3rem);
+    right: 0;
+    left: 0;
+    height: calc(var(--m-stage-h) - var(--m-bar-h) - env(safe-area-inset-top) - 2.3rem - var(--m-sheet-overlap) - 0.6rem);
+    content: "";
+    pointer-events: none;
+    --corner: color-mix(in srgb, var(--home-primary) 55%, transparent);
+    background:
+        linear-gradient(var(--corner), var(--corner)) top left / 0.9rem 1.5px no-repeat,
+        linear-gradient(var(--corner), var(--corner)) top left / 1.5px 0.9rem no-repeat,
+        linear-gradient(var(--corner), var(--corner)) top right / 0.9rem 1.5px no-repeat,
+        linear-gradient(var(--corner), var(--corner)) top right / 1.5px 0.9rem no-repeat,
+        linear-gradient(var(--corner), var(--corner)) bottom left / 0.9rem 1.5px no-repeat,
+        linear-gradient(var(--corner), var(--corner)) bottom left / 1.5px 0.9rem no-repeat,
+        linear-gradient(var(--corner), var(--corner)) bottom right / 0.9rem 1.5px no-repeat,
+        linear-gradient(var(--corner), var(--corner)) bottom right / 1.5px 0.9rem no-repeat;
+}
+
+body.home-page .m-hud {
+    position: absolute;
+    z-index: 4;
+    top: calc(var(--m-bar-h) + env(safe-area-inset-top) + 0.25rem);
+    right: 0;
+    left: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    font-family: var(--m-mono);
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.13em;
+    line-height: 1;
+    color: var(--home-text-muted);
+    pointer-events: none;
+}
+
+body.home-page .m-hud-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.32rem 0.55rem;
+    border: 1px solid var(--home-border);
+    border-radius: 999px;
+    color: var(--home-text-strong);
+    background: var(--home-surface);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+}
+
+body.home-page .m-hud-dot {
+    width: 0.42rem;
+    height: 0.42rem;
+    border-radius: 50%;
+    background: #94a3b8;
+}
+
+body.home-page .m-hud-state {
+    display: none;
+}
+
+html:not(.webgl-ready):not(.webgl-unavailable):not(.webgl-reduced-motion) body.home-page .m-hud-sync,
+html.webgl-ready body.home-page .m-hud-live,
+html.webgl-unavailable body.home-page .m-hud-idle,
+html.webgl-reduced-motion body.home-page .m-hud-idle {
+    display: inline;
+}
+
+html:not(.webgl-ready):not(.webgl-unavailable):not(.webgl-reduced-motion) body.home-page .m-hud-dot {
+    background: #f59e0b;
+    animation: m-blink 0.9s steps(2, jump-none) infinite;
+}
+
+html.webgl-ready body.home-page .m-hud-dot {
+    background: #ef4444;
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.55);
+    animation: m-rec 1.8s ease-out infinite;
+}
+
+body.home-page .m-hud-channel {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+html[data-theme="light"] body.home-page .m-hud-space,
+html[data-theme="dark"] body.home-page .m-hud-lab {
+    display: none;
+}
+
+body.home-page .m-hud-time {
+    flex: 0 0 auto;
+    font-variant-numeric: tabular-nums;
+}
+
+@keyframes m-blink {
+    50% {
+        opacity: 0.2;
+    }
+}
+
+@keyframes m-rec {
+    0% {
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.55);
+    }
+    70%,
+    100% {
+        box-shadow: 0 0 0 0.45rem rgba(239, 68, 68, 0);
+    }
+}
+
+body.home-page #home > .hero-layout {
+    max-width: 100%;
+    padding-top: 0;
+}
+
+/* The ID sheet. */
+body.home-page .hero-copy {
+    position: relative;
+    z-index: 3;
+    max-width: 100%;
+    padding: 0.95rem 1.1rem 1.15rem;
+    border: 1px solid var(--home-border);
+    border-radius: 1.6rem;
+    background: var(--home-surface-strong);
+    box-shadow: 0 -12px 36px rgba(0, 0, 0, 0.07), var(--home-card-shadow);
+    -webkit-backdrop-filter: blur(22px) saturate(140%);
+    backdrop-filter: blur(22px) saturate(140%);
+}
+
+body.home-page .m-avatar {
+    position: absolute;
+    top: -2.35rem;
+    left: 1rem;
+    width: 4.7rem;
+    height: 4.7rem;
+    border: 3px solid var(--home-bg-elevated);
+    border-radius: 50%;
+    object-fit: cover;
+    box-shadow: 0 0 0 2px var(--home-primary), 0 14px 30px rgba(0, 0, 0, 0.2);
+}
+
+body.home-page #home h1 {
+    margin: 0 0 0.45rem;
+    font-size: 2.4rem;
+    line-height: 1.04;
+    letter-spacing: -0.02em;
+}
+
+/* "Hello, I'm" sits beside the avatar as a small overline. */
+body.home-page #home h1 > [data-i18n-key="hero.greeting"] {
+    display: flex;
+    align-items: center;
+    min-height: 1.45rem;
+    margin: 0 0 0.75rem 5.25rem;
+    font-family: var(--m-mono);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--home-text-muted);
+}
+
+body.home-page #home h1 .liquid-text {
+    padding-bottom: 0.1em;
+}
+
+/* Role line as a console prompt (no "I am a" prefix to get wrong). */
+body.home-page #home .hero-typing {
+    min-height: 0;
+    margin: 0 0 0.95rem;
+    overflow: hidden;
+    font-size: 0.98rem;
+    line-height: 1.5;
+    white-space: nowrap;
+}
+
+body.home-page #home .hero-typing .typing-text {
+    display: none;
+}
+
+body.home-page #home .hero-typing::before {
+    margin-right: 0.5rem;
+    content: "›";
+    font-family: var(--m-mono);
+    font-weight: 800;
+    color: var(--home-signal);
+}
+
+/* Skill chips: one swipeable row instead of a wrapped block. */
+body.home-page #home .flex.flex-wrap.gap-3 {
+    flex-wrap: nowrap;
+    gap: 0.45rem;
+    margin: 0 -1.1rem 1rem;
+    padding: 0.1rem 1.1rem 0.3rem;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 1.1rem, #000 calc(100% - 2rem), transparent);
+    mask-image: linear-gradient(90deg, transparent 0, #000 1.1rem, #000 calc(100% - 2rem), transparent);
+}
+
+body.home-page #home .flex.flex-wrap.gap-3::-webkit-scrollbar {
+    display: none;
+}
+
+body.home-page #home .flex.flex-wrap.gap-3 > span {
+    flex: 0 0 auto;
+    padding: 0.36rem 0.7rem;
+    font-size: 0.78rem;
+    white-space: nowrap;
+    box-shadow: none;
+}
+
+body.home-page #home .flex.flex-wrap.gap-3 > span:hover {
+    transform: none;
+}
+
+body.home-page #home .flex.flex-wrap.gap-3 > span svg {
+    width: 0.9rem;
+    height: 0.9rem;
+    margin-right: 0.35rem;
+}
+
+body.home-page #home .flex.gap-4 {
+    display: grid;
+    grid-template-columns: 1.3fr 1fr;
+    gap: 0.6rem;
+    width: 100%;
+}
+
+body.home-page #home .flex.gap-4 > a {
+    justify-content: center;
+    width: auto;
+    min-width: 0;
+    height: 2.95rem;
+    padding: 0 0.8rem;
+    border-radius: 0.95rem;
+    font-size: 0.9rem;
+    white-space: nowrap;
+}
+
+body.home-page #home .flex.gap-4 > a svg {
+    width: 1.05rem;
+    height: 1.05rem;
+}
+
+body.home-page #home .flex.gap-4 > a:hover {
+    transform: none;
+}
+
+/* --------------------------------------------------------------------------
+   Research: swipe deck with a pager
+   -------------------------------------------------------------------------- */
+
+body.home-page .pub-list {
+    display: flex;
+    gap: 0.75rem;
+    margin: 0 calc(var(--m-gutter) * -1);
+    padding: 0.2rem var(--m-gutter) 0.9rem;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: var(--m-gutter);
+    scrollbar-width: none;
+}
+
+body.home-page .pub-list::-webkit-scrollbar {
+    display: none;
+}
+
+body.home-page .pub-list > .pub-card {
+    flex: 0 0 min(86%, 22rem);
+    scroll-snap-align: start;
+    border-radius: 1.3rem;
+}
+
+body.home-page .pub-media {
+    padding: 0.55rem;
+}
+
+body.home-page .pub-body {
+    gap: 0.55rem;
+    padding: 0.95rem 1rem 1.05rem;
+}
+
+body.home-page .pub-meta {
+    gap: 0.35rem 0.45rem;
+}
+
+body.home-page .pub-venue {
+    font-size: 0.72rem;
+}
+
+body.home-page .pub-tag {
+    padding: 0.1rem 0.5rem;
+    font-size: 0.64rem;
+}
+
+body.home-page .pub-title {
+    font-size: 1.02rem;
+    line-height: 1.32;
+}
+
+body.home-page .pub-authors {
+    font-size: 0.78rem;
+    line-height: 1.5;
+}
+
+body.home-page .pub-desc {
+    font-size: 0.86rem;
+    line-height: 1.55;
+}
+
+body.home-page #research .pub-links {
+    gap: 0.4rem;
+    padding-top: 0.25rem;
+}
+
+body.home-page #research .card-interactive .pub-links > a,
+body.home-page #research .card-interactive .pub-links > button {
+    padding: 0.32rem 0.62rem;
+    font-size: 0.74rem;
+}
+
+body.home-page #research .card-interactive .pub-links svg {
+    width: 0.85rem;
+    height: 0.85rem;
+}
+
+body.home-page .m-pager {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.1rem;
+    min-height: 1.75rem;
+}
+
+body.home-page .m-pager button {
+    display: grid;
+    width: 1.6rem;
+    height: 1.6rem;
+    padding: 0;
+    place-items: center;
+    border: 0;
+    background: transparent;
+}
+
+body.home-page .m-pager button::before {
+    width: 0.45rem;
+    height: 0.45rem;
+    border-radius: 999px;
+    content: "";
+    background: var(--home-border-strong);
+    transition: width 300ms cubic-bezier(0.22, 1, 0.36, 1), background-color 300ms ease;
+}
+
+body.home-page .m-pager button[aria-current="true"]::before {
+    width: 1.35rem;
+    background: var(--home-primary);
+}
+
+body.home-page .m-pager-count {
+    margin-left: 0.45rem;
+    font-family: var(--m-mono);
+    font-size: 0.66rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--home-text-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+body.home-page .research-footer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.65rem;
+    margin-top: 0.6rem;
+}
+
+body.home-page .pub-footnote {
+    font-size: 0.76rem;
+}
+
+body.home-page #research .research-more {
+    font-size: 0.82rem;
+}
+
+/* --------------------------------------------------------------------------
+   Journey: segmented control + swipeable panes
+   -------------------------------------------------------------------------- */
+
+body.home-page .m-segment {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(var(--seg-count, 3), minmax(0, 1fr));
+    margin-bottom: 0.85rem;
+    padding: 0.25rem;
+    border: 1px solid var(--home-border);
+    border-radius: 1rem;
+    background: var(--home-surface);
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+}
+
+body.home-page .m-segment button {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    min-width: 0;
+    height: 2.4rem;
+    padding: 0 0.3rem;
+    border: 0;
+    border-radius: 0.75rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--home-text-muted);
+    background: transparent;
+    transition: color 240ms ease;
+}
+
+body.home-page .m-segment button span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+body.home-page .m-segment button svg {
+    flex: 0 0 auto;
+    width: 0.95rem;
+    height: 0.95rem;
+}
+
+body.home-page .m-segment button[aria-current="true"] {
+    color: #ffffff;
+}
+
+body.home-page .m-segment-thumb {
+    position: absolute;
+    z-index: 0;
+    top: 0.25rem;
+    bottom: 0.25rem;
+    left: 0.25rem;
+    width: calc((100% - 0.5rem) / var(--seg-count, 3));
+    border-radius: 0.75rem;
+    background: var(--home-primary-strong);
+    box-shadow: 0 6px 18px var(--home-glow);
+    transform: translateX(calc(var(--seg-pos, 0) * 100%));
+}
+
+body.home-page #journey .journey-panes {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    max-width: none;
+    margin: 0 calc(var(--m-gutter) * -1);
+    padding: 0 var(--m-gutter) 0.4rem;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: var(--m-gutter);
+    scrollbar-width: none;
+}
+
+body.home-page #journey .journey-panes::-webkit-scrollbar {
+    display: none;
+}
+
+body.home-page #journey .journey-panes > div {
+    flex: 0 0 100%;
+    padding: 1.15rem 1rem 0.35rem 1.1rem;
+    border-radius: 1.3rem;
+    scroll-snap-align: start;
+}
+
+/* The segmented control names each pane; keep the headings for screen readers. */
+body.home-page #journey .journey-panes > div > .flex.items-center {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+}
+
+body.home-page #journey .timeline-item {
+    padding-bottom: 1.15rem;
+    padding-left: 1.5rem;
+}
+
+body.home-page #journey .timeline-item:last-child {
+    padding-bottom: 0.8rem;
+}
+
+body.home-page #journey .timeline-dot {
+    left: -0.4rem;
+    width: 0.82rem;
+    height: 0.82rem;
+    border-width: 2.5px;
+}
+
+body.home-page #journey .timeline-item > p.text-sm {
+    margin-bottom: 0.2rem;
+    font-family: var(--m-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.04em;
+}
+
+body.home-page #journey .timeline-item > h3 {
+    margin-bottom: 0.15rem;
+    font-size: 1rem;
+    line-height: 1.3;
+}
+
+body.home-page #journey .timeline-item > p.text-lg {
+    margin-bottom: 0.2rem;
+    font-size: 0.84rem;
+    line-height: 1.4;
+}
+
+body.home-page #journey .timeline-item > p.text-slate-400 {
+    font-size: 0.74rem;
+    line-height: 1.45;
+}
+
+/* --------------------------------------------------------------------------
+   Blog: compact feed
+   -------------------------------------------------------------------------- */
+
+body.home-page #blog > h2 {
+    margin-bottom: 0.8rem;
+}
+
+body.home-page #blog > div.scroll-animate {
+    margin-bottom: 1.25rem;
+}
+
+body.home-page #blog > div > .flex.items-center {
+    margin-bottom: 0.55rem;
+}
+
+body.home-page #blog > div > .flex.items-center h3 {
+    font-family: var(--m-mono);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--home-text-muted);
+}
+
+body.home-page #blog > div > .flex.items-center svg {
+    width: 0.95rem;
+    height: 0.95rem;
+    margin-right: 0.5rem;
+}
+
+body.home-page #blog .grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+body.home-page #blog .grid > a.card-interactive {
+    display: grid;
+    grid-template-columns: 5.6rem minmax(0, 1fr);
+    min-height: 6.1rem;
+    border-radius: 1.1rem;
+    transition: transform 160ms ease, background-color 240ms ease;
+}
+
+body.home-page #blog .grid > a.card-interactive:active {
+    transform: scale(0.985);
+}
+
+body.home-page #blog .grid > a > img {
+    width: 100%;
+    height: 100%;
+    min-height: 6.1rem;
+    object-fit: cover;
+    border-right: 1px solid var(--home-border);
+    border-bottom: 0;
+}
+
+body.home-page #blog .grid > a > .p-6 {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 0;
+    padding: 0.65rem 0.85rem 0.7rem;
+}
+
+body.home-page #blog .grid > a .p-6 > p.font-mono {
+    margin-bottom: 0.2rem;
+    font-size: 0.66rem;
+}
+
+body.home-page #blog .grid > a .p-6 > h3 {
+    display: -webkit-box;
+    margin-bottom: 0.35rem;
+    overflow: hidden;
+    font-size: 0.9rem;
+    line-height: 1.3;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+body.home-page #blog .grid > a .p-6 > p.text-sm:not(.font-mono) {
+    display: none;
+}
+
+body.home-page #blog .grid > a .p-6 > .flex {
+    flex-wrap: nowrap;
+    gap: 0.3rem;
+    overflow: hidden;
+}
+
+body.home-page #blog .grid > a .p-6 > .flex > span {
+    padding: 0.08rem 0.4rem;
+    font-size: 0.6rem;
+    white-space: nowrap;
+}
+
+/* "Under construction" shrinks to a badge on the thumbnail. */
+body.home-page #blog .card-interactive > .absolute.top-4.right-4 {
+    top: auto;
+    right: auto;
+    bottom: 0.4rem;
+    left: 0.4rem;
+    padding: 0.22rem;
+}
+
+body.home-page #blog .card-interactive > .absolute.top-4.right-4 svg {
+    width: 0.8rem;
+    height: 0.8rem;
+    margin: 0;
+}
+
+body.home-page #blog .card-interactive > .absolute.top-4.right-4 span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+}
+
+/* --------------------------------------------------------------------------
+   Contact: one card, one big button, four tiles
+   -------------------------------------------------------------------------- */
+
+body.home-page #contact {
+    margin: 2.6rem 0 0;
+    padding: 1.35rem 1.1rem 1.15rem;
+    scroll-margin-top: calc(var(--m-bar-h) + env(safe-area-inset-top) + 0.75rem);
+    border: 1px solid var(--home-border);
+    border-radius: 1.5rem;
+    background: var(--home-surface);
+    box-shadow: var(--home-card-shadow);
+    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
+}
+
+body.home-page #contact > h2 {
+    width: auto;
+    margin: 0 0 0.7rem;
+}
+
+body.home-page #contact > p {
+    max-width: none;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    line-height: 1.55;
+    text-align: left;
+}
+
+body.home-page #contact > .flex.justify-center {
+    display: block;
+}
+
+body.home-page #contact a[href^="mailto:"] {
+    justify-content: center;
+    width: 100%;
+    padding: 0.85rem 1rem;
+    border-radius: 1rem;
+    font-size: 0.9rem;
+}
+
+body.home-page #contact a[href^="mailto:"] svg {
+    width: 1.15rem;
+    height: 1.15rem;
+    margin-right: 0.55rem;
+}
+
+body.home-page .m-contact-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.5rem;
+    margin-top: 0.6rem;
+}
+
+body.home-page .m-tile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    min-width: 0;
+    min-height: 4.3rem;
+    padding: 0.5rem 0.25rem;
+    border: 1px solid var(--home-border);
+    border-radius: 1rem;
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--home-text-strong);
+    background: var(--home-surface-strong);
+    transition: transform 160ms ease, border-color 240ms ease;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body.home-page .m-tile span {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+body.home-page .m-tile svg {
+    width: 1.3rem;
+    height: 1.3rem;
+    color: var(--home-primary);
+}
+
+body.home-page .m-tile:active {
+    border-color: var(--home-border-strong);
+    transform: scale(0.96);
+}
+
+body.home-page main > footer.text-center {
+    margin-top: 1.25rem;
+    padding: 0.75rem 0 0;
+    border-top: 0;
+    border-radius: 0;
+    background: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+}
+
+body.home-page main > footer p {
+    font-size: 0.7rem;
+}
+
+/* --------------------------------------------------------------------------
+   Floating dock
+   -------------------------------------------------------------------------- */
+
+body.home-page > nav.md\:hidden {
+    right: 0.75rem;
+    bottom: calc(0.6rem + env(safe-area-inset-bottom));
+    left: 0.75rem;
+    padding-bottom: 0;
+    border: 1px solid var(--home-border);
+    border-radius: 1.45rem;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.16);
+}
+
+body.home-page #mobile-nav {
+    height: var(--m-dock-h);
+    padding: 0 0.3rem;
+}
+
+body.home-page .mobile-nav-link {
+    gap: 0.1rem;
+    min-width: 3.5rem;
+    padding: 0.38rem 0.2rem;
+    border-radius: 1.05rem;
+    transition: color 240ms ease, background-color 240ms ease;
+}
+
+body.home-page .mobile-nav-link svg {
+    width: 1.3rem;
+    height: 1.3rem;
+}
+
+body.home-page > nav.md\:hidden .mobile-nav-link span {
+    font-size: 0.62rem;
+    font-weight: 600;
+}
+
+body.home-page .mobile-nav-link.active::before {
+    display: none;
+}
+
+@media (max-width: 360px) {
+    body.home-page {
+        --m-gutter: 0.8rem;
+    }
+
+    body.home-page #home h1 {
+        font-size: 2.1rem;
+    }
+
+    body.home-page .m-segment button svg {
+        display: none;
+    }
+
+    body.home-page .m-contact-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    body.home-page .m-hud-dot {
+        animation: none !important;
+    }
+}

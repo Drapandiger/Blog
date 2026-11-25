@@ -2548,7 +2548,7 @@
 
         /* Fit the chart into the free sky: right of the headline and above
          * the skill pills on desktop (or above the headline when that strip
-         * is too narrow), above the headline on mobile. */
+         * is too narrow), and across the portrait stage on phones. */
         const chartNdc = new THREE.Vector3();
         const chartRayDirection = new THREE.Vector3();
         function screenToChartPlane(x, y, target) {
@@ -2588,7 +2588,9 @@
             const boxes = [];
             const headlineTop = hero.headline ? hero.headline.top : viewportHeight * 0.38;
             if (mobileLayout) {
-                boxes.push({ left: viewportWidth * 0.06, right: viewportWidth * 0.94, top: 72, bottom: headlineTop - 18 });
+                /* The whole portrait stage between the HUD and the ID sheet. */
+                const stage = measureStageBox();
+                boxes.push({ left: viewportWidth * 0.04, right: viewportWidth * 0.96, top: stage.top + 6, bottom: stage.bottom - 10 });
             } else {
                 const headlineRight = hero.headline ? hero.headline.right : viewportWidth * 0.5;
                 const pillsTop = hero.pillsTop || viewportHeight * 0.62;
@@ -2617,7 +2619,7 @@
                 screenToChartPlane(middleX, box.bottom, chartCornerB);
                 const worldHeight = chartCornerA.y - chartCornerB.y;
                 const pixelsPerWorld = (box.right - box.left) / worldWidth;
-                const maxPixels = mobileLayout ? 360 : 640;
+                const maxPixels = mobileLayout ? viewportWidth * 0.92 : 640;
                 const scale = Math.min(worldWidth / chartWidth, worldHeight / chartHeight,
                     maxPixels / pixelsPerWorld / chartWidth);
                 if (!best || scale > best.scale) best = { scale, middleX, middleY };
@@ -2751,9 +2753,87 @@
             }
         }
 
+        /* Phones: the canvas is a portrait "live monitor" at the top of the
+         * page instead of a full-screen backdrop. The free band runs from
+         * the HUD strip down to where the ID sheet overlaps the stage. */
+        const stageHud = document.querySelector('#home .m-hud');
+        const stageSheet = document.querySelector('#home .hero-copy');
+        function measureStageBox() {
+            const canvasTop = canvas.getBoundingClientRect().top;
+            let top = viewportHeight * 0.2;
+            let bottom = viewportHeight * 0.86;
+            if (stageHud) {
+                const rect = stageHud.getBoundingClientRect();
+                if (rect.height > 0) top = rect.bottom - canvasTop + 10;
+            }
+            if (stageSheet) {
+                const rect = stageSheet.getBoundingClientRect();
+                if (rect.height > 0) bottom = Math.min(viewportHeight, rect.top - canvasTop) - 6;
+            }
+            if (bottom - top < 120) {
+                top = viewportHeight * 0.2;
+                bottom = viewportHeight * 0.86;
+            }
+            return { left: 8, right: viewportWidth - 8, top, bottom };
+        }
+
+        /* The working core of the cell for the portrait stage: bench and
+         * monitor, docked AMR, the arm at full height, the scanner head and
+         * the docked quadruped. The hologram panels may crop at the edge. */
+        const labStagePoints = [
+            [-1.93, 1.0, -1.62], [-1.6, 1.95, -2.2],
+            /* The AMR turns on the spot at the dock: its whole footprint. */
+            [AMR_DOCK_X - 0.72, 0, AMR_LANE_Z + 0.62], [AMR_DOCK_X - 0.72, 0.95, AMR_LANE_Z],
+            [ARM_BASE.x, 2.45, ARM_BASE.z], [SCAN_POINT.x, SCAN_HEAD_Y + 0.1, SCAN_POINT.z],
+            /* The quadruped turns at its dock too; head and near feet. */
+            [DOG_DOCK.x + 0.98, 1.3, DOG_DOCK.z - 0.2], [DOG_DOCK.x + 0.55, 0, DOG_DOCK.z + 0.7]
+        ].map(point => new THREE.Vector3(point[0], point[1], point[2]));
+        function measureLabBox(points) {
+            labGroup.updateMatrixWorld(true);
+            const box = { left: Infinity, right: -Infinity, top: Infinity, bottom: -Infinity };
+            points.forEach(point => {
+                extentProbe.copy(point).applyMatrix4(labGroup.matrixWorld).project(camera);
+                const x = (extentProbe.x + 1) * 0.5 * viewportWidth;
+                const y = (1 - extentProbe.y) * 0.5 * viewportHeight;
+                box.left = Math.min(box.left, x);
+                box.right = Math.max(box.right, x);
+                box.top = Math.min(box.top, y);
+                box.bottom = Math.max(box.bottom, y);
+            });
+            return box;
+        }
+        function fitLabToStage() {
+            const stage = measureStageBox();
+            camera.updateMatrixWorld(true);
+            for (let pass = 0; pass < 3; pass += 1) {
+                let box = measureLabBox(labStagePoints);
+                const fit = Math.min(
+                    (stage.right - stage.left) / (box.right - box.left),
+                    (stage.bottom - stage.top) / (box.bottom - box.top)
+                );
+                labGroup.scale.multiplyScalar(Math.max(0.5, Math.min(2, fit)));
+                box = measureLabBox(labStagePoints);
+                /* Projected points move ~linearly with a group shift, so a
+                 * measured pixels-per-unit centres the set in one step. */
+                labGroup.position.x += 1;
+                const perX = measureLabBox(labStagePoints).left - box.left;
+                labGroup.position.x -= 1;
+                labGroup.position.y += 1;
+                const perY = measureLabBox(labStagePoints).top - box.top;
+                labGroup.position.y -= 1;
+                if (perX > 0) {
+                    labGroup.position.x += ((stage.left + stage.right) / 2 - (box.left + box.right) / 2) / perX;
+                }
+                if (perY < 0) {
+                    labGroup.position.y += ((stage.top + stage.bottom) / 2 - (box.top + box.bottom) / 2) / perY;
+                }
+            }
+        }
+
         function applyLayout() {
-            /* Size from the canvas's CSS box (100vw x 100vh) rather than the
-             * window so mobile URL-bar show/hide doesn't stretch the scene. */
+            /* Size from the canvas's CSS box (the full-screen backdrop on
+             * desktop, the stage at the top of the page on phones) rather
+             * than the window, so URL-bar show/hide doesn't stretch it. */
             const rect = canvas.getBoundingClientRect();
             viewportWidth = Math.max(1, Math.round(rect.width) || window.innerWidth);
             viewportHeight = Math.max(1, Math.round(rect.height) || window.innerHeight);
@@ -2764,18 +2844,21 @@
             }
 
             camera.aspect = viewportWidth / viewportHeight;
-            camera.fov = mobileLayout ? 43 : 34;
-            cameraBase.set(0, mobileLayout ? 3.6 : 3.75, mobileLayout ? 15.5 : 15);
-            cameraTarget.set(0, mobileLayout ? 0.25 : 0.55, 0);
+            /* Phones look down on the cell a little more steeply, which
+             * gives the wide set some depth in a portrait frame. */
+            camera.fov = mobileLayout ? 36 : 34;
+            cameraBase.set(0, mobileLayout ? 5.2 : 3.75, mobileLayout ? 14 : 15);
+            cameraTarget.set(0, mobileLayout ? 0.4 : 0.55, 0);
             camera.position.copy(cameraBase);
             camera.lookAt(cameraTarget);
             camera.updateProjectionMatrix();
 
             if (mobileLayout) {
-                labGroup.position.set(0.35, -2.9, -2.65);
-                labGroup.scale.setScalar(0.72);
-                spaceGroup.position.set(0.1, -1.7, -2.6);
-                spaceGroup.scale.setScalar(1);
+                labGroup.position.set(-0.3, -1.2, 0);
+                labGroup.scale.setScalar(1);
+                fitLabToStage();
+                spaceGroup.position.set(0, 0.2, -1.6);
+                spaceGroup.scale.setScalar(0.92);
             } else {
                 labGroup.position.set(3.3, -1.7, -0.3);
                 labGroup.scale.setScalar(1.12);
@@ -3077,8 +3160,21 @@
             }
         }
 
+        /* On phones the canvas is a stage at the top of the page; stop
+         * rendering once it has scrolled out of view. The desktop backdrop
+         * is fixed and therefore always on screen. */
+        let canvasOnScreen = true;
+        const stageObserver = typeof IntersectionObserver === 'function'
+            ? new IntersectionObserver(entries => {
+                canvasOnScreen = entries[entries.length - 1].isIntersecting;
+                if (canvasOnScreen) startAnimation();
+                else stopAnimation();
+            })
+            : null;
+        if (stageObserver) stageObserver.observe(canvas);
+
         function startAnimation() {
-            if (animationFrame !== null || document.hidden || motionQuery.matches) return;
+            if (animationFrame !== null || document.hidden || motionQuery.matches || !canvasOnScreen) return;
             lastPresentedAt = 0;
             animationFrame = window.requestAnimationFrame(animate);
         }
@@ -3201,6 +3297,7 @@
             }
             renderer.dispose();
             if (headlineObserver) headlineObserver.disconnect();
+            if (stageObserver) stageObserver.disconnect();
             window.removeEventListener('pointermove', handlePointerMove);
             window.removeEventListener('blur', resetPointer);
             window.removeEventListener('resize', handleResize);

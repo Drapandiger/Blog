@@ -505,6 +505,9 @@
         }
     </style>
     <link rel="stylesheet" href="assets/css/home-redesign.css">
+    <!-- 手机端独立版式（不影响桌面）：顶部直播舞台 + 身份卡、横滑论文、分段历程、信息流博客、浮动导航坞 -->
+    <link rel="stylesheet" href="assets/css/home-mobile.css" media="(max-width: 767px)">
+    <script src="assets/js/home-mobile.js" defer></script>
 </head>
 
 <body class="home-page text-slate-300 font-inter relative overflow-x-hidden selection:bg-primary-500 selection:text-white">
@@ -639,6 +642,10 @@
     <main class="md:ml-64 p-6 md:p-12 pb-24 md:pb-12 relative z-10">
 
         <div class="md:hidden flex justify-end space-x-2 mb-6 mobile-controls" id="lang-switcher-mobile">
+            <a href="#home" class="m-brand">
+                <img src="assets/home/profile.webp" alt="" width="28" height="28" decoding="async">
+                <span data-i18n-key="profile.name">Zeqi Li</span>
+            </a>
             <button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false"
                 aria-label="LAB MODE: switch to dark cosmic theme" title="Switch to dark theme">
                 <span class="theme-toggle-track" aria-hidden="true">
@@ -648,16 +655,28 @@
                 </span>
                 <span class="theme-toggle-label">LAB MODE</span>
             </button>
-            <button class="lang-btn active" data-lang="en">EN</button>
-            <button class="lang-btn" data-lang="zh">中</button>
-            <button class="lang-btn" data-lang="de">DE</button>
+            <div class="m-lang" role="group" aria-label="Language">
+                <button class="lang-btn active" data-lang="en">EN</button>
+                <button class="lang-btn" data-lang="zh">中</button>
+                <button class="lang-btn" data-lang="de">DE</button>
+            </div>
         </div>
 
         <!-- 区域1: 英雄/主页 -->
         <section id="home" class="min-h-screen flex items-center scroll-mt-16 relative">
+            <!-- 手机端：Three.js 画布是页面顶部的"直播监视器"，这里是叠在上面的 HUD（装饰性） -->
+            <div class="m-hud m-only" aria-hidden="true">
+                <span class="m-hud-tag"><span class="m-hud-dot"></span><span class="m-hud-state m-hud-sync">SYNC</span><span
+                        class="m-hud-state m-hud-live">LIVE</span><span class="m-hud-state m-hud-idle">STANDBY</span></span>
+                <span class="m-hud-channel"><span class="m-hud-lab">CAM-01 · LOGISTICS CELL</span><span
+                        class="m-hud-space">SKY-CHART · DEEP FIELD</span></span>
+                <span class="m-hud-time" data-hud-clock>00:00:00</span>
+            </div>
             <!-- 首屏内容不走滚动淡入（opacity:0 会推迟首屏绘制/LCP），只做位移入场 -->
             <div class="hero-enter w-full hero-layout">
                 <div class="hero-copy">
+                    <img class="m-avatar m-only" src="assets/home/profile.webp" alt="Portrait of Zeqi Li" width="80"
+                        height="80" decoding="async">
                     <!-- 标题 -->
                     <h1 class="text-4xl md:text-6xl font-extrabold text-white mb-4">
                         <span data-i18n-key="hero.greeting">Hello, I'm</span>
@@ -891,6 +910,7 @@
                     </div>
                 </article>
             </div>
+            <div class="m-pager m-only" data-pager-for=".pub-list"></div>
             <div class="research-footer scroll-animate" style="transition-delay: 250ms;">
                 <p class="pub-footnote"><sup>*</sup> <span data-i18n-key="research.equal">Equal contribution</span></p>
                 <a href="https://scholar.google.com/citations?hl=en&user=IiApesIAAAAJ" target="_blank" rel="noopener noreferrer"
@@ -910,9 +930,18 @@
                 <i data-lucide="map" class="w-8 h-8 inline-block mr-2 text-primary-400"></i> <span
                     data-i18n-key="journey.title">Academic Journey</span>
             </h2>
-            <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="m-segment m-only" role="group" aria-label="Academic Journey" style="--seg-count: 3;">
+                <button type="button" data-journey-tab="0" aria-controls="journey-edu" aria-current="true"><i
+                        data-lucide="graduation-cap"></i><span data-i18n-key="journey.tab.education">Education</span></button>
+                <button type="button" data-journey-tab="1" aria-controls="journey-research"><i
+                        data-lucide="flask-conical"></i><span data-i18n-key="journey.tab.research">Research</span></button>
+                <button type="button" data-journey-tab="2" aria-controls="journey-work"><i
+                        data-lucide="briefcase"></i><span data-i18n-key="journey.tab.work">Work</span></button>
+                <span class="m-segment-thumb" aria-hidden="true"></span>
+            </div>
+            <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8 journey-panes">
                 <!-- 列 1：Education -->
-                <div>
+                <div id="journey-edu">
                     <!-- Education Experience -->
                     <div class="flex items-center mb-8">
                         <i data-lucide="graduation-cap" class="w-6 h-6 mr-3 text-primary-400"></i>
@@ -961,7 +990,7 @@
                 </div>
 
                 <!-- 列 2：Research -->
-                <div>
+                <div id="journey-research">
                     <!-- Research Experience -->
                     <div class="flex items-center mb-8">
                         <i data-lucide="flask-conical" class="w-6 h-6 mr-3 text-primary-400"></i>
@@ -1004,7 +1033,7 @@
                 </div>
 
                 <!-- 列 3：Work -->
-                <div>
+                <div id="journey-work">
                     <!-- Work Experience -->
                     <div class="flex items-center mb-8">
                         <i data-lucide="briefcase" class="w-6 h-6 mr-3 text-primary-400"></i>
@@ -1177,6 +1206,20 @@
                     drapandiger@gmail.com
                 </a>
             </div>
+            <div class="m-contact-grid m-only">
+                <a href="CV.pdf" target="_blank" rel="noopener noreferrer" class="m-tile"><i data-lucide="file-text"></i><span
+                        data-i18n-key="contact.tile.cv">CV</span></a>
+                <a href="https://scholar.google.com/citations?hl=en&user=IiApesIAAAAJ" target="_blank" rel="noopener noreferrer"
+                    class="m-tile"><i data-lucide="graduation-cap"></i><span>Scholar</span></a>
+                <a href="https://github.com/Drapandiger" target="_blank" rel="noopener noreferrer" class="m-tile"><svg
+                        xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        aria-hidden="true"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg><span>GitHub</span></a>
+                <a href="https://www.linkedin.com/in/zeqi-li-tum" target="_blank" rel="noopener noreferrer" class="m-tile"><svg
+                        xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg><span>LinkedIn</span></a>
+            </div>
         </section>
 
         <footer class="text-center py-8 border-t border-slate-800 relative z-10 bg-slate-900/50 backdrop-blur">
@@ -1206,6 +1249,7 @@
                 'common.project_page': '项目主页', 'common.paper': '论文', 'common.bibtex': 'BibTeX', 'common.copied': '已复制！', 'common.under_construction': '施工中',
                 'blog.cat.practice': '项目实践', 'blog.cat.frontier': '前沿探索', 'blog.bo.tag1': '贝叶斯优化', 'blog.bo.tag2': '可达性分析',
                 'journey.title': '学术历程',
+                'journey.tab.education': '教育', 'journey.tab.research': '科研', 'journey.tab.work': '工作', 'contact.tile.cv': '简历',
                 'journey.category.education': '教育经历', 'journey.category.research': '科研经历', 'journey.category.work': '工作经历',
                 'journey.item0.date': '2025年5月 - 至今', 'journey.item0.degree': '远程研究助理', 'journey.item0.school': '意大利技术研究院 (IIT), 热那亚, 意大利',
                 'journey.item05.date': '2025年1月 - 2025年4月', 'journey.item05.degree': '研究协作者', 'journey.item05.school': '意大利技术研究院 (IIT), 热那亚, 意大利',
@@ -1239,6 +1283,7 @@
                 'common.project_page': 'Project Page', 'common.paper': 'Paper', 'common.bibtex': 'BibTeX', 'common.copied': 'Copied!', 'common.under_construction': 'Under Construction',
                 'blog.cat.practice': 'Project Practice', 'blog.cat.frontier': 'Frontier Exploration', 'blog.bo.tag1': 'BayesianOpt', 'blog.bo.tag2': 'Reachability',
                 'journey.title': 'Academic Journey',
+                'journey.tab.education': 'Education', 'journey.tab.research': 'Research', 'journey.tab.work': 'Work', 'contact.tile.cv': 'CV',
                 'journey.category.education': 'Education Experience', 'journey.category.research': 'Research Experience', 'journey.category.work': 'Work Experience',
                 'journey.item0.date': 'May 2025 - Current', 'journey.item0.degree': 'Remote Research Assistant', 'journey.item0.school': 'Italian Institute of Technology (IIT), Genoa, Italy',
                 'journey.item05.date': 'Jan 2025 - Apr 2025', 'journey.item05.degree': 'Research Collaborator', 'journey.item05.school': 'Italian Institute of Technology (IIT), Genoa, Italy',
@@ -1272,6 +1317,7 @@
                 'common.project_page': 'Projektseite', 'common.paper': 'Artikel', 'common.bibtex': 'BibTeX', 'common.copied': 'Kopiert!', 'common.under_construction': 'In Arbeit',
                 'blog.cat.practice': 'Projektpraxis', 'blog.cat.frontier': 'Forschungsfront', 'blog.bo.tag1': 'Bayes-Optimierung', 'blog.bo.tag2': 'Erreichbarkeit',
                 'journey.title': 'Akademischer Werdegang',
+                'journey.tab.education': 'Bildung', 'journey.tab.research': 'Forschung', 'journey.tab.work': 'Beruf', 'contact.tile.cv': 'Lebenslauf',
                 'journey.category.education': 'Bildungserfahrung', 'journey.category.research': 'Forschungserfahrung', 'journey.category.work': 'Berufserfahrung',
                 'journey.item0.date': 'Mai 2025 - Aktuell', 'journey.item0.degree': 'Wissenschaftlicher Mitarbeiter (Remote)', 'journey.item0.school': 'Istituto Italiano di Tecnologia (IIT), Genua, Italien',
                 'journey.item05.date': 'Jan 2025 - Apr 2025', 'journey.item05.degree': 'Forschungskooperator', 'journey.item05.school': 'Istituto Italiano di Tecnologia (IIT), Genua, Italien',

@@ -1535,55 +1535,7 @@ html.webgl-reduced-motion body.home-page #neural-canvas {
     display: none;
 }
 
-@media (max-width: 767px) {
-    body.home-page #neural-canvas {
-        -webkit-mask-image: linear-gradient(
-            180deg,
-            transparent 0%,
-            rgba(0, 0, 0, 0.06) 38%,
-            #000 68%,
-            rgba(0, 0, 0, 0.78) 100%
-        );
-        mask-image: linear-gradient(
-            180deg,
-            transparent 0%,
-            rgba(0, 0, 0, 0.06) 38%,
-            #000 68%,
-            rgba(0, 0, 0, 0.78) 100%
-        );
-    }
-
-    html.webgl-ready[data-theme="light"] body.home-page #neural-canvas {
-        opacity: 0.62;
-    }
-
-    html.webgl-ready[data-theme="dark"] body.home-page #neural-canvas {
-        opacity: 0.72;
-    }
-
-    /* Cosmos: keep the empty sky above the headline visible so the robot
-     * constellations have a stage; still calm behind the headline itself. */
-    html[data-theme="dark"] body.home-page #neural-canvas {
-        -webkit-mask-image: linear-gradient(
-            180deg,
-            #000 0%,
-            #000 28%,
-            rgba(0, 0, 0, 0.1) 36%,
-            rgba(0, 0, 0, 0.1) 46%,
-            #000 66%,
-            rgba(0, 0, 0, 0.78) 100%
-        );
-        mask-image: linear-gradient(
-            180deg,
-            #000 0%,
-            #000 28%,
-            rgba(0, 0, 0, 0.1) 36%,
-            rgba(0, 0, 0, 0.1) 46%,
-            #000 66%,
-            rgba(0, 0, 0, 0.78) 100%
-        );
-    }
-}
+/* Phones: the canvas is the stage at the top of the page (home-mobile.css). */
 
 /* --------------------------------------------------------------------------
    Hero entrance — transform only, so the first paint (and LCP) is immediate
@@ -1801,5 +1753,12 @@ body.home-page .pub-footnote {
 
     body.home-page .pub-title {
         font-size: 1.12rem;
+    }
+}
+
+/* Phone-only furniture (HUD, avatar, pagers, tiles); styled in home-mobile.css. */
+@media (min-width: 768px) {
+    body.home-page .m-only {
+        display: none !important;
     }
 }
