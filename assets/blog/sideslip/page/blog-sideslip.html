@@ -1,0 +1,1979 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#f4f9f7">
+    <title>Chasing an Invisible Angle: EKF vs. UKF for Vehicle Side-Slip Estimation | Zeqi Li</title>
+    <meta name="description" content="My B.Sc. thesis: estimating a car's side-slip angle from ESC sensors with an Extended and an Unscented Kalman Filter, and where the two part ways at the grip limit. With interactive figures.">
+    <meta name="author" content="Zeqi Li">
+    <link rel="canonical" href="https://drapandiger.github.io/Blog/assets/blog/sideslip/page/blog-sideslip.html">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Zeqi Li">
+    <meta property="og:title" content="Chasing an Invisible Angle: EKF vs. UKF for Vehicle Side-Slip Estimation">
+    <meta property="og:description" content="My B.Sc. thesis: estimating a car's side-slip angle from ESC sensors with an Extended and an Unscented Kalman Filter, and where the two part ways at the grip limit. With interactive figures.">
+    <meta property="og:url" content="https://drapandiger.github.io/Blog/assets/blog/sideslip/page/blog-sideslip.html">
+    <meta property="og:image" content="https://drapandiger.github.io/Blog/assets/blog/sideslip/images/sideslipcover-og.jpg">
+    <meta property="article:published_time" content="2022-03-21">
+    <meta property="article:author" content="https://drapandiger.github.io/Blog/">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Chasing an Invisible Angle: EKF vs. UKF for Vehicle Side-Slip Estimation">
+    <meta name="twitter:description" content="My B.Sc. thesis: estimating a car's side-slip angle from ESC sensors with an Extended and an Unscented Kalman Filter, and where the two part ways at the grip limit. With interactive figures.">
+    <meta name="twitter:image" content="https://drapandiger.github.io/Blog/assets/blog/sideslip/images/sideslipcover-og.jpg">
+    <script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": "Chasing an Invisible Angle: EKF vs. UKF for Vehicle Side-Slip Estimation",
+    "description": "My B.Sc. thesis: estimating a car's side-slip angle from ESC sensors with an Extended and an Unscented Kalman Filter, and where the two part ways at the grip limit. With interactive figures.",
+    "datePublished": "2022-03-21",
+    "inLanguage": "en",
+    "url": "https://drapandiger.github.io/Blog/assets/blog/sideslip/page/blog-sideslip.html",
+    "mainEntityOfPage": "https://drapandiger.github.io/Blog/assets/blog/sideslip/page/blog-sideslip.html",
+    "image": "https://drapandiger.github.io/Blog/assets/blog/sideslip/images/sideslipcover-og.jpg",
+    "keywords": [
+        "Kalman filter",
+        "Extended Kalman filter",
+        "Unscented Kalman filter",
+        "Vehicle dynamics",
+        "Side-slip angle",
+        "State estimation"
+    ],
+    "author": {
+        "@type": "Person",
+        "name": "Zeqi Li",
+        "url": "https://drapandiger.github.io/Blog/"
+    }
+}
+    </script>
+
+    <!-- Favicon -->
+    <link rel="apple-touch-icon" sizes="180x180" href="../../../../favicon_io/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../../../../favicon_io/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../../../../favicon_io/favicon-16x16.png">
+    <link rel="manifest" href="../../../../favicon_io/site.webmanifest">
+
+    <script>
+        document.documentElement.classList.add('js-enabled');
+        (() => {
+            let savedTheme = null;
+            try { savedTheme = localStorage.getItem('preferredTheme'); } catch (error) { /* Optional storage. */ }
+            const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            const theme = savedTheme === 'light' || savedTheme === 'dark' ? savedTheme : systemTheme;
+            document.documentElement.dataset.theme = theme;
+            document.documentElement.style.colorScheme = theme;
+            document.querySelector('meta[name="theme-color"]').setAttribute(
+                'content', theme === 'dark' ? '#050713' : '#f4f9f7'
+            );
+        })();
+        window.createLucideIcons = function () {
+            if (window.lucide && typeof window.lucide.createIcons === 'function') {
+                window.lucide.createIcons();
+            } else {
+                window.__lucidePending = true;
+            }
+        };
+    </script>
+    <!-- Inter: self-hosted (@font-face in site.css) -->
+    <link rel="preload" href="../../../../assets/fonts/inter/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="../../../../assets/css/site.css">
+
+    <!-- Lucide Icons: site subset (tools/build-lucide-subset.mjs), non-blocking -->
+    <script src="../../../../assets/js/lucide-subset.js" defer
+        onerror="document.documentElement.classList.add('lucide-unavailable')"></script>
+
+    <!-- MathJax -->
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                tags: 'ams'
+            },
+            svg: {
+                fontCache: 'global'
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+        }
+
+        /* Custom styles for article content */
+        .article-content h2 {
+            font-size: 1.875rem;
+            font-weight: 800;
+            color: #fff;
+            margin-top: 3.5rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #1e293b;
+            display: flex;
+            align-items: center;
+        }
+
+        .article-content h3 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #e2e8f0;
+            margin-top: 2.5rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .article-content p {
+            font-size: 1.125rem;
+            line-height: 1.75;
+            color: #cbd5e1;
+            margin-bottom: 1.5rem;
+        }
+
+        .article-content ul,
+        .article-content ol {
+            font-size: 1.125rem;
+            line-height: 1.75;
+            color: #cbd5e1;
+            margin-bottom: 1.5rem;
+            padding-left: 1.5rem;
+        }
+
+        .article-content li {
+            margin-bottom: 0.5rem;
+        }
+
+        .article-content ul {
+            list-style-type: disc;
+        }
+
+        .article-content ol {
+            list-style-type: decimal;
+        }
+
+        .article-content strong {
+            color: #f8fafc;
+            font-weight: 600;
+        }
+
+        .article-content em {
+            font-style: italic;
+            color: #a78bfa;
+        }
+
+        .article-content blockquote {
+            border-left: 4px solid #8b5cf6;
+            margin-left: 0;
+            margin-right: 0;
+            font-style: italic;
+            color: #a1a1aa;
+            background-color: rgba(139, 92, 246, 0.05);
+            padding: 1.5rem;
+            border-radius: 0 0.5rem 0.5rem 0;
+            margin-bottom: 2rem;
+        }
+
+        .article-content hr {
+            border-color: #1e293b;
+            margin: 3rem 0;
+        }
+
+        .math-box {
+            background-color: rgba(30, 41, 59, 0.5);
+            border: 1px solid #334155;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin: 2rem 0;
+            box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+            overflow-x: auto;
+        }
+
+        .math-box-title {
+            font-family: 'ui-monospace', monospace;
+            font-size: 0.85rem;
+            color: #8b5cf6;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .mjx-chtml {
+            color: #e2e8f0 !important;
+            padding: 0.5em 0;
+        }
+
+        /* ====== Side-slip post: thesis card ====== */
+        .ss-mono {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        }
+
+        .ss-thesis {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 1.1rem;
+            margin: 0 0 2.5rem;
+            padding: 1.4rem 1.5rem;
+            border: 1px solid var(--blog-border);
+            border-radius: 1rem;
+            background:
+                linear-gradient(120deg, var(--blog-primary-soft), transparent 60%),
+                var(--blog-surface);
+            box-shadow: var(--blog-shadow-soft);
+        }
+
+        .ss-thesis-icon {
+            display: grid;
+            place-items: center;
+            width: 2.8rem;
+            height: 2.8rem;
+            border-radius: 0.8rem;
+            color: var(--blog-primary);
+            background: var(--blog-primary-soft);
+            border: 1px solid var(--blog-border-strong);
+        }
+
+        .ss-thesis-icon svg {
+            width: 1.4rem;
+            height: 1.4rem;
+        }
+
+        .ss-thesis-tag {
+            font: 600 0.72rem/1.3 ui-monospace, SFMono-Regular, Menlo, monospace;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--blog-primary);
+        }
+
+        .ss-thesis-title {
+            margin: 0.35rem 0 0.8rem;
+            font-size: 1.08rem;
+            font-weight: 700;
+            line-height: 1.45;
+            color: var(--blog-text-strong);
+        }
+
+        body.blog-page .article-content .ss-thesis p {
+            margin: 0;
+            font-size: 0.95rem;
+            line-height: 1.65;
+            color: var(--blog-text-muted);
+        }
+
+        /* ====== Figures ====== */
+        .ss-figure {
+            margin: 2.5rem 0;
+            padding: 1.25rem 1.35rem 1.1rem;
+            border: 1px solid var(--blog-border);
+            border-radius: 1rem;
+            background: var(--blog-surface);
+            box-shadow: var(--blog-shadow-soft);
+        }
+
+        .ss-fig-head {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.6rem 1rem;
+            margin-bottom: 0.9rem;
+        }
+
+        .ss-fig-tag {
+            display: block;
+            font: 600 0.7rem/1.3 ui-monospace, SFMono-Regular, Menlo, monospace;
+            letter-spacing: 0.09em;
+            text-transform: uppercase;
+            color: var(--blog-primary);
+        }
+
+        .ss-fig-title {
+            margin-top: 0.15rem;
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--blog-text-strong);
+        }
+
+        .ss-plot svg,
+        .ss-diagram {
+            display: block;
+            width: 100%;
+            height: auto;
+        }
+
+        .ss-figure figcaption {
+            margin-top: 0.85rem;
+            font-size: 0.92rem;
+            line-height: 1.65;
+            color: var(--blog-text-muted);
+        }
+
+        .ss-figure figcaption strong {
+            color: var(--blog-text-strong);
+        }
+
+        .ss-caption-note {
+            display: block;
+            margin-top: 0.3rem;
+        }
+
+        .ss-figure noscript p,
+        .ss-fallback {
+            font-size: 0.9rem;
+            color: var(--blog-text-muted);
+        }
+
+        .js-enabled .ss-figure[data-fig]:not(.is-ready) .ss-plot {
+            min-height: 12rem;
+        }
+
+        .ss-svg {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+            overflow: visible;
+            touch-action: pan-y;
+            cursor: crosshair;
+        }
+
+        .ss-svg:focus-visible {
+            outline: 2px solid var(--blog-focus);
+            outline-offset: 4px;
+            border-radius: 6px;
+        }
+
+        .ss-grid {
+            stroke: var(--blog-border);
+            stroke-width: 1;
+        }
+
+        .ss-grid-v {
+            stroke-dasharray: 2 5;
+        }
+
+        .ss-zero {
+            stroke: var(--blog-text-faint);
+            stroke-width: 1;
+        }
+
+        .ss-frame {
+            fill: none;
+            stroke: var(--blog-border);
+        }
+
+        .ss-tick {
+            fill: var(--blog-text-muted);
+            font-size: 11px;
+        }
+
+        .ss-axis-label {
+            fill: var(--blog-text-muted);
+            font-size: 11.5px;
+        }
+
+        .ss-note {
+            fill: var(--blog-text-faint);
+            font-size: 11px;
+        }
+
+        .ss-line {
+            fill: none;
+            stroke-width: 2;
+            stroke-linejoin: round;
+            stroke-linecap: round;
+        }
+
+        .ss-thick {
+            stroke-width: 3.2;
+            opacity: 0.85;
+        }
+
+        .ss-truth {
+            stroke: var(--blog-text-strong);
+        }
+
+        .ss-ekf {
+            stroke: var(--blog-amber);
+        }
+
+        .ss-plot .ss-line.ss-ekf {
+            stroke-width: 2.8;
+        }
+
+        .ss-plot .ss-line.ss-ukf {
+            stroke-width: 1.8;
+        }
+
+        .ss-ukf {
+            stroke: var(--blog-secondary);
+        }
+
+        .ss-kin {
+            stroke: var(--blog-rose);
+        }
+
+        .ss-ay {
+            stroke: var(--blog-primary);
+            stroke-width: 1.6;
+        }
+
+        .ss-dash {
+            stroke-dasharray: 7 5;
+        }
+
+        .ss-dash-fine {
+            stroke-dasharray: 7 3;
+        }
+
+        .ss-band {
+            fill: color-mix(in srgb, var(--blog-secondary) 20%, transparent);
+            stroke: none;
+        }
+
+        .ss-band.ss-band-ekf {
+            fill: color-mix(in srgb, var(--blog-amber) 20%, transparent);
+        }
+
+        .ss-limit {
+            stroke: var(--blog-rose);
+            stroke-dasharray: 3 4;
+            stroke-width: 1.2;
+        }
+
+        .ss-limit-dry {
+            stroke: var(--blog-text-faint);
+        }
+
+        .ss-cursor {
+            stroke: var(--blog-text-muted);
+            stroke-width: 1;
+            stroke-dasharray: 3 3;
+            pointer-events: none;
+        }
+
+        .ss-restart {
+            stroke: var(--blog-rose);
+            stroke-width: 1.5;
+            stroke-dasharray: 5 4;
+        }
+
+        .ss-tyre {
+            stroke: var(--blog-text-strong);
+            stroke-width: 3;
+        }
+
+        .ss-linear-region {
+            stroke: var(--blog-text-faint);
+            stroke-dasharray: 2 5;
+            stroke-width: 1.5;
+        }
+
+        .ss-pdf {
+            fill: color-mix(in srgb, var(--blog-primary) 16%, transparent);
+            stroke: var(--blog-primary);
+            stroke-width: 1.2;
+        }
+
+        .ss-sigma-stem {
+            stroke: var(--blog-secondary);
+            stroke-dasharray: 2 3;
+            stroke-width: 1.2;
+        }
+
+        .ss-dot {
+            stroke: var(--blog-surface-strong);
+            stroke-width: 2;
+        }
+
+        .ss-ekf-fill {
+            fill: var(--blog-amber);
+        }
+
+        .ss-ukf-fill {
+            fill: var(--blog-secondary);
+        }
+
+        .ss-tickmark {
+            stroke-width: 3;
+        }
+
+        .ss-bar-label {
+            fill: var(--blog-text);
+        }
+
+        .ss-note.ss-ukf-label {
+            fill: var(--blog-secondary);
+            font-weight: 600;
+        }
+
+        .ss-ekf-text {
+            color: var(--blog-amber);
+            font-weight: 600;
+        }
+
+        .ss-ukf-text {
+            color: var(--blog-secondary);
+            font-weight: 600;
+        }
+
+        .ss-truth-text {
+            color: var(--blog-text-strong);
+            font-weight: 600;
+        }
+
+        .ss-readout {
+            min-height: 1.7em;
+            margin-top: 0.6rem;
+            font: 0.8rem/1.65 ui-monospace, SFMono-Regular, Menlo, monospace;
+            color: var(--blog-text-muted);
+        }
+
+        .ss-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.35rem 1rem;
+            font: 0.76rem/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+            color: var(--blog-text-muted);
+        }
+
+        .ss-key i {
+            display: inline-block;
+            width: 18px;
+            height: 3px;
+            margin-right: 0.4rem;
+            border-radius: 2px;
+            vertical-align: middle;
+        }
+
+        .ss-key.ss-truth i {
+            background: var(--blog-text-strong);
+        }
+
+        .ss-key.ss-ekf i {
+            background: var(--blog-amber);
+        }
+
+        .ss-key.ss-ukf i {
+            background: var(--blog-secondary);
+        }
+
+        .ss-key.ss-kin i {
+            background: var(--blog-rose);
+        }
+
+        .ss-key.ss-band-key i {
+            height: 10px;
+            background: color-mix(in srgb, var(--blog-secondary) 28%, transparent);
+        }
+
+        .ss-key.ss-band-key.ss-band-ekf i {
+            background: color-mix(in srgb, var(--blog-amber) 28%, transparent);
+        }
+
+        .ss-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.6rem 1rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .ss-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+        }
+
+        .ss-tabs button,
+        .ss-presets button {
+            padding: 0.48rem 0.8rem;
+            font: 600 0.76rem/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+            color: var(--blog-text-muted);
+            cursor: pointer;
+            border: 1px solid var(--blog-border);
+            border-radius: 999px;
+            background: transparent;
+            transition: color 160ms ease, border-color 160ms ease, background-color 160ms ease;
+        }
+
+        .ss-tabs button:hover,
+        .ss-presets button:hover {
+            color: var(--blog-text-strong);
+            border-color: var(--blog-border-strong);
+        }
+
+        .ss-tabs button[aria-pressed="true"] {
+            color: var(--blog-text-strong);
+            border-color: var(--blog-border-strong);
+            background: var(--blog-primary-soft);
+        }
+
+        .ss-tabs button:focus-visible,
+        .ss-presets button:focus-visible,
+        .ss-control input:focus-visible,
+        .ss-check input:focus-visible {
+            outline: 2px solid var(--blog-focus);
+            outline-offset: 2px;
+        }
+
+        .ss-check {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            font: 0.78rem ui-monospace, SFMono-Regular, Menlo, monospace;
+            color: var(--blog-text-muted);
+            cursor: pointer;
+        }
+
+        .ss-check input {
+            accent-color: var(--blog-secondary);
+        }
+
+        .ss-controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+            gap: 0.75rem 1.5rem;
+            margin-top: 0.9rem;
+        }
+
+        .ss-control label {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            font: 0.8rem/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+            color: var(--blog-text-muted);
+        }
+
+        .ss-control output {
+            color: var(--blog-text-strong);
+            font-weight: 600;
+        }
+
+        .ss-control input[type="range"] {
+            width: 100%;
+            margin-top: 0.35rem;
+            accent-color: var(--blog-primary);
+        }
+
+        .ss-presets {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+            margin-top: 0.85rem;
+        }
+
+        .ss-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+            gap: 0.6rem 1rem;
+            margin: 0.9rem 0 0;
+            padding-top: 0.85rem;
+            border-top: 1px solid var(--blog-border);
+        }
+
+        .ss-stats dt {
+            font: 0.74rem/1.3 ui-monospace, SFMono-Regular, Menlo, monospace;
+            color: var(--blog-text-faint);
+        }
+
+        .ss-stats dd {
+            margin: 0.2rem 0 0;
+            font: 600 0.92rem/1.3 ui-monospace, SFMono-Regular, Menlo, monospace;
+            color: var(--blog-text-strong);
+        }
+
+        /* ====== Single-track diagram ====== */
+        .ss-diagram {
+            max-width: 54rem;
+            margin: 0 auto;
+            overflow: visible;
+        }
+
+        .ssd-body {
+            fill: var(--blog-surface-soft);
+            stroke: var(--blog-border);
+            stroke-width: 1.5;
+        }
+
+        .ssd-glass {
+            fill: none;
+            stroke: var(--blog-border);
+            stroke-width: 1.2;
+            stroke-dasharray: 4 4;
+        }
+
+        .ssd-axis {
+            stroke: var(--blog-text-faint);
+            stroke-width: 1.2;
+            stroke-dasharray: 6 6;
+        }
+
+        .ssd-chassis {
+            stroke: var(--blog-text-strong);
+            stroke-width: 3.5;
+            stroke-linecap: round;
+        }
+
+        .ssd-wheel {
+            fill: var(--blog-text-strong);
+        }
+
+        .ssd-vec {
+            fill: none;
+            stroke-width: 2.4;
+            stroke-linecap: round;
+        }
+
+        .ssd-v {
+            stroke: var(--blog-secondary);
+        }
+
+        .ssd-a {
+            stroke: var(--blog-amber);
+            stroke-dasharray: 6 4;
+        }
+
+        .ssd-f {
+            stroke: var(--blog-rose);
+        }
+
+        .ssd-m {
+            stroke: var(--blog-primary);
+            fill: var(--blog-primary);
+        }
+
+        .ssd-yaw {
+            fill: none;
+        }
+
+        .ssd-head-v {
+            fill: var(--blog-secondary);
+        }
+
+        .ssd-head-a {
+            fill: var(--blog-amber);
+        }
+
+        .ssd-head-f {
+            fill: var(--blog-rose);
+        }
+
+        .ssd-head-m {
+            fill: var(--blog-primary);
+        }
+
+        .ssd-arc {
+            fill: none;
+            stroke-width: 1.6;
+        }
+
+        .ssd-arc-v {
+            stroke: var(--blog-secondary);
+        }
+
+        .ssd-arc-a {
+            stroke: var(--blog-amber);
+        }
+
+        .ssd-arc-m {
+            stroke: var(--blog-primary);
+        }
+
+        .ssd-sym {
+            font: italic 600 22px/1 'Times New Roman', Georgia, serif;
+            stroke: none;
+        }
+
+        .ssd-label {
+            font: 600 13px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+        }
+
+        .ssd-muted {
+            fill: var(--blog-text-muted);
+        }
+
+        .ssd-v-text {
+            fill: var(--blog-secondary);
+        }
+
+        .ssd-a-text {
+            fill: var(--blog-amber);
+        }
+
+        .ssd-f-text {
+            fill: var(--blog-rose);
+        }
+
+        .ssd-cg {
+            fill: var(--blog-surface-strong);
+            stroke: var(--blog-text-strong);
+            stroke-width: 2;
+        }
+
+        .ssd-cg-fill {
+            fill: var(--blog-text-strong);
+        }
+
+        .ssd-dim {
+            stroke: var(--blog-text-muted);
+            stroke-width: 1.2;
+        }
+
+        .ssd-ext {
+            stroke: var(--blog-text-faint);
+            stroke-width: 1;
+            stroke-dasharray: 2 4;
+        }
+
+        /* ====== Test-bench pipeline ====== */
+        .ss-pipeline {
+            display: grid;
+            grid-template-columns: 1fr auto 1.25fr auto 1fr auto 0.95fr auto 0.9fr;
+            align-items: stretch;
+            gap: 0;
+        }
+
+        .ss-block {
+            position: relative;
+            padding: 0.8rem 0.85rem;
+            border: 1.5px solid var(--blog-border-strong);
+            border-radius: 0.6rem;
+            background: var(--blog-surface-strong);
+        }
+
+        .ss-block-tag {
+            display: block;
+            font: 600 0.64rem/1.2 ui-monospace, SFMono-Regular, Menlo, monospace;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--blog-primary);
+        }
+
+        .ss-block strong {
+            display: block;
+            margin: 0.3rem 0 0.25rem;
+            font-size: 0.92rem;
+            color: var(--blog-text-strong);
+        }
+
+        .ss-block small {
+            display: block;
+            font: 0.72rem/1.45 ui-monospace, SFMono-Regular, Menlo, monospace;
+            color: var(--blog-text-muted);
+        }
+
+        .ss-block-split {
+            display: grid;
+            gap: 0.5rem;
+        }
+
+        .ss-block-split .ss-block {
+            padding: 0.55rem 0.75rem;
+        }
+
+        .ss-block-ekf {
+            border-color: color-mix(in srgb, var(--blog-amber) 60%, transparent);
+        }
+
+        .ss-block-ekf strong {
+            color: var(--blog-amber);
+        }
+
+        .ss-block-ukf {
+            border-color: color-mix(in srgb, var(--blog-secondary) 60%, transparent);
+        }
+
+        .ss-block-ukf strong {
+            color: var(--blog-secondary);
+        }
+
+        .ss-wire {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-width: 3.4rem;
+            padding: 0 0.2rem;
+            font: 0.68rem/1.3 ui-monospace, SFMono-Regular, Menlo, monospace;
+            color: var(--blog-text-muted);
+            text-align: center;
+        }
+
+        .ss-wire::after {
+            width: 100%;
+            height: 9px;
+            margin-top: 0.2rem;
+            content: "";
+            background:
+                linear-gradient(var(--blog-text-faint), var(--blog-text-faint)) left center / calc(100% - 7px) 1.5px no-repeat,
+                conic-gradient(from 225deg at 100% 50%, var(--blog-text-faint) 0 90deg, transparent 0) right center / 7px 9px no-repeat;
+        }
+
+        /* ====== Tables & misc ====== */
+        .ss-table-wrap {
+            margin: 2rem 0;
+            overflow-x: auto;
+        }
+
+        .ss-table-wrap caption {
+            caption-side: top;
+            padding-bottom: 0.6rem;
+            font-size: 0.75rem;
+            font-style: italic;
+            color: var(--blog-text-faint);
+        }
+
+        body.blog-page .article-content .ss-table-wrap table {
+            width: 100%;
+            min-width: 36rem;
+            border-collapse: separate;
+            border-spacing: 0;
+            font-size: 0.86rem;
+            border: 1px solid var(--blog-border);
+            border-radius: 0.75rem;
+            overflow: hidden;
+        }
+
+        body.blog-page .article-content .ss-table-wrap th,
+        body.blog-page .article-content .ss-table-wrap td {
+            padding: 0.65rem 0.85rem;
+            border-bottom: 1px solid var(--blog-border);
+            text-align: center;
+            font-variant-numeric: tabular-nums;
+        }
+
+        body.blog-page .article-content .ss-table-wrap tbody tr:last-child > * {
+            border-bottom: 0;
+        }
+
+        body.blog-page .article-content .ss-table-wrap th[scope="row"] {
+            text-align: left;
+            font-weight: 600;
+            color: var(--blog-text-strong);
+            white-space: nowrap;
+        }
+
+        body.blog-page .article-content .ss-table-wrap thead th {
+            font-size: 0.7rem;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        .ss-num-ekf {
+            color: var(--blog-amber);
+        }
+
+        .ss-num-ukf {
+            color: var(--blog-secondary);
+        }
+
+        .ss-win {
+            font-weight: 700;
+        }
+
+        .ss-bad {
+            color: var(--blog-rose);
+            font-weight: 700;
+        }
+
+        .ss-cards {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 1.25rem;
+            margin: 2rem 0;
+        }
+
+        .ss-card {
+            padding: 1.25rem 1.35rem;
+            border: 1px solid var(--blog-border);
+            border-radius: 0.9rem;
+            background: var(--blog-surface);
+        }
+
+        .ss-card-tag {
+            font: 600 0.68rem/1.3 ui-monospace, SFMono-Regular, Menlo, monospace;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .ss-card-title {
+            margin: 0.35rem 0 0.6rem;
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--blog-text-strong);
+        }
+
+        body.blog-page .article-content .ss-card p,
+        body.blog-page .article-content .ss-card li {
+            font-size: 0.95rem;
+            line-height: 1.65;
+        }
+
+        body.blog-page .article-content .ss-card p:last-child,
+        body.blog-page .article-content .ss-card ul:last-child {
+            margin-bottom: 0;
+        }
+
+        body.blog-page .article-content .ss-card ul {
+            padding-left: 1.1rem;
+        }
+
+        .ss-card-ekf {
+            border-top: 3px solid var(--blog-amber);
+        }
+
+        .ss-card-ekf .ss-card-tag {
+            color: var(--blog-amber);
+        }
+
+        .ss-card-ukf {
+            border-top: 3px solid var(--blog-secondary);
+        }
+
+        .ss-card-ukf .ss-card-tag {
+            color: var(--blog-secondary);
+        }
+
+        .ss-card-plain .ss-card-tag {
+            color: var(--blog-primary);
+        }
+
+        body.blog-page .article-content ol.ss-lessons {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .ss-lessons {
+            counter-reset: lesson;
+            display: grid;
+            gap: 1rem;
+            margin: 2rem 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        body.blog-page .article-content .ss-lessons > li {
+            position: relative;
+            margin: 0;
+            padding: 1.1rem 1.25rem 1.1rem 3.6rem;
+            border: 1px solid var(--blog-border);
+            border-radius: 0.9rem;
+            background: var(--blog-surface);
+            font-size: 1rem;
+            line-height: 1.7;
+        }
+
+        .ss-lessons > li::before {
+            position: absolute;
+            top: 1.05rem;
+            left: 1.1rem;
+            counter-increment: lesson;
+            content: counter(lesson, decimal-leading-zero);
+            font: 700 0.95rem/1.6 ui-monospace, SFMono-Regular, Menlo, monospace;
+            color: var(--blog-primary);
+        }
+
+        .ss-code {
+            margin: 1.25rem 0;
+            padding: 1rem 1.2rem;
+            overflow-x: auto;
+            font: 0.85rem/1.7 ui-monospace, SFMono-Regular, Menlo, monospace;
+            border: 1px solid var(--blog-border);
+            border-radius: 0.75rem;
+        }
+
+        @media (max-width: 860px) {
+            .ss-pipeline {
+                grid-template-columns: 1fr;
+            }
+
+            .ss-wire {
+                flex-direction: row;
+                gap: 0.6rem;
+                min-height: 2.6rem;
+            }
+
+            .ss-wire::after {
+                order: -1;
+                width: 9px;
+                height: 2.2rem;
+                margin: 0;
+                background:
+                    linear-gradient(var(--blog-text-faint), var(--blog-text-faint)) center top / 1.5px calc(100% - 7px) no-repeat,
+                    conic-gradient(from 135deg at 50% 100%, var(--blog-text-faint) 0 90deg, transparent 0) center bottom / 9px 7px no-repeat;
+            }
+
+            .ss-block-split {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .ss-cards {
+                grid-template-columns: 1fr;
+            }
+
+            .ss-thesis {
+                grid-template-columns: 1fr;
+                padding: 1.2rem;
+            }
+
+            .ss-figure {
+                margin-left: -0.5rem;
+                margin-right: -0.5rem;
+                padding: 1rem 0.85rem 0.9rem;
+            }
+
+            .ss-toolbar {
+                align-items: flex-start;
+            }
+
+            body.blog-page .article-content .ss-lessons > li {
+                padding: 1rem 1rem 1rem 3.1rem;
+            }
+
+            .ss-lessons > li::before {
+                left: 0.9rem;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="../../../../assets/css/blog-theme.css">
+    <script defer src="../../../../assets/js/blog-theme.js"></script>
+    <script defer src="../../../../assets/js/blog-ambient.js"></script>
+    <script defer src="../js/sideslip-data.js"></script>
+    <script defer src="../js/sideslip-figures.js"></script>
+</head>
+
+<body class="blog-page antialiased selection:bg-primary-500/30">
+    <!-- Navbar -->
+    <nav
+        class="fixed w-full z-50 bg-slate-900/80 backdrop-blur-md border-b border-slate-800 transition-all duration-300">
+        <div class="max-w-6xl mx-auto px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <a href="../../../../index.html#blog"
+                    class="flex items-center text-slate-300 hover:text-white transition-colors group">
+                    <i data-lucide="arrow-left"
+                        class="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform"></i>
+                    <span class="font-medium">Back to Portfolio</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <button type="button" class="blog-theme-toggle" data-theme-toggle aria-pressed="false"
+        aria-label="Switch to dark cosmic theme" title="Switch to dark cosmic theme">
+        <span class="theme-toggle-track" aria-hidden="true">
+            <i data-lucide="sun" class="theme-toggle-icon theme-toggle-icon-sun"></i>
+            <i data-lucide="moon-star" class="theme-toggle-icon theme-toggle-icon-moon"></i>
+            <span class="theme-toggle-thumb"></span>
+        </span>
+        <span class="theme-toggle-label">LAB MODE</span>
+    </button>
+
+    <!-- Main Content -->
+    <main class="pt-32 pb-24">
+        <article class="max-w-6xl mx-auto px-6 lg:px-8">
+            <!-- Header -->
+            <header class="mb-12">
+                <h1 class="text-4xl md:text-5xl lg:text-6xl font-black text-white mb-6 leading-tight tracking-tight">
+                    Chasing an Invisible Angle: EKF vs. UKF for Vehicle Side-Slip Estimation
+                </h1>
+
+                <div class="flex flex-wrap items-center gap-4 text-slate-400 font-mono text-sm mb-6">
+                    <div class="flex items-center">
+                        <i data-lucide="calendar" class="w-4 h-4 mr-2"></i>
+                        <time datetime="2022-03-21">March 21, 2022</time>
+                    </div>
+                    <div class="flex items-center">
+                        <i data-lucide="book-open" class="w-4 h-4 mr-2"></i>
+                        <span>Vehicle Dynamics</span>
+                    </div>
+                    <div class="flex items-center">
+                        <i data-lucide="graduation-cap" class="w-4 h-4 mr-2"></i>
+                        <span>B.Sc. Thesis</span>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap gap-2 mb-8">
+                    <span
+                        class="text-xs font-mono bg-slate-800 border border-slate-700 text-primary-400 px-3 py-1 rounded-full">#KalmanFilter</span>
+                    <span
+                        class="text-xs font-mono bg-slate-800 border border-slate-700 text-primary-400 px-3 py-1 rounded-full">#EKF</span>
+                    <span
+                        class="text-xs font-mono bg-slate-800 border border-slate-700 text-primary-400 px-3 py-1 rounded-full">#UKF</span>
+                    <span
+                        class="text-xs font-mono bg-slate-800 border border-slate-700 text-primary-400 px-3 py-1 rounded-full">#VehicleDynamics</span>
+                    <span
+                        class="text-xs font-mono bg-slate-800 border border-slate-700 text-primary-400 px-3 py-1 rounded-full">#StateEstimation</span>
+                    <span
+                        class="text-xs font-mono bg-slate-800 border border-slate-700 text-primary-400 px-3 py-1 rounded-full">#MATLAB</span>
+                </div>
+            </header>
+
+            <!-- Hero Image -->
+            <div class="rounded-2xl overflow-hidden mb-12 border border-slate-800 shadow-2xl max-w-5xl mx-auto">
+                <img width="1600" height="893" fetchpriority="high" decoding="async" src="../images/sideslipcover.webp"
+                    alt="A car sliding through a lane change, with the side-slip angle between its heading and its velocity, next to EKF and UKF estimates tracking that angle"
+                    class="w-full h-auto object-cover">
+            </div>
+
+            <!-- Content Body -->
+            <div class="article-content">
+                <blockquote class="text-lg">
+                    <strong>Abstract:</strong> The side-slip angle $\beta$, the angle between where a car points and
+                    where it actually travels, is one of the clearest signs of whether a vehicle is still under
+                    control. No series-production sensor measures it. My B.Sc. thesis implemented two variants of the
+                    Kalman filter, the <strong>Extended (EKF)</strong> and the <strong>Unscented (UKF)</strong>, to
+                    estimate $\beta$ from the sensors an ESC system already carries, and compared them in
+                    MATLAB/Simulink. The comparison turned out to be more interesting than "the UKF is more
+                    accurate". In everyday driving the two are indistinguishable. At the tyre's grip limit the
+                    UKF recovers where the EKF becomes overconfident. And the same sigma points that help it there make
+                    it the more fragile filter when its spread is tuned carelessly.
+                </blockquote>
+
+                <div class="ss-thesis">
+                    <div class="ss-thesis-icon" aria-hidden="true"><i data-lucide="graduation-cap"></i></div>
+                    <div>
+                        <div class="ss-thesis-tag">B.Sc. Thesis · University of Siegen · 2022</div>
+                        <div class="ss-thesis-title">Implementation and comparison of two variants of the Kalman
+                            Filter for estimating the side-slip angle of a vehicle within the simulation environment
+                            MATLAB/Simulink</div>
+                    </div>
+                </div>
+
+                <h2><i data-lucide="target" class="w-6 h-6 mr-3 text-rose-400"></i> 1. The Angle Nobody Measures</h2>
+
+                <p>Watch a car drive through a corner from above. Its body points one way, but its centre of gravity
+                    moves along a slightly different direction. The angle between the two is the <strong>side-slip
+                    angle</strong>:</p>
+
+                <div class="math-box">
+                    <div class="math-box-title">// Side-slip angle at the centre of gravity</div>
+                    $$\beta = \arctan\frac{v_y}{v_x}$$
+                </div>
+
+                <p>In normal driving on a dry road, $\beta$ stays within a couple of degrees and nobody notices it.
+                    When it grows, the car is sliding: the tyres are near their limit, steering loses authority over
+                    the car's rotation, and a skid is under way. That is why Electronic Stability Control (ESC) cares so
+                    much about it. Knowing $\beta$ is knowing how close the car is to losing control.</p>
+
+                <p>The trouble is that measuring it directly takes optical speed-over-ground sensors or dual-antenna
+                    GNSS/INS units. These are the instruments of a test vehicle, far too expensive for a production
+                    car. A production car has to <em>estimate</em> $\beta$ from the sensors it already carries.</p>
+
+                <div class="ss-cards">
+                    <div class="ss-card ss-card-plain">
+                        <div class="ss-card-tag">What the ESC cluster measures</div>
+                        <div class="ss-card-title">Cheap, fast, slightly wrong</div>
+                        <ul>
+                            <li>yaw rate $r$ (gyro)</li>
+                            <li>lateral acceleration $a_y$ (accelerometer)</li>
+                            <li>longitudinal speed $v_x$ (wheel speeds)</li>
+                            <li>steering-wheel angle $\delta_{SW}$</li>
+                        </ul>
+                        <p>Each comes with noise and a small offset that drifts with temperature and age.</p>
+                    </div>
+                    <div class="ss-card ss-card-plain">
+                        <div class="ss-card-tag">What we want</div>
+                        <div class="ss-card-title">One angle, never measured</div>
+                        <p>$\beta$ appears in none of these signals directly. It has to be <strong>inferred</strong>
+                            through a model of how the car moves, which is exactly the job a Kalman filter was made
+                            for.</p>
+                    </div>
+                </div>
+
+                <figure class="ss-figure">
+                    <div class="ss-fig-head">
+                        <div>
+                            <span class="ss-fig-tag">Figure 1</span>
+                            <div class="ss-fig-title">The single-track ("bicycle") model</div>
+                        </div>
+                    </div>
+                    <svg viewBox="40 34 800 400" class="ss-diagram" role="img" aria-labelledby="ssd-title ssd-desc">
+                        <title id="ssd-title">Single-track vehicle model</title>
+                        <desc id="ssd-desc">Top view of the single-track model: the front and rear wheels on the
+                            vehicle axis, the side-slip angle beta between the body axis and the velocity at the centre
+                            of gravity, the steering angle delta, the slip angles alpha f and alpha r between each wheel
+                            and its velocity, the lateral tyre forces and the yaw rate r.</desc>
+                        <defs>
+                            <marker id="ssd-head-v" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1L10,5L0,9z" class="ssd-head-v"/></marker>
+                            <marker id="ssd-head-f" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1L10,5L0,9z" class="ssd-head-f"/></marker>
+                            <marker id="ssd-head-a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1L10,5L0,9z" class="ssd-head-a"/></marker>
+                            <marker id="ssd-head-m" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1L10,5L0,9z" class="ssd-head-m"/></marker>
+                        </defs>
+                        <rect x="88.2" y="135.1" width="560" height="206" rx="54" class="ssd-body" transform="rotate(-10.0 368.2 238.1)"/>
+                        <rect x="378.9" y="141.8" width="140" height="164" rx="26" class="ssd-glass" transform="rotate(-10.0 448.9 223.8)"/>
+                        <line x1="104.3" y1="284.6" x2="764.1" y2="168.3" class="ssd-axis"/>
+                        <text x="772.0" y="170.9" text-anchor="start" class="ssd-label ssd-muted">x<tspan dy="0.3em" font-size="70%">body</tspan></text>
+                        <line x1="173.2" y1="272.5" x2="567.1" y2="203.0" class="ssd-chassis"/>
+                        <rect x="137.2" y="261.5" width="72" height="22" rx="4" class="ssd-wheel" transform="rotate(-10.0 173.2 272.5)"/>
+                        <rect x="531.1" y="192.0" width="72" height="22" rx="4" class="ssd-wheel" transform="rotate(-50.0 567.1 203.0)"/>
+                        <line x1="505.4" y1="276.5" x2="676.4" y2="72.8" class="ssd-axis"/>
+                        <path d="M486.4,217.2A82,82 0 0 0 514.4,265.8" class="ssd-arc ssd-arc-m"/>
+                        <text x="480.5" y="260.0" text-anchor="middle" class="ssd-sym ssd-m">δ</text>
+                        <line x1="380.0" y1="236.0" x2="562.7" y2="154.7" class="ssd-vec ssd-v" marker-end="url(#ssd-head-v)"/>
+                        <text x="577.3" y="154.1" text-anchor="middle" class="ssd-sym ssd-v-text">v</text>
+                        <path d="M504.1,214.1A126,126 0 0 0 495.1,184.8" class="ssd-arc ssd-arc-v"/>
+                        <text x="515.8" y="201.5" text-anchor="middle" class="ssd-sym ssd-v-text">β</text>
+                        <line x1="567.1" y1="203.0" x2="655.3" y2="147.9" class="ssd-vec ssd-a" marker-end="url(#ssd-head-a)"/>
+                        <text x="670.6" y="144.4" text-anchor="middle" class="ssd-sym ssd-a-text">v<tspan dy="0.3em" font-size="70%">f</tspan></text>
+                        <path d="M677.4,134.1A130,130 0 0 0 650.7,103.4" class="ssd-arc ssd-arc-a"/>
+                        <text x="680.3" y="111.6" text-anchor="middle" class="ssd-sym ssd-a-text">α<tspan dy="0.3em" font-size="70%">f</tspan></text>
+                        <line x1="173.2" y1="272.5" x2="301.2" y2="270.2" class="ssd-vec ssd-a" marker-end="url(#ssd-head-a)"/>
+                        <text x="319.2" y="275.9" text-anchor="middle" class="ssd-sym ssd-a-text">v<tspan dy="0.3em" font-size="70%">r</tspan></text>
+                        <path d="M273.2,270.7A100,100 0 0 0 271.7,255.1" class="ssd-arc ssd-arc-a"/>
+                        <text x="262" y="300" text-anchor="start" class="ssd-sym ssd-a-text">α<tspan dy="0.3em" font-size="70%">r</tspan></text>
+                        <line x1="567.1" y1="203.0" x2="487.4" y2="136.2" class="ssd-vec ssd-f" marker-end="url(#ssd-head-f)"/>
+                        <text x="475.2" y="129.9" text-anchor="middle" class="ssd-sym ssd-f-text">F<tspan dy="0.3em" font-size="70%">y,f</tspan></text>
+                        <line x1="173.2" y1="272.5" x2="158.3" y2="187.8" class="ssd-vec ssd-f" marker-end="url(#ssd-head-f)"/>
+                        <text x="155.5" y="176.0" text-anchor="middle" class="ssd-sym ssd-f-text">F<tspan dy="0.3em" font-size="70%">y,r</tspan></text>
+                        <path d="M347.5,268.5A46,46 0 0 0 421.7,255.4" class="ssd-vec ssd-m ssd-yaw" marker-end="url(#ssd-head-m)"/>
+                        <text x="391.5" y="308.0" text-anchor="middle" class="ssd-sym ssd-m">r</text>
+                        <circle cx="380.0" cy="236.0" r="10" class="ssd-cg"/>
+                        <path d="M380.0,226.0A10,10 0 0 1 390.0,236.0L380.0,236.0Z M380.0,246.0A10,10 0 0 1 370.0,236.0L380.0,236.0Z" class="ssd-cg-fill"/>
+                        <text x="360.7" y="217.0" text-anchor="middle" class="ssd-label ssd-muted">CoG</text>
+                        <line x1="196.1" y1="402.5" x2="402.9" y2="366.0" class="ssd-dim" marker-start="url(#ssd-head-m)" marker-end="url(#ssd-head-m)"/>
+                        <text x="303.0" y="410.9" text-anchor="middle" class="ssd-sym ssd-muted">l<tspan dy="0.3em" font-size="70%">r</tspan></text>
+                        <line x1="402.9" y1="366.0" x2="590.0" y2="333.0" class="ssd-dim" marker-start="url(#ssd-head-m)" marker-end="url(#ssd-head-m)"/>
+                        <text x="500.0" y="376.2" text-anchor="middle" class="ssd-sym ssd-muted">l<tspan dy="0.3em" font-size="70%">f</tspan></text>
+                        <line x1="176.0" y1="288.2" x2="197.5" y2="410.3" class="ssd-ext"/>
+                        <line x1="382.8" y1="251.8" x2="404.3" y2="373.9" class="ssd-ext"/>
+                        <line x1="569.9" y1="218.8" x2="591.4" y2="340.9" class="ssd-ext"/>
+                    </svg>
+                    <figcaption>Both wheels of an axle are lumped into one, which keeps exactly the physics that
+                        matter for lateral motion. The body axis points one way, the velocity $v$ at the centre of
+                        gravity another: that difference is $\beta$. Each tyre also travels at a <strong>slip
+                        angle</strong> $\alpha$ to the direction it is pointing, and it is this slip that makes the
+                        tyre push sideways with $F_y$. Angles are exaggerated for readability.</figcaption>
+                </figure>
+
+                <h3>Why not just integrate?</h3>
+
+                <p>For constant speed and small angles, pure kinematics already links $\beta$ to two of the measured
+                    signals, with no model parameters at all:</p>
+
+                <div class="math-box">
+                    <div class="math-box-title">// Kinematic relation</div>
+                    $$\dot\beta \approx \frac{a_y}{v_x} - r$$
+                </div>
+
+                <p>It is tempting to integrate this and call it a day. The catch is the word <em>integrate</em>: every
+                    hundredth of a m/s² of accelerometer offset and every tenth of a degree per second of gyro offset
+                    is summed up forever. In the run below the integral has drifted by about <strong>0.75°</strong>
+                    after twelve seconds of gentle slalom, which is more than the entire signal it is supposed to
+                    follow. Nothing in the equation ever pulls it back.</p>
+
+                <figure class="ss-figure" data-fig="drift">
+                    <div class="ss-fig-head">
+                        <div>
+                            <span class="ss-fig-tag">Figure 2</span>
+                            <div class="ss-fig-title">Integration drifts, a filter does not</div>
+                        </div>
+                        <div class="ss-legend-slot"></div>
+                    </div>
+                    <div class="ss-plot"></div>
+                    <figcaption>Slalom at 72 km/h. The integrated kinematic estimate (rose) wanders off with the
+                        sensor offsets, while the UKF (dashed) stays on the true $\beta$ because its model keeps tying
+                        the estimate back to what the tyres can physically produce.</figcaption>
+                    <noscript><p class="ss-fallback">Interactive chart: requires JavaScript.</p></noscript>
+                </figure>
+
+                <p>So we need a model that ties $\beta$ to quantities we can measure, and a filter that weighs that
+                    model against noisy measurements. That is the Kalman filter's job.</p>
+
+                <hr>
+
+                <h2><i data-lucide="function-square" class="w-6 h-6 mr-3 text-primary-400"></i> 2. A Model of the Car
+                </h2>
+
+                <p>The estimator's state is $\mathbf{x} = [\beta,\ r]^\top$. Its inputs are the measured steering angle
+                    and speed, $\mathbf{u} = [\delta,\ v_x]^\top$. Newton's second law in the lateral direction and
+                    around the vertical axis gives the nonlinear single-track model:</p>
+
+                <div class="math-box">
+                    <div class="math-box-title">// Nonlinear single-track model</div>
+                    $$\begin{aligned}
+                    \dot\beta &= \frac{\cos^2\beta}{v_x}\left(\frac{F_{y,f}\cos\delta + F_{y,r}}{m} - v_x\, r\right)\\
+                    \dot r &= \frac{l_f\, F_{y,f}\cos\delta - l_r\, F_{y,r}}{I_z}
+                    \end{aligned}$$
+                </div>
+
+                <p>The tyre forces depend on how much each axle slips, which in turn depends on the state itself:</p>
+
+                <div class="math-box">
+                    <div class="math-box-title">// Slip angles</div>
+                    $$\alpha_f = \delta - \arctan\!\left(\tan\beta + \frac{l_f\, r}{v_x}\right), \qquad
+                    \alpha_r = -\arctan\!\left(\tan\beta - \frac{l_r\, r}{v_x}\right)$$
+                </div>
+
+                <p>The tyre is where the trouble lives. For small slip it behaves like a linear spring. Beyond
+                    roughly ten degrees it saturates: more slip no longer buys more force. Pacejka's <strong>Magic
+                    Formula</strong> captures this shape with four coefficients. Friction $\mu$ enters through the
+                    similarity method, so that a wet road keeps the same cornering stiffness but runs out of grip
+                    sooner:</p>
+
+                <div class="math-box">
+                    <div class="math-box-title">// Magic Formula tyre (per axle)</div>
+                    $$F_y(\alpha) = \mu F_z \sin\!\Big(C \arctan\big(B\tilde\alpha - E\,(B\tilde\alpha - \arctan B\tilde\alpha)\big)\Big),
+                    \qquad \tilde\alpha = \frac{\alpha}{\mu}$$
+                </div>
+
+                <p>The measurement model is short, and it is where the nonlinearity bites. The gyro sees $r$
+                    directly, but the accelerometer sees $\beta$ only <em>through</em> the tyre forces:</p>
+
+                <div class="math-box">
+                    <div class="math-box-title">// Measurement model</div>
+                    $$\mathbf{y} = \begin{bmatrix} r \\ a_y \end{bmatrix}
+                    = \begin{bmatrix} r \\ \big(F_{y,f}(\alpha_f)\cos\delta + F_{y,r}(\alpha_r)\big)/m \end{bmatrix} + \mathbf{v},
+                    \qquad \mathbf{v}\sim\mathcal{N}(0, R)$$
+                </div>
+
+                <div class="ss-table-wrap">
+                    <table>
+                        <caption>Table 1: Vehicle and tyre parameters (a mid-size passenger car)</caption>
+                        <thead>
+                            <tr>
+                                <th scope="col">Parameter</th>
+                                <th scope="col">Symbol</th>
+                                <th scope="col">Value</th>
+                                <th scope="col">Parameter</th>
+                                <th scope="col">Symbol</th>
+                                <th scope="col">Value</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <th scope="row">Mass</th>
+                                <td>$m$</td>
+                                <td>1500 kg</td>
+                                <th scope="row">Tyre stiffness (front / rear)</th>
+                                <td>$B_f,\ B_r$</td>
+                                <td>12.0 / 13.5</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Yaw inertia</th>
+                                <td>$I_z$</td>
+                                <td>2600 kg·m²</td>
+                                <th scope="row">Shape / curvature</th>
+                                <td>$C,\ E$</td>
+                                <td>1.3 / −0.5</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">CoG to front / rear axle</th>
+                                <td>$l_f,\ l_r$</td>
+                                <td>1.18 / 1.42 m</td>
+                                <th scope="row">Tyre relaxation length</th>
+                                <td>$\sigma_\alpha$</td>
+                                <td>0.6 m</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Steering ratio</th>
+                                <td>$i_s$</td>
+                                <td>16</td>
+                                <th scope="row">Road friction (dry / wet)</th>
+                                <td>$\mu$</td>
+                                <td>1.0 / 0.5</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <hr>
+
+                <h2><i data-lucide="cpu" class="w-6 h-6 mr-3 text-amber-400"></i> 3. Two Ways to Push a Gaussian
+                    Through a Tyre</h2>
+
+                <p>A Kalman filter keeps a Gaussian belief over the state, a mean $\hat{\mathbf{x}}$ and a covariance
+                    $P$, and alternates between <em>predicting</em> it with the model and <em>correcting</em> it with
+                    the measurement. For linear models this is exact. Ours are not linear, and the two filters differ
+                    only in how they cope with that.</p>
+
+                <div class="math-box">
+                    <div class="math-box-title">// Extended Kalman Filter: linearise the model at the estimate</div>
+                    $$\begin{aligned}
+                    \hat{\mathbf{x}}^-_k &= f(\hat{\mathbf{x}}_{k-1}, \mathbf{u}_{k-1}), &
+                    P^-_k &= F_k P_{k-1} F_k^\top + Q, &
+                    F_k &= \left.\tfrac{\partial f}{\partial \mathbf{x}}\right|_{\hat{\mathbf{x}}_{k-1}}\\
+                    K_k &= P^-_k H_k^\top \big(H_k P^-_k H_k^\top + R\big)^{-1}, &
+                    \hat{\mathbf{x}}_k &= \hat{\mathbf{x}}^-_k + K_k\big(\mathbf{y}_k - h(\hat{\mathbf{x}}^-_k)\big), &
+                    H_k &= \left.\tfrac{\partial h}{\partial \mathbf{x}}\right|_{\hat{\mathbf{x}}^-_k}
+                    \end{aligned}$$
+                </div>
+
+                <div class="math-box">
+                    <div class="math-box-title">// Unscented Kalman Filter: push sample points through the model</div>
+                    $$\mathcal{X}_0 = \hat{\mathbf{x}}, \qquad
+                    \mathcal{X}_{\pm i} = \hat{\mathbf{x}} \pm \Big(\sqrt{(n+\lambda)\,P}\Big)_i, \qquad
+                    W_0 = \frac{\lambda}{n+\lambda}, \quad W_{\pm i} = \frac{1}{2(n+\lambda)}$$
+                    $$\hat{\mathbf{y}} = \sum_i W_i\, h(\mathcal{X}_i), \qquad
+                    P_{yy} = \sum_i W_i\, (\mathcal{Y}_i - \hat{\mathbf{y}})(\cdot)^\top + R, \qquad
+                    K = P_{xy}\, P_{yy}^{-1}$$
+                </div>
+
+                <p>With two states and the usual choice $n + \lambda = 3$, the UKF evaluates the model at five points:
+                    the mean, and $\pm\sqrt{3}$ standard deviations along each axis of the covariance.</p>
+
+                <div class="ss-cards">
+                    <div class="ss-card ss-card-ekf">
+                        <div class="ss-card-tag">EKF</div>
+                        <div class="ss-card-title">Linearise the model, at one point</div>
+                        <ul>
+                            <li>Uses the slope of the tyre curve exactly where the estimate is.</li>
+                            <li>Needs Jacobians (analytic or by finite differences).</li>
+                            <li>Exact when the uncertainty is small compared with the curvature.</li>
+                        </ul>
+                    </div>
+                    <div class="ss-card ss-card-ukf">
+                        <div class="ss-card-tag">UKF</div>
+                        <div class="ss-card-title">Linearise the statistics, over the spread</div>
+                        <ul>
+                            <li>Fits a line through points spread over the current uncertainty.</li>
+                            <li>Derivative-free: only evaluates $f$ and $h$.</li>
+                            <li>Captures curvature, but the points can land where the model no longer means much.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <p>The whole difference between the two filters fits in one picture. Move the belief along the tyre
+                    curve and widen it:</p>
+
+                <figure class="ss-figure" data-fig="tyre">
+                    <div class="ss-fig-head">
+                        <div>
+                            <span class="ss-fig-tag">Figure 3 · interactive</span>
+                            <div class="ss-fig-title">What each filter "sees" of the tyre</div>
+                        </div>
+                    </div>
+                    <div class="ss-plot"></div>
+                    <div class="ss-controls">
+                        <div class="ss-control">
+                            <label for="ss-alpha-mean">mean slip angle <output data-out="alpha-mean">4.0°</output></label>
+                            <input id="ss-alpha-mean" name="alpha-mean" type="range" min="0" max="18" step="0.1" value="4">
+                        </div>
+                        <div class="ss-control">
+                            <label for="ss-alpha-sd">uncertainty σ <output data-out="alpha-sd">5.0°</output></label>
+                            <input id="ss-alpha-sd" name="alpha-sd" type="range" min="0.3" max="10" step="0.1" value="5">
+                        </div>
+                    </div>
+                    <div class="ss-presets" role="group" aria-label="Presets">
+                        <button type="button" data-preset="2,0.5">everyday driving</button>
+                        <button type="button" data-preset="10.2,1.5">sitting on the peak</button>
+                        <button type="button" data-preset="4,5">restart at the limit</button>
+                        <button type="button" data-preset="4,10">spread too wide</button>
+                    </div>
+                    <div class="ss-readout" aria-live="polite"></div>
+                    <figcaption>The shaded bump is the filter's Gaussian belief about the slip angle. The
+                        <span class="ss-ekf-text">EKF</span> replaces the tyre by its tangent at the mean. The
+                        <span class="ss-ukf-text">UKF</span> evaluates the tyre at three sigma points and fits a line
+                        through them. Both lines are dashed in their filter's colour. The marks on the left edge compare the force each
+                        filter predicts with the exact mean of the force under the belief. With a narrow belief the
+                        two agree. On the peak the tangent is flat, and the EKF concludes that the accelerometer says
+                        nothing about the slip. With a wide belief sitting in the linear range, the tangent is steep
+                        while the true average slope is not, and the EKF overrates how much one measurement
+                        tells it.</figcaption>
+                    <noscript><p class="ss-fallback">Interactive figure: requires JavaScript.</p></noscript>
+                </figure>
+
+                <hr>
+
+                <h2><i data-lucide="flask-conical" class="w-6 h-6 mr-3 text-emerald-400"></i> 4. The Test Bench</h2>
+
+                <p>Both filters run against a simulated car. The test bench has three parts: a "true" vehicle
+                    produces the motion, a sensor model turns it into what an ESC cluster
+                    would read, and both filters receive exactly the same samples.</p>
+
+                <figure class="ss-figure">
+                    <div class="ss-fig-head">
+                        <div>
+                            <span class="ss-fig-tag">Figure 4</span>
+                            <div class="ss-fig-title">Signal flow of the experiment</div>
+                        </div>
+                    </div>
+                    <div class="ss-pipeline">
+                        <div class="ss-block">
+                            <span class="ss-block-tag">Source</span>
+                            <strong>Steering profile</strong>
+                            <small>slalom · sine with dwell · ramp steer</small>
+                        </div>
+                        <div class="ss-wire" aria-hidden="true"><span>δ<sub>SW</sub>(t)</span></div>
+                        <div class="ss-block">
+                            <span class="ss-block-tag">Plant · 1 kHz</span>
+                            <strong>Vehicle (truth)</strong>
+                            <small>nonlinear single-track, Magic Formula, tyre relaxation, RK4</small>
+                        </div>
+                        <div class="ss-wire" aria-hidden="true"><span>r, a<sub>y</sub>, v<sub>x</sub>, δ</span></div>
+                        <div class="ss-block">
+                            <span class="ss-block-tag">Sensors · 100 Hz</span>
+                            <strong>ESC cluster</strong>
+                            <small>white noise + per-run offset</small>
+                        </div>
+                        <div class="ss-wire" aria-hidden="true"><span>y<sub>k</sub>, u<sub>k</sub></span></div>
+                        <div class="ss-block-split">
+                            <div class="ss-block ss-block-ekf"><span class="ss-block-tag">Estimator</span><strong>EKF</strong></div>
+                            <div class="ss-block ss-block-ukf"><span class="ss-block-tag">Estimator</span><strong>UKF</strong></div>
+                        </div>
+                        <div class="ss-wire" aria-hidden="true"><span>β estimate, σ<sub>β</sub></span></div>
+                        <div class="ss-block">
+                            <span class="ss-block-tag">Scope</span>
+                            <strong>Evaluation</strong>
+                            <small>error vs. true β, RMSE, ±2σ coverage</small>
+                        </div>
+                    </div>
+                    <figcaption>Both estimators run at the sensor rate with identical $Q$, $R$ and initial
+                        covariance. The comparison is about the filter, not the tuning.</figcaption>
+                </figure>
+
+                <p>A fair test bench has to be unfair to the filters in the right ways. A filter that knows the
+                    truth model exactly always looks brilliant, so the test bench builds in the mismatches a real car
+                    would have:</p>
+
+                <ul>
+                    <li><strong>Imperfect tyre data.</strong> The filters' tyre stiffness is off by −6&nbsp;% (front)
+                        and +4&nbsp;% (rear), as if identified on a skid pad on a different day.</li>
+                    <li><strong>Missing dynamics.</strong> The true tyres build up force with a relaxation length of
+                        0.6 m. The filters' tyres react instantly.</li>
+                    <li><strong>Unknown sensor offsets.</strong> Each run draws a new gyro and accelerometer offset
+                        that the filters do not estimate. The accelerometer channel in $R$ is inflated to cover the
+                        model error.</li>
+                </ul>
+
+                <div class="ss-table-wrap">
+                    <table>
+                        <caption>Table 2: Sensor model (100 Hz; offsets drawn once per run)</caption>
+                        <thead>
+                            <tr>
+                                <th scope="col">Signal</th>
+                                <th scope="col">Noise (1σ)</th>
+                                <th scope="col">Offset (1σ)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <th scope="row">Yaw-rate gyro $r$</th>
+                                <td>0.25 °/s</td>
+                                <td>0.15 °/s</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Lateral accelerometer $a_y$</th>
+                                <td>0.15 m/s²</td>
+                                <td>0.05 m/s²</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Wheel-speed $v_x$</th>
+                                <td>0.05 m/s</td>
+                                <td>–</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Steering-wheel angle $\delta_{SW}$</th>
+                                <td>0.2°</td>
+                                <td>–</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <p>Four manoeuvres cover the range from boring to scary. Each one runs <strong>30 times</strong> with
+                    fresh noise and offsets:</p>
+
+                <ol>
+                    <li><strong>Slalom</strong>: 72 km/h, ±30° at the steering wheel. Everyday driving, with the
+                        tyres in their linear range.</li>
+                    <li><strong>Sine with dwell</strong>: the 0.7 Hz profile from the US ESC regulation (FMVSS 126)
+                        at 80 km/h and 70°. The rear axle saturates and the car comes close to spinning,
+                        $|\beta|$ peaks at 7°.</li>
+                    <li><strong>Ramp steer</strong>: 80 km/h, steering wound up at 9°/s, so the lateral
+                        acceleration sweeps from zero all the way to the friction limit.</li>
+                    <li><strong>Wet road</strong>: a slalom on $\mu = 0.5$, while both filters still believe they
+                        are on dry asphalt.</li>
+                </ol>
+
+                <hr>
+
+                <h2><i data-lucide="bar-chart-2" class="w-6 h-6 mr-3 text-cyan-400"></i> 5. Results</h2>
+
+                <h3>Everyday driving and the limit: a tie</h3>
+
+                <figure class="ss-figure" data-fig="results">
+                    <div class="ss-fig-head">
+                        <div>
+                            <span class="ss-fig-tag">Figure 5 · interactive</span>
+                            <div class="ss-fig-title">Side-slip estimates, one run per manoeuvre</div>
+                        </div>
+                        <div class="ss-legend-slot"></div>
+                    </div>
+                    <div class="ss-toolbar">
+                        <div class="ss-tab-slot"></div>
+                        <label class="ss-check"><input type="checkbox" name="show-band" checked> UKF ±2σ band</label>
+                    </div>
+                    <div class="ss-plot"></div>
+                    <div class="ss-readout" aria-live="polite"></div>
+                    <dl class="ss-stats"></dl>
+                    <figcaption><strong>Top:</strong> lateral acceleration with the friction limit dashed.
+                        <strong>Middle:</strong> true and estimated $\beta$. <strong>Bottom:</strong> estimation
+                        error. <span class="ss-caption-note"></span></figcaption>
+                    <noscript><p class="ss-fallback">Interactive chart: requires JavaScript. Table 3 lists the same
+                            results.</p></noscript>
+                </figure>
+
+                <p>Look at the slalom and the two near-limit manoeuvres, and the honest summary is that the two
+                    filters produce <strong>the same answer</strong>. The traces lie on top of each other. Over 30
+                    runs the RMSE differs by at most 0.015°, far below what any reference sensor could resolve. Even
+                    where the lateral acceleration exceeds 6 m/s², the UKF's edge in the ramp steer is 0.02°.</p>
+
+                <div class="ss-table-wrap">
+                    <table>
+                        <caption>Table 3: Mean over 30 runs per manoeuvre (β errors in degrees; <span class="ss-num-ekf">EKF</span> / <span class="ss-num-ukf">UKF</span>)</caption>
+                        <thead>
+                            <tr>
+                                <th scope="col">Manoeuvre</th>
+                                <th scope="col">Peak |β| · |a<sub>y</sub>|</th>
+                                <th scope="col">RMSE</th>
+                                <th scope="col">RMSE at |a<sub>y</sub>| ≥ 6</th>
+                                <th scope="col">Max error</th>
+                                <th scope="col">Truth within ±2σ</th>
+                                <th scope="col">Time / step</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <th scope="row">Slalom</th>
+                                <td>0.68° · 3.9</td>
+                                <td><span class="ss-num-ekf">0.082</span> / <span class="ss-num-ukf">0.082</span></td>
+                                <td>–</td>
+                                <td><span class="ss-num-ekf">0.18</span> / <span class="ss-num-ukf">0.18</span></td>
+                                <td>92&nbsp;% / 92&nbsp;%</td>
+                                <td>208 / 210 µs</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Sine with dwell</th>
+                                <td>7.02° · 9.6</td>
+                                <td><span class="ss-num-ekf">0.228</span> / <span class="ss-num-ukf">0.232</span></td>
+                                <td><span class="ss-num-ekf">0.312</span> / <span class="ss-num-ukf">0.318</span></td>
+                                <td><span class="ss-num-ekf">0.54</span> / <span class="ss-num-ukf">0.55</span></td>
+                                <td>70&nbsp;% / 70&nbsp;%</td>
+                                <td>211 / 212 µs</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Ramp steer</th>
+                                <td>7.58° · 9.8</td>
+                                <td><span class="ss-num-ekf">0.272</span> / <span class="ss-num-ukf">0.258</span></td>
+                                <td><span class="ss-num-ekf">0.346</span> / <span class="ss-num-ukf">0.327</span></td>
+                                <td><span class="ss-num-ekf">0.85</span> / <span class="ss-num-ukf">0.79</span></td>
+                                <td>98&nbsp;% / 98&nbsp;%</td>
+                                <td>210 / 212 µs</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Wet road</th>
+                                <td>2.63° · 4.6</td>
+                                <td><span class="ss-num-ekf">0.605</span> / <span class="ss-num-ukf">0.604</span></td>
+                                <td>–</td>
+                                <td><span class="ss-num-ekf">1.02</span> / <span class="ss-num-ukf">1.02</span></td>
+                                <td class="ss-bad">19&nbsp;% / 19&nbsp;%</td>
+                                <td>214 / 216 µs</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <p>Two more observations from the table:</p>
+
+                <ul>
+                    <li><strong>Cost is not a differentiator either.</strong> Both take about 0.2 ms per step
+                        without any optimisation, a fiftieth of the 10 ms sample period. With finite-difference Jacobians the EKF
+                        evaluates the model five times per step, exactly as many as the UKF's five sigma points.
+                        Analytic Jacobians would make the EKF cheaper, at the price of a page of derivatives that
+                        must be re-derived whenever the tyre model changes.</li>
+                    <li><strong>The wet road breaks both, equally.</strong> Neither filter knows that $\mu$ has
+                        halved, so both trust a tyre that does not exist. Their RMSE of 0.6° is almost a quarter
+                        of a signal that peaks at 2.6°, and, worse, the true $\beta$ lies inside their ±2σ band only
+                        19&nbsp;% of the time. They are wrong and
+                        <em>confident</em> about it.</li>
+                </ul>
+
+                <h3><i data-lucide="zap" class="w-5 h-5 mr-2 text-amber-400"></i> Restarting at the limit: where the
+                    UKF earns its keep</h3>
+
+                <p>The tie above has a reason. Started from rest, both filters track the car from the first sample, so
+                    their uncertainty stays small, and a small Gaussian sees a nearly straight piece of tyre curve. The
+                    interesting case is when the uncertainty is <em>large</em> at the worst possible moment: say the
+                    estimator is (re)initialised while the car is already sliding at the limit, with $\hat\beta = 0$
+                    and an honest initial uncertainty.</p>
+
+                <figure class="ss-figure" data-fig="restart">
+                    <div class="ss-fig-head">
+                        <div>
+                            <span class="ss-fig-tag">Figure 6 · interactive</span>
+                            <div class="ss-fig-title">Both filters restarted mid-manoeuvre with $\hat\beta = 0$</div>
+                        </div>
+                        <div class="ss-legend-slot"></div>
+                    </div>
+                    <div class="ss-toolbar">
+                        <div class="ss-tab-slot"></div>
+                    </div>
+                    <div class="ss-plot"></div>
+                    <div class="ss-readout" aria-live="polite"></div>
+                    <figcaption><span class="ss-caption-note"></span></figcaption>
+                    <noscript><p class="ss-fallback">Interactive chart: requires JavaScript. Table 4 lists the same
+                            results.</p></noscript>
+                </figure>
+
+                <p>In the ramp steer, the restart happens at $a_y = 9.8$ m/s² with the true $\beta$ at −6.7°. Within
+                    40 ms the EKF has moved to −2.6°, a good first step. But in the same update its standard
+                    deviation collapses <strong>from 5° to 0.17°</strong>. From then on it trusts its wrong estimate
+                    far more than the measurements and creeps towards the truth over seconds. The UKF lands at −5.5°
+                    with σ ≈ 1.3° after the same 40 ms, and is within half a degree of the truth half a second
+                    later.</p>
+
+                <p>Figure 3 explains why. At $\hat\beta = 0$ the EKF believes the tyres are in their linear range,
+                    where the tangent is steep, and concludes that the accelerometer pins $\beta$ down precisely. The
+                    UKF's sigma points sit $\pm\sqrt{3}\cdot 5° \approx \pm 8.7°$ apart and reach into the saturated
+                    part of the curve. The UKF <em>sees</em> the force flatten, keeps a realistic covariance, and
+                    keeps listening to the sensors. (Try the <em>restart at the limit</em> preset in Figure 3.)</p>
+
+                <div class="ss-table-wrap">
+                    <table>
+                        <caption>Table 4: Restart at the limit, mean over 30 runs. RMSE after the restart (degrees) and how often the truth lies within ±2σ</caption>
+                        <thead>
+                            <tr>
+                                <th scope="col">Initial σ<sub>β</sub></th>
+                                <th scope="col">Ramp steer: EKF</th>
+                                <th scope="col">Ramp steer: UKF</th>
+                                <th scope="col">Sine with dwell: EKF</th>
+                                <th scope="col">Sine with dwell: UKF</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <th scope="row">1°</th>
+                                <td class="ss-num-ekf">2.12 · 9&nbsp;%</td>
+                                <td class="ss-num-ukf">1.97 · 13&nbsp;%</td>
+                                <td class="ss-num-ekf">0.57 · 71&nbsp;%</td>
+                                <td class="ss-num-ukf">0.56 · 71&nbsp;%</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">2°</th>
+                                <td class="ss-num-ekf">2.11 · 9&nbsp;%</td>
+                                <td class="ss-num-ukf">1.67 · 20&nbsp;%</td>
+                                <td class="ss-num-ekf">0.57 · 71&nbsp;%</td>
+                                <td class="ss-num-ukf">0.49 · 73&nbsp;%</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">5°</th>
+                                <td class="ss-num-ekf">2.11 · 10&nbsp;%</td>
+                                <td class="ss-num-ukf ss-win">0.90 · 79&nbsp;%</td>
+                                <td class="ss-num-ekf">0.57 · 72&nbsp;%</td>
+                                <td class="ss-num-ukf ss-win">0.47 · 75&nbsp;%</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">10°</th>
+                                <td class="ss-num-ekf">2.11 · 10&nbsp;%</td>
+                                <td class="ss-num-ukf">1.94 · 95&nbsp;%</td>
+                                <td class="ss-num-ekf">0.57 · 72&nbsp;%</td>
+                                <td class="ss-bad">60.5 · 0&nbsp;% (diverged)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <p>Note the EKF column: its result does not depend on the initial uncertainty at all, because the first
+                    linearised update throws that uncertainty away. Note also the last row. With σ = 10° the UKF's
+                    sigma points sit ±17° apart, deep in a region where the single-track model with saturated
+                    tyres no longer describes anything physical. In the sine with dwell the filter locks onto a
+                    spinning car that does not exist.</p>
+
+                <h3><i data-lucide="alert-triangle" class="w-5 h-5 mr-2 text-rose-400"></i> The price of a wide
+                    spread</h3>
+
+                <p>The same mechanism shows up with process noise. A larger $Q$ is the usual way to make a filter
+                    react faster and to make up for model error, and it also widens the sigma points at every step.
+                    In the ramp steer:</p>
+
+                <figure class="ss-figure" data-fig="sweep">
+                    <div class="ss-fig-head">
+                        <div>
+                            <span class="ss-fig-tag">Figure 7</span>
+                            <div class="ss-fig-title">RMSE against process noise, ramp steer, 30 runs</div>
+                        </div>
+                        <div class="ss-legend-slot"></div>
+                    </div>
+                    <div class="ss-plot"></div>
+                    <figcaption>Up to $\sqrt{Q_\beta} = 0.05°$ per step the two are equal. Beyond that the EKF
+                        degrades gently, while the UKF's error grows to <strong>2.6×</strong> the EKF's at
+                        0.4°.</figcaption>
+                    <noscript><p class="ss-fallback">EKF / UKF RMSE: 0.02° → 0.23 / 0.23; 0.05° → 0.25 / 0.24; 0.1°
+                            → 0.36 / 0.38; 0.2° → 0.49 / 0.81; 0.4° → 0.60 / 1.57.</p></noscript>
+                </figure>
+
+                <p>The reason is an old friend from statistics, <strong>Jensen's inequality</strong>. Near the peak
+                    the tyre curve is concave, so the average force over a wide spread of slip angles is lower than
+                    the force at the average slip angle. The UKF computes that average faithfully and predicts less
+                    lateral acceleration than the car is producing. To explain the measurement it pushes $\hat\beta$
+                    further out, overshooting by up to about 2° in these runs. The EKF never averages, so it never makes this
+                    error, and it never sees the flattening either.</p>
+
+                <hr>
+
+                <h2><i data-lucide="lightbulb" class="w-6 h-6 mr-3 text-amber-400"></i> 6. Lessons Learned</h2>
+
+                <ol class="ss-lessons">
+                    <li><strong>The model is the bottleneck, not the filter.</strong> Under normal conditions the
+                        choice between EKF and UKF moves the error by hundredths of a degree. A wrong friction
+                        coefficient moves it by more than half a degree, and no filter variant fixes that.</li>
+                    <li><strong>Choose the filter for its failure mode.</strong> The UKF is the better choice when
+                        the uncertainty can be large at the limit: initialisation, a sensor dropout, the transition
+                        into a skid. The EKF is simpler to reason about and degrades gracefully when it is over-tuned.
+                    </li>
+                    <li><strong>The UKF's spread is a design parameter.</strong> $P_0$, $Q$ and the scaling
+                        parameters decide where the sigma points land. If they land in physically meaningless
+                        states, the filter averages over nonsense. Clipping sigma points to plausible ranges is cheap
+                        insurance.</li>
+                    <li><strong>Check consistency, not just RMSE.</strong> "Is the truth inside ±2σ as often as it
+                        should be?" flagged the wet road (19&nbsp;%) and the collapsed EKF (10&nbsp;%) immediately.
+                        An RMSE alone would only have said "a bit worse".</li>
+                    <li><strong>Estimate what you do not know.</strong> The natural next step is to add $\mu$ (or a
+                        tyre-stiffness scale) to the state, use GNSS velocity whenever it is available, or learn the
+                        tyre's residual from data. All of these attack the real source of error found here.</li>
+                </ol>
+
+                <div class="bg-slate-800/50 border border-slate-700 p-8 rounded-xl my-10 shadow-lg">
+                    <h3 class="!mt-0 !mb-4 text-2xl font-bold text-white flex items-center">
+                        <i data-lucide="check-circle" class="w-6 h-6 mr-3 text-primary-400"></i>
+                        Conclusion
+                    </h3>
+                    <p class="text-slate-300">Estimating the side-slip angle is a small problem with all the
+                        ingredients of state estimation: an unmeasurable quantity, cheap and biased sensors, and a
+                        model that is accurate right up to the point where it matters most. Putting the two filters
+                        side by side showed that the textbook ranking, "UKF beats EKF on nonlinear problems",
+                        is true only where the uncertainty is large compared with the curvature of the model. That
+                        happens rarely, but exactly at the friction limit, where an ESC system needs the estimate
+                        most. There the UKF's sigma points are both its strength and its weakness, which makes tuning
+                        their spread as important as choosing the filter.</p>
+                </div>
+
+                <h3 id="reproduce"><i data-lucide="file-code-2" class="w-5 h-5 mr-2 text-emerald-400"></i> Reproduce
+                    it</h3>
+
+                <p>All figures and tables above can be reproduced with a single NumPy script of about 500 lines:
+                    truth model, sensor model,
+                    both filters and all three experiments. It needs nothing but Python and NumPy and takes about
+                    three minutes for 30 runs per case.</p>
+
+                <pre class="ss-code"><code>python3 sideslip_ekf_ukf.py --runs 30               # print all tables
+python3 sideslip_ekf_ukf.py --runs 30 --export data.json   # plus figure data</code></pre>
+
+                <p><a href="https://github.com/Drapandiger/Blog/blob/main/assets/blog/sideslip/code/sideslip_ekf_ukf.py">View
+                        the script on GitHub</a> or <a href="../code/sideslip_ekf_ukf.py" download>download it</a>.</p>
+            </div>
+        </article>
+    </main>
+
+    <!-- Footer Script -->
+    <script>
+        createLucideIcons();
+    </script>
+</body>
+</html>
