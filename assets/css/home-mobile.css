@@ -12,7 +12,7 @@
 body.home-page {
     --m-gutter: 1rem;
     --m-bar-h: 3.4rem;
-    --m-stage-h: clamp(25rem, 58svh, 34rem);
+    --m-stage-h: clamp(25rem, 62svh, 36rem);
     --m-sheet-overlap: 3.4rem;
     --m-dock-h: 3.85rem;
     --m-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;

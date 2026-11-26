@@ -1582,6 +1582,35 @@
         }
         const dogPrevious = { x: 0, z: 0, heading: 0, odometer: 0 };
 
+        /* Phones: the portrait stage is too narrow to show the whole cell at
+         * a useful size, so it acts as a pan camera that follows the work —
+         * AMR dock, QC scanner, then the quadruped hand-off or the reject
+         * bin — and frames the robots larger. Lab-local x to centre on. */
+        const STAGE_FOCUS = { amr: -0.45, scan: 0.55, dog: 1.25, bin: -0.15 };
+        const stageFocusKeys = [];
+        PARCELS.forEach((parcel, index) => {
+            const b = index * ITEM_PERIOD;
+            stageFocusKeys.push(
+                { t: b + 1.0, x: STAGE_FOCUS.amr }, { t: b + 6.3, x: STAGE_FOCUS.amr },
+                { t: b + 8.0, x: STAGE_FOCUS.scan }, { t: b + 9.6, x: STAGE_FOCUS.scan }
+            );
+            if (parcel.pass) {
+                stageFocusKeys.push({ t: b + 11.2, x: STAGE_FOCUS.dog }, { t: b + 13.0, x: STAGE_FOCUS.dog });
+            } else {
+                stageFocusKeys.push({ t: b + 10.9, x: STAGE_FOCUS.bin }, { t: b + 12.6, x: STAGE_FOCUS.bin });
+            }
+        });
+        function stageFocusAt(time) {
+            const t = ((time % CELL_CYCLE) + CELL_CYCLE) % CELL_CYCLE;
+            let index = stageFocusKeys.length - 1;
+            for (let key = 0; key < stageFocusKeys.length && stageFocusKeys[key].t <= t; key += 1) index = key;
+            const from = stageFocusKeys[index];
+            const to = stageFocusKeys[(index + 1) % stageFocusKeys.length];
+            const span = ((to.t - from.t) % CELL_CYCLE + CELL_CYCLE) % CELL_CYCLE;
+            const local = ((t - from.t) % CELL_CYCLE + CELL_CYCLE) % CELL_CYCLE;
+            return from.x + (to.x - from.x) * easeInOutSine(clamp01(local / span));
+        }
+
         /* Where each parcel is right now: on the AMR, in the gripper, on the
          * quadruped, falling into the reject bin, or off-stage (hidden). */
         function placeParcel(block, parcel, index, time) {
@@ -2802,32 +2831,35 @@
             });
             return box;
         }
+        /* Horizontal framing window of the pan camera: 3.2 lab units at the
+         * depth of the AMR lane / dog dock. Height still fits the whole set. */
+        const stageWindowPoints = [
+            new THREE.Vector3(-1.6, 0, AMR_LANE_Z), new THREE.Vector3(1.6, 0, AMR_LANE_Z)
+        ];
         function fitLabToStage() {
             const stage = measureStageBox();
             camera.updateMatrixWorld(true);
+            labGroup.position.x = 0;
             for (let pass = 0; pass < 3; pass += 1) {
                 let box = measureLabBox(labStagePoints);
+                const frame = measureLabBox(stageWindowPoints);
                 const fit = Math.min(
-                    (stage.right - stage.left) / (box.right - box.left),
+                    (stage.right - stage.left) / (frame.right - frame.left),
                     (stage.bottom - stage.top) / (box.bottom - box.top)
                 );
                 labGroup.scale.multiplyScalar(Math.max(0.5, Math.min(2, fit)));
                 box = measureLabBox(labStagePoints);
                 /* Projected points move ~linearly with a group shift, so a
                  * measured pixels-per-unit centres the set in one step. */
-                labGroup.position.x += 1;
-                const perX = measureLabBox(labStagePoints).left - box.left;
-                labGroup.position.x -= 1;
                 labGroup.position.y += 1;
                 const perY = measureLabBox(labStagePoints).top - box.top;
                 labGroup.position.y -= 1;
-                if (perX > 0) {
-                    labGroup.position.x += ((stage.left + stage.right) / 2 - (box.left + box.right) / 2) / perX;
-                }
                 if (perY < 0) {
                     labGroup.position.y += ((stage.top + stage.bottom) / 2 - (box.top + box.bottom) / 2) / perY;
                 }
             }
+            /* x is driven per frame by the pan camera (stageFocusAt). */
+            labGroup.position.x = -stageFocusAt(sceneTime) * labGroup.scale.x;
         }
 
         function applyLayout() {
@@ -3122,6 +3154,10 @@
             }
 
             updatePointerTargets();
+            if (mobileLayout && labGroup.visible) {
+                /* Camera x sits at 0, so centring lab x = f means group x = -f * scale. */
+                labGroup.position.x = -stageFocusAt(time) * labGroup.scale.x;
+            }
             if (labGroup.visible) updateLaboratory(time);
             if (spaceGroup.visible) updateSpace(time, deltaSeconds);
 
