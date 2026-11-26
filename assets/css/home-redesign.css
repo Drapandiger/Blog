@@ -873,6 +873,13 @@ body.home-page .card-interactive img {
     border-bottom: 1px solid var(--home-border);
 }
 
+/* Artwork drawn per theme: only the matching variant is laid out, and because
+ * both are lazy, only that one is downloaded. */
+html[data-theme="dark"] body.home-page .theme-art-light,
+html:not([data-theme="dark"]) body.home-page .theme-art-dark {
+    display: none;
+}
+
 html[data-theme="light"] body.home-page .card-interactive img,
 html[data-theme="dark"] body.home-page .card-interactive img {
     filter: none;

@@ -1140,6 +1140,149 @@
                 left: 0.9rem;
             }
         }
+
+        /* ====== Hero artwork: one cover per theme, cross-faded ====== */
+        .ss-hero {
+            display: grid;
+            background: var(--blog-surface-soft);
+        }
+
+        .ss-hero > img {
+            grid-area: 1 / 1;
+            display: block;
+            width: 100%;
+            height: auto;
+            transition: opacity var(--blog-theme-duration, 360ms) ease;
+        }
+
+        html[data-theme="dark"] .ss-hero-art[data-art="light"],
+        html:not([data-theme="dark"]) .ss-hero-art[data-art="dark"] {
+            opacity: 0;
+        }
+
+        html:not(.js-enabled) .ss-hero-art {
+            display: none;
+        }
+
+        /* ====== ESC lamp: a side-slip estimator for the mouse cursor ====== */
+        .esc-widget {
+            --esc-c: var(--blog-emerald);
+            appearance: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            height: 32px;
+            padding: 0 12px 0 8px;
+            border-radius: 4px;
+            border: 1px solid color-mix(in srgb, var(--esc-c) 34%, transparent);
+            background: var(--blog-surface-strong);
+            box-shadow: 0 0 10px color-mix(in srgb, var(--esc-c) 12%, transparent),
+                inset 0 0 5px color-mix(in srgb, var(--esc-c) 10%, transparent);
+            color: var(--esc-c);
+            font: 700 12px/1 ui-monospace, 'SFMono-Regular', Menlo, Monaco, Consolas, monospace;
+            cursor: pointer;
+            user-select: none;
+            transition: color 0.25s, border-color 0.25s, box-shadow 0.25s, transform 0.25s;
+        }
+
+        .esc-widget.is-limit,
+        .esc-widget.is-off {
+            --esc-c: var(--blog-amber);
+        }
+
+        .esc-widget.is-limit {
+            box-shadow: 0 0 18px color-mix(in srgb, var(--esc-c) 30%, transparent),
+                inset 0 0 8px color-mix(in srgb, var(--esc-c) 16%, transparent);
+        }
+
+        .esc-widget.is-sliding {
+            --esc-c: var(--blog-rose);
+            box-shadow: 0 0 24px color-mix(in srgb, var(--esc-c) 45%, transparent),
+                inset 0 0 12px color-mix(in srgb, var(--esc-c) 28%, transparent);
+            transform: scale(0.98);
+        }
+
+        .esc-lamp {
+            width: 36px;
+            height: 24px;
+            flex: none;
+            overflow: visible;
+            fill: none;
+            stroke: currentColor;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .esc-car {
+            transform-box: view-box;
+            transform-origin: 17px 9.5px;
+        }
+
+        .esc-body {
+            stroke-width: 1.6;
+            fill: color-mix(in srgb, currentColor 14%, transparent);
+        }
+
+        .esc-glass {
+            stroke: none;
+            fill: currentColor;
+            opacity: 0.8;
+        }
+
+        .esc-vel {
+            stroke-width: 1.5;
+            opacity: 0.55;
+        }
+
+        .esc-skid {
+            stroke-width: 1.3;
+            opacity: 0;
+        }
+
+        .esc-off {
+            display: none;
+            stroke: none;
+            fill: currentColor;
+            font: 800 6.6px/1 ui-monospace, Menlo, monospace;
+            letter-spacing: 0.4px;
+            text-anchor: middle;
+        }
+
+        .esc-widget.is-off .esc-off {
+            display: inline;
+        }
+
+        .esc-widget.is-intervening .esc-lamp {
+            animation: esc-blink 0.5s steps(1, end) infinite;
+        }
+
+        @keyframes esc-blink {
+            50% {
+                opacity: 0.25;
+            }
+        }
+
+        .esc-beta {
+            min-width: 8ch;
+            padding-right: 10px;
+            border-right: 1px dashed currentColor;
+            font-variant-numeric: tabular-nums;
+            opacity: 0.92;
+            text-align: left;
+        }
+
+        .esc-text {
+            width: 31ch;
+            letter-spacing: 0.5px;
+            text-align: left;
+            white-space: nowrap;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .esc-widget.is-intervening .esc-lamp {
+                animation: none;
+            }
+        }
     </style>
     <link rel="stylesheet" href="../../../../assets/css/blog-theme.css">
     <script defer src="../../../../assets/js/blog-theme.js"></script>
@@ -1160,6 +1303,27 @@
                         class="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform"></i>
                     <span class="font-medium">Back to Portfolio</span>
                 </a>
+                <div class="hidden md:block">
+                    <button type="button" id="esc-widget" class="esc-widget" aria-pressed="false"
+                        aria-label="ESC OFF switch. Your mouse cursor is the car: swing it through a tight corner to make it slide."
+                        title="Your cursor is the car: swing it through a tight corner to make it slide. Click: ESC OFF.">
+                        <svg class="esc-lamp" viewBox="0 0 36 24" aria-hidden="true">
+                            <g class="esc-skid">
+                                <path d="M1.5 4.5c2.2 0 2.2 2.6 4.4 2.6s2.2-2.6 4.4-2.6"/>
+                                <path d="M1.5 11.5c2.2 0 2.2 2.6 4.4 2.6s2.2-2.6 4.4-2.6"/>
+                            </g>
+                            <path class="esc-vel" d="M17 9.5h16m-3.4-3.2 3.4 3.2-3.4 3.2"/>
+                            <g class="esc-car">
+                                <rect class="esc-body" x="9" y="5" width="16" height="9" rx="2.8"/>
+                                <rect class="esc-glass" x="17.6" y="6.6" width="3.4" height="5.8" rx="1"/>
+                                <rect class="esc-glass" x="11.2" y="7" width="2.2" height="5" rx="0.8"/>
+                            </g>
+                            <text class="esc-off" x="17" y="23.2">OFF</text>
+                        </svg>
+                        <span class="esc-beta" id="esc-beta">β +0.0°</span>
+                        <span class="esc-text" id="esc-text">GRIP: NOMINAL | ESC: STANDBY</span>
+                    </button>
+                </div>
             </div>
         </div>
     </nav>
@@ -1215,11 +1379,32 @@
             </header>
 
             <!-- Hero Image -->
-            <div class="rounded-2xl overflow-hidden mb-12 border border-slate-800 shadow-2xl max-w-5xl mx-auto">
-                <img width="1600" height="893" fetchpriority="high" decoding="async" src="../images/sideslipcover.webp"
-                    alt="A car sliding through a lane change, with the side-slip angle between its heading and its velocity, next to EKF and UKF estimates tracking that angle"
-                    class="w-full h-auto object-cover">
+            <div class="ss-hero rounded-2xl overflow-hidden mb-12 border border-slate-800 shadow-2xl max-w-5xl mx-auto"
+                role="img"
+                aria-label="A car sliding through a lane change, with the side-slip angle between its heading and its velocity, next to EKF and UKF estimates tracking that angle">
+                <img class="ss-hero-art" data-art="light" data-src="../images/sideslipcover-light.webp" width="1600"
+                    height="893" decoding="async" alt="">
+                <img class="ss-hero-art" data-art="dark" data-src="../images/sideslipcover.webp" width="1600"
+                    height="893" decoding="async" alt="">
+                <noscript><img src="../images/sideslipcover.webp" width="1600" height="893" alt=""></noscript>
             </div>
+            <script>
+                /* Load the cover that matches the active theme right away and the other one once the page is
+                 * idle, so switching themes cross-fades instead of flashing. */
+                (() => {
+                    const root = document.documentElement;
+                    const arts = Array.from(document.querySelectorAll('.ss-hero-art'));
+                    const load = (img) => { if (img && !img.getAttribute('src')) img.src = img.dataset.src; };
+                    const active = () => arts.find((img) => img.dataset.art === (root.dataset.theme === 'dark' ? 'dark' : 'light'));
+                    const first = active();
+                    if (first) { first.fetchPriority = 'high'; load(first); }
+                    window.addEventListener('themechange', () => load(active()));
+                    window.addEventListener('load', () => {
+                        const idle = window.requestIdleCallback || ((fn) => setTimeout(fn, 1500));
+                        idle(() => arts.forEach(load));
+                    }, { once: true });
+                })();
+            </script>
 
             <!-- Content Body -->
             <div class="article-content">
@@ -1974,6 +2159,110 @@ python3 sideslip_ekf_ukf.py --runs 30 --export data.json   # plus figure data</c
     <!-- Footer Script -->
     <script>
         createLucideIcons();
+
+        // ====== ESC lamp: estimates the side-slip angle of the mouse cursor ======
+        // The cursor is the car. Its velocity direction comes straight from the pointer; its heading follows
+        // that direction with a short lag, the way a car body yaws into a corner. The gap between the two
+        // is the side-slip angle. With ESC on, the heading is pulled in harder once the slip gets large.
+        (() => {
+            const widget = document.getElementById('esc-widget');
+            if (!widget) return;
+            const car = widget.querySelector('.esc-car');
+            const skid = widget.querySelector('.esc-skid');
+            const betaEl = document.getElementById('esc-beta');
+            const textEl = document.getElementById('esc-text');
+            const STATES = {
+                nominal: ['GRIP: NOMINAL | ESC: STANDBY', []],
+                intervening: ['GRIP: LIMIT | ESC: INTERVENING', ['is-limit', 'is-intervening']],
+                off: ['GRIP: NOMINAL | ESC: OFF', ['is-off']],
+                offLimit: ['GRIP: LIMIT | ESC: OFF', ['is-off', 'is-limit']],
+                sliding: ['GRIP: LOST | STATUS: SLIDING', ['is-off', 'is-sliding']]
+            };
+            const ALL = ['is-limit', 'is-intervening', 'is-off', 'is-sliding'];
+            const SCALE = 0.1;                       // cursor slip (deg) -> "car" slip (deg)
+            const wrap = (a) => Math.atan2(Math.sin(a), Math.cos(a));
+            const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+
+            let escOn = true;
+            let state = 'nominal';
+            let shown = '';
+            let theta = 0, psi = 0, beta = 0;        // velocity direction, heading, slip (rad)
+            let vx = 0, vy = 0, lastX = null, lastY = 0, lastT = 0, lastMove = -1, aligned = false;
+            let raf = 0, prev = 0;
+
+            const slipDeg = () => beta * 180 / Math.PI * SCALE;
+
+            function render() {
+                const d = clamp(slipDeg(), -15, 15);
+                const a = Math.abs(d);
+                let next;
+                if (escOn) {
+                    next = a > (state === 'intervening' ? 1.5 : 2.5) ? 'intervening' : 'nominal';
+                } else if (a > (state === 'sliding' ? 4.5 : 6)) {
+                    next = 'sliding';
+                } else {
+                    next = a > 2.5 ? 'offLimit' : 'off';
+                }
+                if (next !== state) {
+                    widget.classList.remove(...ALL);
+                    widget.classList.add(...STATES[next][1]);
+                    textEl.textContent = STATES[next][0];
+                    state = next;
+                }
+                const label = 'β ' + (d < -0.05 ? '−' : '+') + a.toFixed(1) + '°';
+                if (label !== shown) { betaEl.textContent = label; shown = label; }
+                car.style.transform = 'rotate(' + (-clamp(d * 3, -42, 42)).toFixed(1) + 'deg)';
+                skid.style.opacity = clamp((a - 2) / 4, 0, 1).toFixed(2);
+            }
+
+            function tick(now) {
+                const t = now / 1000;
+                const dt = prev ? Math.min(0.05, t - prev) : 1 / 60;
+                prev = t;
+                const moving = performance.now() / 1000 - lastMove < 0.09;
+                if (moving) {
+                    const tau = escOn && Math.abs(slipDeg()) > 2 ? 0.045 : 0.13;
+                    psi += wrap(theta - psi) * (1 - Math.exp(-dt / tau));
+                    beta = wrap(theta - psi);
+                } else {
+                    beta *= Math.exp(-dt / 0.18);
+                    psi = theta - beta;
+                }
+                render();
+                if (moving || Math.abs(beta) > 0.002) {
+                    raf = requestAnimationFrame(tick);
+                } else {
+                    beta = 0; raf = 0; prev = 0; aligned = false;
+                    render();
+                }
+            }
+
+            window.addEventListener('pointermove', (e) => {
+                if (e.pointerType === 'touch') return;
+                const t = performance.now() / 1000;
+                if (lastX === null || t - lastT > 0.2) {
+                    lastX = e.clientX; lastY = e.clientY; lastT = t; vx = vy = 0; aligned = false;
+                    return;
+                }
+                const dt = t - lastT;
+                if (dt < 0.004) return;
+                vx += ((e.clientX - lastX) / dt - vx) * 0.5;
+                vy += ((e.clientY - lastY) / dt - vy) * 0.5;
+                lastX = e.clientX; lastY = e.clientY; lastT = t;
+                if (Math.hypot(vx, vy) < 160) return;
+                theta = Math.atan2(vy, vx);
+                // A fresh start or a reversal is a new heading, not a spin.
+                if (!aligned || Math.abs(wrap(theta - psi)) > 1.9) { psi = theta; beta = 0; aligned = true; }
+                lastMove = t;
+                if (!raf) raf = requestAnimationFrame(tick);
+            }, { passive: true });
+
+            widget.addEventListener('click', () => {
+                escOn = !escOn;
+                widget.setAttribute('aria-pressed', String(!escOn));
+                render();
+            });
+        })();
     </script>
 </body>
 </html>
